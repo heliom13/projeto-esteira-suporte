@@ -30,5 +30,20 @@ class DataInitializer(
         } else {
             log.info(">>> Usuário admin já existe no banco.")
         }
+
+        if (userRepository.findByEmail("helioncorrea13@gmail.com").isEmpty) {
+            val user = userRepository.save(
+                User(
+                    name = "Helion Correa",
+                    username = "heliom13",
+                    email = "helioncorrea13@gmail.com",
+                    password = bCryptPasswordEncoder.encode("JESUSSALVA"),
+                    role = User.Role.ADMIN
+                )
+            )
+            log.info(">>> Usuário Helion criado com ID: ${user.id}")
+        } else {
+            log.info(">>> Usuário Helion já existe no banco.")
+        }
     }
 }
