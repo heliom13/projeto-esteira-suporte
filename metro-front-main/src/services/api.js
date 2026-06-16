@@ -1,13 +1,13 @@
 import axios from "axios";
 
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
 const api = axios.create({
-  baseURL: "http://localhost:8080/v1",
-  // baseURL: "https://metro-app-fm78p.ondigitalocean.app/v1",
+  baseURL: `${API_BASE}/v1`,
 });
 
 export const apiLogin = axios.create({
-  // baseURL: "https://metro-app-fm78p.ondigitalocean.app/",
-  baseURL: "http://localhost:8080/",
+  baseURL: `${API_BASE}/`,
 });
 
 api.interceptors.request.use((config) => {
