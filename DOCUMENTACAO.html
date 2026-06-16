@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Documentação — Sistema Esteira Suporte</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; background: #fff; padding: 40px; max-width: 900px; margin: auto; }
+  h1 { font-size: 26px; color: #1a3a5c; border-bottom: 3px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 24px; }
+  h2 { font-size: 18px; color: #1a3a5c; margin-top: 32px; margin-bottom: 12px; border-left: 4px solid #1a3a5c; padding-left: 10px; }
+  h3 { font-size: 15px; color: #333; margin-top: 18px; margin-bottom: 8px; }
+  p { line-height: 1.7; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px 0; }
+  th { background: #1a3a5c; color: #fff; padding: 9px 12px; text-align: left; font-size: 13px; }
+  td { padding: 8px 12px; border-bottom: 1px solid #ddd; font-size: 13px; }
+  tr:nth-child(even) { background: #f5f8fc; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .box { background: #f0f6ff; border: 1px solid #b3d0f5; border-radius: 6px; padding: 14px 18px; margin: 14px 0; }
+  .alert { background: #fff8e6; border: 1px solid #ffd591; border-radius: 6px; padding: 14px 18px; margin: 14px 0; }
+  .green { color: #237804; font-weight: bold; }
+  ul { padding-left: 22px; margin-bottom: 10px; }
+  li { line-height: 1.8; }
+  .divider { border: none; border-top: 1px solid #ddd; margin: 30px 0; }
+  .header-meta { color: #666; font-size: 13px; margin-bottom: 30px; }
+  @media print {
+    body { padding: 20px; }
+    h2 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Sistema Esteira Suporte — Documentação Técnica</h1>
+<p class="header-meta">Data de criação: 17 de junho de 2026 &nbsp;|&nbsp; Responsável: Helion Correa</p>
+
+<hr class="divider">
+
+<h2>1. Visão Geral do Sistema</h2>
+<p>Sistema web interno para gerenciamento de esteira de suporte imobiliário. Permite que a equipe acompanhe processos em etapas, com controle de acesso por usuário e painel administrativo.</p>
+
+<table>
+  <tr><th>Item</th><th>Detalhe</th></tr>
+  <tr><td>Nome do projeto</td><td>Esteira Suporte</td></tr>
+  <tr><td>Usuários previstos</td><td>6 a 8 pessoas</td></tr>
+  <tr><td>Tipo</td><td>Sistema web interno</td></tr>
+  <tr><td>Ambiente</td><td>Cloud (Render)</td></tr>
+</table>
+
+<hr class="divider">
+
+<h2>2. Acesso ao Sistema (Produção)</h2>
+
+<div class="box">
+  <h3>🌐 Frontend (Interface do usuário)</h3>
+  <p><strong>URL:</strong> <code>https://metro-front-tuna.onrender.com</code></p>
+  <p>Essa é a URL que todos os usuários devem acessar para usar o sistema.</p>
+</div>
+
+<div class="box">
+  <h3>⚙️ Backend (API)</h3>
+  <p><strong>URL:</strong> <code>https://projeto-esteira-suporte.onrender.com</code></p>
+  <p>Responsável por toda a lógica do sistema, autenticação e banco de dados. Não é acessado diretamente pelos usuários.</p>
+</div>
+
+<div class="alert">
+  <strong>⚠️ Atenção — Plano Gratuito:</strong> O sistema usa o plano Free do Render. Após 15 minutos sem acesso, o servidor "dorme" e pode demorar até 1 minuto para acordar na primeira visita do dia.
+</div>
+
+<hr class="divider">
+
+<h2>3. Logins do Sistema</h2>
+
+<table>
+  <tr><th>Usuário</th><th>E-mail</th><th>Senha</th><th>Perfil</th><th>Acesso</th></tr>
+  <tr><td>Helion Correa (Administrador)</td><td><code>helioncorrea13@gmail.com</code></td><td><code>JESUSSALVA</code></td><td>ADMIN</td><td>Ambas as abas (Usuário e Administrador)</td></tr>
+  <tr><td>Admin padrão do sistema</td><td><code>admin@metro.com</code></td><td><code>admin123</code></td><td>ADMIN</td><td>Ambas as abas</td></tr>
+</table>
+
+<p>Para criar novos usuários, acesse a aba <strong>Administrador</strong> no login e navegue até a tela de gerenciamento de usuários (<code>/usuarios</code>).</p>
+
+<hr class="divider">
+
+<h2>4. Repositório no GitHub</h2>
+
+<div class="box">
+  <p><strong>Repositório:</strong> <code>https://github.com/heliom13/projeto-esteira-suporte</code></p>
+  <p><strong>Conta GitHub:</strong> <code>heliom13</code></p>
+  <p><strong>Branch principal:</strong> <code>master</code></p>
+  <p>O repositório contém os dois projetos juntos (monorepo):</p>
+  <ul>
+    <li><code>metro-api-main/</code> — Backend (Spring Boot)</li>
+    <li><code>metro-front-main/</code> — Frontend (React)</li>
+  </ul>
+</div>
+
+<p><strong>Auto-deploy:</strong> Qualquer alteração enviada para o branch <code>master</code> dispara automaticamente um novo deploy no Render.</p>
+
+<hr class="divider">
+
+<h2>5. Infraestrutura — Render</h2>
+
+<table>
+  <tr><th>Serviço</th><th>Nome no Render</th><th>Tipo</th><th>Plano</th><th>Região</th></tr>
+  <tr><td>Frontend</td><td><code>metro-front</code></td><td>Static Site</td><td>Free</td><td>Global (CDN)</td></tr>
+  <tr><td>Backend</td><td><code>projeto-esteira-suporte</code></td><td>Web Service (Docker)</td><td>Free</td><td>Oregon (US West)</td></tr>
+  <tr><td>Banco de dados</td><td><code>Esteria Suporte</code></td><td>PostgreSQL</td><td>Free</td><td>Oregon (US West)</td></tr>
+</table>
+
+<div class="alert">
+  <strong>⚠️ Banco de dados Free expira em 17 de julho de 2026.</strong> Antes dessa data, será necessário fazer upgrade para o plano pago (Basic — $6/mês) ou exportar os dados e recriar o banco.
+</div>
+
+<h3>Variáveis de Ambiente do Backend</h3>
+<table>
+  <tr><th>Variável</th><th>Valor</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td><code>jdbc:postgresql://dpg-d8p35o1194ac738sv430-a/esteira</code></td></tr>
+  <tr><td><code>DATABASE_USERNAME</code></td><td><code>esteira_user</code></td></tr>
+  <tr><td><code>DATABASE_PASSWORD</code></td><td><em>(salvo no Render — não compartilhar)</em></td></tr>
+  <tr><td><code>DATABASE_DRIVER</code></td><td><code>org.postgresql.Driver</code></td></tr>
+  <tr><td><code>H2_CONSOLE</code></td><td><code>false</code></td></tr>
+</table>
+
+<h3>Variáveis de Ambiente do Frontend</h3>
+<table>
+  <tr><th>Variável</th><th>Valor</th></tr>
+  <tr><td><code>REACT_APP_API_URL</code></td><td><code>https://projeto-esteira-suporte.onrender.com</code></td></tr>
+</table>
+
+<hr class="divider">
+
+<h2>6. Stack Tecnológico</h2>
+
+<table>
+  <tr><th>Camada</th><th>Tecnologia</th><th>Versão</th></tr>
+  <tr><td>Backend — linguagem</td><td>Kotlin</td><td>JVM 17</td></tr>
+  <tr><td>Backend — framework</td><td>Spring Boot</td><td>2.7.0</td></tr>
+  <tr><td>Backend — build</td><td>Gradle</td><td>7.4.1</td></tr>
+  <tr><td>Backend — autenticação</td><td>JWT + Spring Security</td><td>—</td></tr>
+  <tr><td>Backend — container</td><td>Docker (eclipse-temurin:17)</td><td>—</td></tr>
+  <tr><td>Frontend — framework</td><td>React</td><td>17</td></tr>
+  <tr><td>Frontend — linguagem</td><td>TypeScript</td><td>—</td></tr>
+  <tr><td>Frontend — UI</td><td>Ant Design</td><td>4.18.7</td></tr>
+  <tr><td>Frontend — roteamento</td><td>React Router</td><td>v6</td></tr>
+  <tr><td>Banco de dados</td><td>PostgreSQL (produção) / H2 (local)</td><td>18 / —</td></tr>
+</table>
+
+<hr class="divider">
+
+<h2>7. Como Rodar Localmente</h2>
+
+<h3>Pré-requisitos</h3>
+<ul>
+  <li>Java 17 instalado</li>
+  <li>Node.js instalado</li>
+</ul>
+
+<h3>Backend</h3>
+<p>Abra um terminal na pasta <code>metro-api-main</code> e execute:</p>
+<p><code>.\gradlew.bat bootRun</code></p>
+<p>O backend sobe em <code>http://localhost:8080</code> usando banco H2 em memória (sem precisar de PostgreSQL instalado).</p>
+
+<h3>Frontend</h3>
+<p>Abra um terminal na pasta <code>metro-front-main</code> e execute:</p>
+<p><code>npm install --legacy-peer-deps</code> (apenas na primeira vez)</p>
+<p><code>npm start</code></p>
+<p>O frontend abre automaticamente em <code>http://localhost:3000</code>.</p>
+
+<div class="alert">
+  <strong>Atenção:</strong> Localmente o sistema usa banco H2 em memória. Os dados são perdidos ao reiniciar o backend. O usuário <code>admin@metro.com / admin123</code> e <code>helioncorrea13@gmail.com / JESUSSALVA</code> são criados automaticamente ao iniciar.
+</div>
+
+<hr class="divider">
+
+<h2>8. Arquivos Importantes</h2>
+
+<table>
+  <tr><th>Arquivo</th><th>Localização</th><th>Para que serve</th></tr>
+  <tr><td><code>application.yml</code></td><td><code>metro-api-main/src/main/resources/</code></td><td>Configurações do banco e ambiente</td></tr>
+  <tr><td><code>DataInitializer.kt</code></td><td><code>metro-api-main/src/main/kotlin/.../configs/</code></td><td>Cria usuários padrão ao iniciar</td></tr>
+  <tr><td><code>Dockerfile</code></td><td><code>metro-api-main/</code></td><td>Container do backend para deploy</td></tr>
+  <tr><td><code>api.js</code></td><td><code>metro-front-main/src/services/</code></td><td>URL da API (localhost ou produção)</td></tr>
+  <tr><td><code>index.tsx</code> (login)</td><td><code>metro-front-main/src/pages/login/</code></td><td>Tela de login com abas Usuário/Administrador</td></tr>
+</table>
+
+<hr class="divider">
+
+<h2>9. Como Fazer Deploy de Alterações</h2>
+
+<ol style="line-height:2.2; padding-left:22px;">
+  <li>Faça a alteração no código localmente</li>
+  <li>Abra o terminal na pasta <code>Projeto Esteira Suporte</code></li>
+  <li>Execute: <code>git add .</code></li>
+  <li>Execute: <code>git commit -m "descrição da alteração"</code></li>
+  <li>Execute: <code>git push origin master</code></li>
+  <li>O Render detecta automaticamente e faz o deploy (aguarde 5-10 min para o backend)</li>
+</ol>
+
+<hr class="divider">
+
+<h2>10. Contatos e Acessos</h2>
+
+<table>
+  <tr><th>Plataforma</th><th>Conta</th></tr>
+  <tr><td>GitHub</td><td><code>heliom13</code> (helioncorrea13@gmail.com)</td></tr>
+  <tr><td>Render</td><td>helioncorrea13@gmail.com</td></tr>
+</table>
+
+<hr class="divider">
+
+<p style="text-align:center; color:#999; margin-top:30px; font-size:12px;">Documento gerado em 17/06/2026 — Sistema Esteira Suporte</p>
+
+</body>
+</html>
