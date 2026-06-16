@@ -1,7 +1,7 @@
-FROM gradle:jdk17 AS builder
+FROM eclipse-temurin:17-jdk-jammy AS builder
 WORKDIR /home/root/build/
 COPY . .
-RUN gradle build -x test
+RUN chmod +x gradlew && ./gradlew build -x test
 
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app/
