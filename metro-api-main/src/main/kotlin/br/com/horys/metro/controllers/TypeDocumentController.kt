@@ -2,8 +2,10 @@ package br.com.horys.metro.controllers
 
 import br.com.horys.metro.exceptions.BusinessException
 import br.com.horys.metro.models.TypeDocument
+import br.com.horys.metro.repositories.StepDocumentRepository
 import br.com.horys.metro.repositories.TypeDocumentRepository
 import org.springframework.data.domain.Sort
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -17,7 +19,8 @@ import javax.validation.constraints.NotBlank
 @RestController
 @RequestMapping("/v1/typesDocument")
 class TypeDocumentController(
-    private val typeDocumentRepository: TypeDocumentRepository
+    private val typeDocumentRepository: TypeDocumentRepository,
+    private val stepDocumentRepository: StepDocumentRepository
 ) {
 
     @GetMapping
@@ -51,6 +54,15 @@ class TypeDocumentController(
                 description = request.description
             )
         )
+    }
+
+    @DeleteMapping("/{id}")
+    fun delete(@PathVariable id: Long) {
+        typeDocumentRepository.findById(id).orElseThrow { BusinessException("Tipo de documento não encontrado") }
+        if (stepDocumentRepository.existsByTypeDocument_IdAndDeletedFalse(id)) {
+            throw BusinessException("Não é possível excluir: tipo de documento está em uso em etapas ativas")
+        }
+        typeDocumentRepository.deleteById(id)
     }
 
     class TypeDocumentRequest(

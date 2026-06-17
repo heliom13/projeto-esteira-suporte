@@ -9,6 +9,7 @@ import {
   Col,
   Form,
   Input,
+  Popconfirm,
   Row,
   Space,
   Spin,
@@ -35,6 +36,25 @@ const Documents = () => {
   const [loading, setLoading] = useState(false);
   const [documentsList, setDocumentsList] = useState([]);
   const navigate = useNavigate();
+
+  const handleDelete = (id: number) => {
+    setLoading(true);
+    DocumentsService.deleteDocument(id)
+      .then(() => {
+        onNotification("success", {
+          message: "Sucesso",
+          description: "Documento excluído com sucesso",
+        });
+        fetchDocuments();
+      })
+      .catch(() => {
+        setLoading(false);
+        onNotification("error", {
+          message: "Erro",
+          description: "Não foi possível excluir o documento",
+        });
+      });
+  };
 
   const fetchDocuments = useCallback(() => {
     setLoading(true);
@@ -71,7 +91,14 @@ const Documents = () => {
             style={{ color: "#FF8C00" }}
             onClick={() => navigate(`atualizar/${r.id}`)}
           />
-          <DeleteOutlined style={{ color: "#B22222" }} />
+          <Popconfirm
+            title="Deseja excluir este documento?"
+            onConfirm={() => handleDelete(r.id)}
+            okText="Sim"
+            cancelText="Não"
+          >
+            <DeleteOutlined style={{ color: "#B22222" }} />
+          </Popconfirm>
         </Space>
       ),
     },

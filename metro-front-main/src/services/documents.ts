@@ -19,4 +19,8 @@ export class DocumentsService {
       description: data.description
     })
   }
+
+  static async deleteDocument(id: number) {
+    return api.delete(`/typesDocument/${id}`)
+  }
 }
