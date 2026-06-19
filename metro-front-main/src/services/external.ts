@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const apiExterno = axios.create({
-    baseURL: "https://metro-app-fm78p.ondigitalocean.app/v1",
+    baseURL: "https://projeto-esteira-suporte.onrender.com/v1",
     // baseURL: "http://localhost:8080/v1",
 })
 
