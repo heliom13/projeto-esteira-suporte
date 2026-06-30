@@ -27,6 +27,7 @@ import Home from "../pages/home";
 import ForgotPassword from "../pages/login/edit";
 import EndProcess from "../pages/process/endProcess";
 import ProcessInvoice from "../pages/process/invoice";
+import Board from "../pages/process/board";
 import Proposal from "../pages/proposal/ProposalList"
 import CreateProposal from "../pages/proposal/create"
 import RoleBasedRoute from "./RoleBasedRoute";
@@ -56,6 +57,7 @@ export default function AppRoutes() {
                 <Route element={<PrivateRoute/>}>
                     <Route element={<MainLayout/>}>
                         <Route path="/" element={<Home/>}/>
+                        <Route path="esteira" element={<Board/>}/>
                         <Route path="bancos" element={<RoleBasedRoute requiredRoles={["ADMIN", "ANALYST"]}/>}>
                             <Route path="" element={<Flows/>}/>
                             <Route path="cadastrar" element={<FlowForm/>}/>

@@ -1,5 +1,5 @@
 // src/components/menu/index.tsx
-import {LogoutOutlined} from "@ant-design/icons";
+import {AppstoreOutlined, LogoutOutlined} from "@ant-design/icons";
 import {Menu} from "antd";
 import {Link, useNavigate} from "react-router-dom";
 import {useAuth} from "../../contexts/AuthContext";
@@ -9,6 +9,12 @@ export const SideMenu = () => {
     const {user, isAuthenticated, hasAnyRole, logout} = useAuth();
 
     const menuItems = [
+        {
+            key: "0",
+            label: <Link to={"esteira"}> Esteira de Processos</Link>,
+            icon: <AppstoreOutlined />,
+            roles: ["ADMIN", "ANALYST", "PROCESSOR", "SECRETARY"]
+        },
         {
             key: "1",
             label: (
