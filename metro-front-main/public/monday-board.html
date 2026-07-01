@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Board Monday — Esteira</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+
+    /* BUTTONS */
+    .btn {
+      padding: 6px 16px; border-radius: 6px; font-size: 14px; cursor: pointer;
+      border: none; font-weight: 500; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: #4762EA; color: #fff; }
+    .btn-primary:hover { background: #3451d1; }
+    .btn-default { background: #fff; color: #333; border: 1px solid #d9d9d9; }
+    .btn-default:hover { border-color: #4762EA; color: #4762EA; }
+    .btn-success { background: #52c41a; color: #fff; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+    /* BOARD TABLE */
+    .board-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #f0f0f0; }
+    table { border-collapse: collapse; min-width: 100%; }
+    thead tr { background: #fafafa; }
+    th {
+      padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600;
+      color: #555; border-bottom: 1px solid #f0f0f0; white-space: nowrap;
+      position: relative; user-select: none;
+    }
+    th .col-icon { margin-right: 6px; font-size: 12px; opacity: 0.6; }
+    th .col-menu {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      opacity: 0; cursor: pointer; color: #999; font-size: 16px;
+      transition: opacity 0.2s;
+    }
+    th:hover .col-menu { opacity: 1; }
+    th:hover { background: #f0f5ff; }
+
+    /* DRAG HANDLE */
+    .drag-handle {
+      display: inline-flex; align-items: center;
+      opacity: 0; transition: opacity 0.2s;
+      margin-left: 6px; vertical-align: middle;
+      cursor: grab; font-size: 14px; color: #4762EA;
+      user-select: none;
+    }
+    th:hover .drag-handle { opacity: 1; }
+    .drag-handle:active { cursor: grabbing; }
+    th.dragging { opacity: 0.4; background: #e6eeff !important; }
+    th.drag-over { border-left: 3px solid #4762EA; background: #f0f5ff !important; }
+
+    td {
+      padding: 10px 16px; font-size: 13px; color: #333;
+      border-bottom: 1px solid #f5f5f5; white-space: nowrap;
+    }
+    tr:hover td { background: #fafcff; }
+    tr:last-child td { border-bottom: none; }
+
+    /* STATUS BADGES */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .badge:hover { opacity: 0.85; }
+    .badge-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .badge-orange { background: #fff7e6; color: #d46b08; }
+    .badge-orange .badge-dot { background: #fa8c16; }
+    .badge-blue { background: #e6f4ff; color: #0958d9; }
+    .badge-blue .badge-dot { background: #1677ff; }
+    .badge-green { background: #f6ffed; color: #389e0d; }
+    .badge-green .badge-dot { background: #52c41a; }
+    .badge-red { background: #fff1f0; color: #cf1322; }
+    .badge-red .badge-dot { background: #ff4d4f; }
+    .badge-purple { background: #f9f0ff; color: #531dab; }
+    .badge-purple .badge-dot { background: #722ed1; }
+
+    /* EDITABLE CELL */
+    .cell-edit {
+      padding: 2px 6px; border-radius: 4px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .cell-edit:hover { background: #f0f5ff; outline: 1px solid #4762EA; }
+
+    /* ADD COLUMN BTN */
+    .add-col-th {
+      padding: 12px 16px; cursor: pointer; color: #4762EA;
+      font-size: 13px; font-weight: 500; white-space: nowrap;
+      border-bottom: 1px solid #f0f0f0; background: #fafafa;
+    }
+    .add-col-th:hover { background: #f0f5ff; }
+
+    /* ADD ROW */
+    .add-row td {
+      color: #4762EA; cursor: pointer; font-size: 13px;
+      padding: 10px 16px; border-top: 1px dashed #d9d9d9;
+    }
+    .add-row:hover td { background: #f0f5ff; }
+
+    /* MODAL OVERLAY */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #fff; border-radius: 10px; padding: 24px;
+      width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      transform: translateY(-20px); transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-title { font-size: 16px; font-weight: 600; color: #222; margin-bottom: 16px; }
+    .modal-subtitle { font-size: 12px; color: #888; margin-bottom: 12px; }
+
+    .col-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .col-type-item {
+      border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 12px;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+    }
+    .col-type-item:hover { border-color: #4762EA; background: #f0f5ff; }
+    .col-type-item.selected { border-color: #4762EA; background: #f0f5ff; }
+    .col-type-icon { font-size: 20px; }
+    .col-type-label { font-size: 13px; font-weight: 500; color: #333; }
+    .col-type-desc { font-size: 11px; color: #888; }
+
+    .modal-input {
+      width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 14px; margin-bottom: 12px; margin-top: 4px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .modal-input:focus { border-color: #4762EA; box-shadow: 0 0 0 2px rgba(71,98,234,0.1); }
+    .modal-label { font-size: 13px; color: #555; font-weight: 500; margin-bottom: 4px; display: block; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+    /* STATUS DROPDOWN */
+    .status-dropdown {
+      position: absolute; background: #fff; border: 1px solid #e8e8e8;
+      border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      z-index: 200; min-width: 160px; padding: 6px;
+      display: none;
+    }
+    .status-dropdown.open { display: block; }
+    .status-option {
+      padding: 8px 12px; cursor: pointer; border-radius: 6px;
+      font-size: 13px; display: flex; align-items: center; gap: 8px;
+    }
+    .status-option:hover { background: #f5f5f5; }
+
+    /* STATS ROW */
+    .stats-row { display: flex; gap: 12px; margin-bottom: 20px; }
+    .stat-card {
+      flex: 1; background: #fff; border-radius: 8px; padding: 16px 20px;
+      border: 1px solid #f0f0f0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .stat-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .stat-value { font-size: 22px; font-weight: 700; color: #222; }
+    .stat-blue { border-top: 3px solid #4762EA; }
+    .stat-orange { border-top: 3px solid #fa8c16; }
+    .stat-green { border-top: 3px solid #52c41a; }
+    .stat-red { border-top: 3px solid #ff4d4f; }
+
+    /* SEARCH */
+    .search-input {
+      padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; width: 220px; outline: none;
+    }
+    .search-input:focus { border-color: #4762EA; }
+
+    /* PRIORITY DOT */
+    .priority { display: flex; align-items: center; gap: 6px; }
+    .p-high { color: #ff4d4f; font-weight: 600; }
+    .p-med { color: #fa8c16; font-weight: 600; }
+    .p-low { color: #52c41a; font-weight: 600; }
+
+    /* AVATAR */
+    .avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .av-blue { background: #4762EA; }
+    .av-green { background: #52c41a; }
+    .av-orange { background: #fa8c16; }
+    .cell-person { display: flex; align-items: center; gap: 8px; }
+
+    /* PAGE HEADER */
+    .page-title { color: #4762EA; font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .toolbar-left { display: flex; gap: 8px; }
+    .content-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    th { min-width: 100px; }
+  </style>
+</head>
+<body>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card stat-blue">
+      <div class="stat-label">Total de Processos</div>
+      <div class="stat-value">12</div>
+    </div>
+    <div class="stat-card stat-orange">
+      <div class="stat-label">Em Andamento</div>
+      <div class="stat-value">5</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-label">Concluídos</div>
+      <div class="stat-value">4</div>
+    </div>
+    <div class="stat-card stat-red">
+      <div class="stat-label">Atrasados</div>
+      <div class="stat-value">3</div>
+    </div>
+  </div>
+
+  <!-- BOARD CARD -->
+  <div class="content-card">
+    <div class="page-title">⚡ Processos — Visualização Board</div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" placeholder="🔍 Pesquisar processo..." />
+        <button class="btn btn-default">⬇ Filtrar</button>
+        <button class="btn btn-default">↕ Ordenar</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="openModal()">＋ Nova coluna</button>
+        <button class="btn btn-success">＋ Novo processo</button>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:32px;"><input type="checkbox" /></th>
+            <th>
+              <span class="col-icon">📋</span>Processo
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th>
+              <span class="col-icon">👤</span>Cliente
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th>
+              <span class="col-icon">🏠</span>Imóvel
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th>
+              <span class="col-icon">📅</span>Prazo
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th>
+              <span class="col-icon">💰</span>Valor (R$)
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th>
+              <span class="col-icon">⚡</span>Status
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th>
+              <span class="col-icon">🎯</span>Prioridade
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th>
+              <span class="col-icon">👷</span>Responsável
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th>
+              <span class="col-icon">📝</span>Observações
+              <span class="drag-handle" title="Arrastar para mover coluna">⇔</span>
+              <span class="col-menu">⋮</span>
+            </th>
+            <th class="add-col-th" onclick="openModal()">＋ Coluna</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="checkbox" /></td>
+            <td><span class="cell-edit">#001 — Compra Apto Bela Vista</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-blue">JS</span>
+                <span class="cell-edit">João Silva</span>
+              </div>
+            </td>
+            <td><span class="cell-edit">Apto 72m² — Centro</span></td>
+            <td><span class="cell-edit" style="color:#fa8c16;">⚠ 20/06/2026</span></td>
+            <td><span class="cell-edit">R$ 350.000</span></td>
+            <td>
+              <div style="position:relative;" class="tooltip">
+                <span class="badge badge-orange" onclick="toggleStatus(this)">
+                  <span class="badge-dot"></span>Em Andamento
+                </span>
+                <div class="status-dropdown">
+                  <div class="status-option"><span class="badge badge-orange" style="pointer-events:none;"><span class="badge-dot"></span>Em Andamento</span></div>
+                  <div class="status-option"><span class="badge badge-blue" style="pointer-events:none;"><span class="badge-dot"></span>Aguardando Doc.</span></div>
+                  <div class="status-option"><span class="badge badge-green" style="pointer-events:none;"><span class="badge-dot"></span>Concluído</span></div>
+                  <div class="status-option"><span class="badge badge-red" style="pointer-events:none;"><span class="badge-dot"></span>Cancelado</span></div>
+                  <div class="status-option"><span class="badge badge-purple" style="pointer-events:none;"><span class="badge-dot"></span>Em Análise</span></div>
+                </div>
+              </div>
+            </td>
+            <td><span class="p-high">▲ Alta</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-orange">HC</span>
+                <span>Helion Correa</span>
+              </div>
+            </td>
+            <td><span class="cell-edit" style="color:#888;">Aguard. ass. contrato</span></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" /></td>
+            <td><span class="cell-edit">#002 — Financiamento Casa Jardins</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-green">ML</span>
+                <span class="cell-edit">Maria Lima</span>
+              </div>
+            </td>
+            <td><span class="cell-edit">Casa 150m² — Jardins</span></td>
+            <td><span class="cell-edit">25/06/2026</span></td>
+            <td><span class="cell-edit">R$ 680.000</span></td>
+            <td>
+              <div style="position:relative;" class="tooltip">
+                <span class="badge badge-blue" onclick="toggleStatus(this)">
+                  <span class="badge-dot"></span>Aguardando Doc.
+                </span>
+                <div class="status-dropdown">
+                  <div class="status-option"><span class="badge badge-orange" style="pointer-events:none;"><span class="badge-dot"></span>Em Andamento</span></div>
+                  <div class="status-option"><span class="badge badge-blue" style="pointer-events:none;"><span class="badge-dot"></span>Aguardando Doc.</span></div>
+                  <div class="status-option"><span class="badge badge-green" style="pointer-events:none;"><span class="badge-dot"></span>Concluído</span></div>
+                  <div class="status-option"><span class="badge badge-red" style="pointer-events:none;"><span class="badge-dot"></span>Cancelado</span></div>
+                  <div class="status-option"><span class="badge badge-purple" style="pointer-events:none;"><span class="badge-dot"></span>Em Análise</span></div>
+                </div>
+              </div>
+            </td>
+            <td><span class="p-med">● Média</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-blue">HC</span>
+                <span>Helion Correa</span>
+              </div>
+            </td>
+            <td><span class="cell-edit" style="color:#888;">Docs enviados ao banco</span></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" /></td>
+            <td><span class="cell-edit">#003 — Aluguel Sala Comercial</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-orange">PC</span>
+                <span class="cell-edit">Pedro Costa</span>
+              </div>
+            </td>
+            <td><span class="cell-edit">Sala 45m² — Vila Olímpia</span></td>
+            <td><span class="cell-edit" style="color:#52c41a;">✓ 30/06/2026</span></td>
+            <td><span class="cell-edit">R$ 4.500/mês</span></td>
+            <td>
+              <div style="position:relative;" class="tooltip">
+                <span class="badge badge-green" onclick="toggleStatus(this)">
+                  <span class="badge-dot"></span>Concluído
+                </span>
+                <div class="status-dropdown">
+                  <div class="status-option"><span class="badge badge-orange" style="pointer-events:none;"><span class="badge-dot"></span>Em Andamento</span></div>
+                  <div class="status-option"><span class="badge badge-blue" style="pointer-events:none;"><span class="badge-dot"></span>Aguardando Doc.</span></div>
+                  <div class="status-option"><span class="badge badge-green" style="pointer-events:none;"><span class="badge-dot"></span>Concluído</span></div>
+                  <div class="status-option"><span class="badge badge-red" style="pointer-events:none;"><span class="badge-dot"></span>Cancelado</span></div>
+                  <div class="status-option"><span class="badge badge-purple" style="pointer-events:none;"><span class="badge-dot"></span>Em Análise</span></div>
+                </div>
+              </div>
+            </td>
+            <td><span class="p-low">▼ Baixa</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-green">ML</span>
+                <span>Maria Lima</span>
+              </div>
+            </td>
+            <td><span class="cell-edit" style="color:#888;">—</span></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" /></td>
+            <td><span class="cell-edit">#004 — Permuta Apto x Casa</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-blue">AF</span>
+                <span class="cell-edit">Ana Ferreira</span>
+              </div>
+            </td>
+            <td><span class="cell-edit">Apto 90m² — Moema</span></td>
+            <td><span class="cell-edit" style="color:#ff4d4f;">⚠ 15/06/2026</span></td>
+            <td><span class="cell-edit">R$ 520.000</span></td>
+            <td>
+              <div style="position:relative;" class="tooltip">
+                <span class="badge badge-red" onclick="toggleStatus(this)">
+                  <span class="badge-dot"></span>Cancelado
+                </span>
+                <div class="status-dropdown">
+                  <div class="status-option"><span class="badge badge-orange" style="pointer-events:none;"><span class="badge-dot"></span>Em Andamento</span></div>
+                  <div class="status-option"><span class="badge badge-blue" style="pointer-events:none;"><span class="badge-dot"></span>Aguardando Doc.</span></div>
+                  <div class="status-option"><span class="badge badge-green" style="pointer-events:none;"><span class="badge-dot"></span>Concluído</span></div>
+                  <div class="status-option"><span class="badge badge-red" style="pointer-events:none;"><span class="badge-dot"></span>Cancelado</span></div>
+                  <div class="status-option"><span class="badge badge-purple" style="pointer-events:none;"><span class="badge-dot"></span>Em Análise</span></div>
+                </div>
+              </div>
+            </td>
+            <td><span class="p-high">▲ Alta</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-orange">HC</span>
+                <span>Helion Correa</span>
+              </div>
+            </td>
+            <td><span class="cell-edit" style="color:#888;">Cliente desistiu</span></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" /></td>
+            <td><span class="cell-edit">#005 — Compra Terreno Alphaville</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-green">RS</span>
+                <span class="cell-edit">Roberto Santos</span>
+              </div>
+            </td>
+            <td><span class="cell-edit">Terreno 600m² — Alphaville</span></td>
+            <td><span class="cell-edit">10/07/2026</span></td>
+            <td><span class="cell-edit">R$ 1.200.000</span></td>
+            <td>
+              <div style="position:relative;" class="tooltip">
+                <span class="badge badge-purple" onclick="toggleStatus(this)">
+                  <span class="badge-dot"></span>Em Análise
+                </span>
+                <div class="status-dropdown">
+                  <div class="status-option"><span class="badge badge-orange" style="pointer-events:none;"><span class="badge-dot"></span>Em Andamento</span></div>
+                  <div class="status-option"><span class="badge badge-blue" style="pointer-events:none;"><span class="badge-dot"></span>Aguardando Doc.</span></div>
+                  <div class="status-option"><span class="badge badge-green" style="pointer-events:none;"><span class="badge-dot"></span>Concluído</span></div>
+                  <div class="status-option"><span class="badge badge-red" style="pointer-events:none;"><span class="badge-dot"></span>Cancelado</span></div>
+                  <div class="status-option"><span class="badge badge-purple" style="pointer-events:none;"><span class="badge-dot"></span>Em Análise</span></div>
+                </div>
+              </div>
+            </td>
+            <td><span class="p-med">● Média</span></td>
+            <td>
+              <div class="cell-person">
+                <span class="avatar av-blue">HC</span>
+                <span>Helion Correa</span>
+              </div>
+            </td>
+            <td><span class="cell-edit" style="color:#888;">Análise jurídica</span></td>
+          </tr>
+          <tr class="add-row">
+            <td colspan="11">＋ Adicionar processo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:12px; font-size:12px; color:#888;">
+      Mostrando 5 de 12 processos · <a href="#" style="color:#4762EA;">Ver todos</a>
+    </div>
+  </div>
+
+<!-- MODAL NOVA COLUNA -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" style="position:relative;">
+    <div class="modal-title">＋ Nova Coluna</div>
+
+    <label class="modal-label">Nome da coluna</label>
+    <input class="modal-input" type="text" placeholder="Ex: Data de Vistoria, Número de Contrato..." />
+
+    <div class="modal-subtitle">Escolha o tipo de dado:</div>
+    <div class="col-type-grid">
+      <div class="col-type-item selected" onclick="selectType(this)">
+        <span class="col-type-icon">📝</span>
+        <div>
+          <div class="col-type-label">Texto</div>
+          <div class="col-type-desc">Texto livre</div>
+        </div>
+      </div>
+      <div class="col-type-item" onclick="selectType(this)">
+        <span class="col-type-icon">🔢</span>
+        <div>
+          <div class="col-type-label">Número</div>
+          <div class="col-type-desc">Valores, R$</div>
+        </div>
+      </div>
+      <div class="col-type-item" onclick="selectType(this)">
+        <span class="col-type-icon">📅</span>
+        <div>
+          <div class="col-type-label">Data</div>
+          <div class="col-type-desc">Prazo, entrega</div>
+        </div>
+      </div>
+      <div class="col-type-item" onclick="selectType(this)">
+        <span class="col-type-icon">⚡</span>
+        <div>
+          <div class="col-type-label">Etapas</div>
+          <div class="col-type-desc">Status pré-definidos</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal()">Adicionar coluna</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openModal() {
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+  function selectType(el) {
+    document.querySelectorAll('.col-type-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  let dragSrcIdx = null;
+  document.querySelectorAll('thead th').forEach((th, i) => {
+    if (i === 0) return;
+    const handle = th.querySelector('.drag-handle');
+    if (!handle) return;
+
+    handle.addEventListener('mousedown', () => { th.draggable = true; });
+    handle.addEventListener('mouseup',   () => { th.draggable = false; });
+
+    th.addEventListener('dragstart', e => {
+      dragSrcIdx = Array.from(th.parentElement.children).indexOf(th);
+      th.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    th.addEventListener('dragend', () => {
+      th.draggable = false;
+      th.classList.remove('dragging');
+      document.querySelectorAll('th').forEach(t => t.classList.remove('drag-over'));
+    });
+    th.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('th').forEach(t => t.classList.remove('drag-over'));
+      th.classList.add('drag-over');
+    });
+    th.addEventListener('drop', e => {
+      e.preventDefault();
+      const dropIdx = Array.from(th.parentElement.children).indexOf(th);
+      if (dragSrcIdx === null || dragSrcIdx === dropIdx) return;
+      const allThs = th.parentElement.children;
+      if (dropIdx === 0 || dropIdx === allThs.length - 1) return;
+      const table = th.closest('table');
+      Array.from(table.rows).forEach(row => {
+        const cells = Array.from(row.children);
+        const src  = cells[dragSrcIdx];
+        const dest = cells[dropIdx];
+        if (!src || !dest) return;
+        if (dragSrcIdx < dropIdx) {
+          row.insertBefore(src, dest.nextSibling);
+        } else {
+          row.insertBefore(src, dest);
+        }
+      });
+      dragSrcIdx = null;
+      document.querySelectorAll('th').forEach(t => t.classList.remove('drag-over'));
+    });
+  });
+
+  function toggleStatus(badge) {
+    const dropdown = badge.nextElementSibling;
+    const allDropdowns = document.querySelectorAll('.status-dropdown');
+    allDropdowns.forEach(d => { if (d !== dropdown) d.classList.remove('open'); });
+    dropdown.classList.toggle('open');
+    document.addEventListener('click', function handler(e) {
+      if (!badge.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        document.removeEventListener('click', handler);
+      }
+    });
+  }
+</script>
+</body>
+</html>

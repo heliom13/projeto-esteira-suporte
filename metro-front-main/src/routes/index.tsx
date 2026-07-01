@@ -35,6 +35,7 @@ import Error403 from "../pages/403/Error403";
 import Users from "../pages/users";
 import UsersCreate from "../pages/users/create";
 import UsersEdit from "../pages/users/edit";
+import MondayBoard from "../pages/monday";
 
 export default function AppRoutes() {
     return (
@@ -110,6 +111,7 @@ export default function AppRoutes() {
                             <Route path="cadastrar" element={<UsersCreate/>}/>
                             <Route path="atualizar" element={<UsersEdit/>}/>
                         </Route>
+                        <Route path="monday" element={<MondayBoard/>}/>
                     </Route>
                 </Route>
                 <Route path="403" element={<Error403/>}/>

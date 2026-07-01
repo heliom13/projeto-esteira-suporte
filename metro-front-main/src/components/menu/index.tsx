@@ -63,6 +63,11 @@ export const SideMenu = () => {
             roles: ["ADMIN"]
         },
         {
+            key: "11",
+            label: <Link to={"monday"}>📋 Board Monday</Link>,
+            roles: ["ADMIN", "ANALYST", "PROCESSOR", "SECRETARY"]
+        },
+        {
             key: "10",
             label: (
                 <span
