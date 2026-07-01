@@ -35,6 +35,11 @@ class UserService(
         return userRepository.findById(userDestiny).orElseThrow { BusinessException(USER_NOT_FOUND_MESSAGE) }
     }
 
+    fun delete(id: Long) {
+        userRepository.findById(id).orElseThrow { BusinessException(USER_NOT_FOUND_MESSAGE) }
+        userRepository.deleteById(id)
+    }
+
     fun reset(email: String, password: String) {
         val user = userRepository.findByEmail(email).orElseThrow { BusinessException("user not found") }
         userRepository.save(

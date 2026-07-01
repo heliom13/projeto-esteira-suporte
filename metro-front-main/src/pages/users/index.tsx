@@ -1,6 +1,6 @@
-import {Button, Col, Form, Input, message, Row, Select, Space, Spin, Table} from 'antd'
+import {Button, Col, Form, Input, message, Popconfirm, Row, Select, Space, Spin, Table} from 'antd'
 import {useCallback, useEffect, useState} from 'react'
-import {EditOutlined} from '@ant-design/icons'
+import {DeleteOutlined, EditOutlined} from '@ant-design/icons'
 import {useNavigate} from "react-router-dom";
 import api from "../../services/api";
 import {rowProps} from "../../utils/FormUtils";
@@ -55,17 +55,33 @@ const Users = () => {
             title: 'Ações',
             key: 'acoes',
             render: (record: UserProps) => (
-                <span>
-          <Button
-              shape="circle"
-              icon={<EditOutlined/>}
-              onClick={() => {
-                  // @ts-ignore
-                  navigate('/usuarios/atualizar', {state: record})
-              }
-              }
-          />
-        </span>
+                <Space>
+                    <Button
+                        shape="circle"
+                        icon={<EditOutlined/>}
+                        onClick={() => {
+                            // @ts-ignore
+                            navigate('/usuarios/atualizar', {state: record})
+                        }}
+                    />
+                    <Popconfirm
+                        title="Excluir usuário"
+                        description={`Tem certeza que deseja excluir "${record.name}"?`}
+                        okText="Sim, excluir"
+                        cancelText="Cancelar"
+                        okButtonProps={{danger: true}}
+                        onConfirm={() => {
+                            api.delete(`/users/${record.id}`)
+                                .then(() => {
+                                    message.success('Usuário excluído com sucesso!')
+                                    fetchData()
+                                })
+                                .catch(() => message.error('Erro ao excluir usuário'))
+                        }}
+                    >
+                        <Button shape="circle" icon={<DeleteOutlined/>} danger/>
+                    </Popconfirm>
+                </Space>
             ),
         },
     ]

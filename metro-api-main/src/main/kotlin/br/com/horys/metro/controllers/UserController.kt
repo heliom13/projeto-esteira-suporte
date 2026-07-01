@@ -10,6 +10,7 @@ import br.com.horys.metro.models.User
 import br.com.horys.metro.services.UserService
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -56,5 +57,11 @@ class UserController(
     @PutMapping("/{id}")
     fun update(@Valid @RequestBody updateUserRequest: UpdateUserRequest, @PathVariable id: Long): User {
         return service.update(id, updateUserRequest)
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun delete(@PathVariable id: Long) {
+        service.delete(id)
     }
 }
