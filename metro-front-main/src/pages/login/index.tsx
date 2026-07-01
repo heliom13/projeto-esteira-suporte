@@ -76,7 +76,7 @@ const Login = () => {
                     Login
                 </Title>
                 <Tabs defaultActiveKey="usuario" centered>
-                    <Tabs.TabPane tab="Usuário" key="usuario">
+                    <Tabs.TabPane tab="👤 Usuário" key="usuario">
                         <LoginForm redirectTo="/" />
                     </Tabs.TabPane>
                     <Tabs.TabPane tab="🔐 Administrador" key="administrador">
