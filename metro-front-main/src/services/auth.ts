@@ -14,7 +14,7 @@ export class AuthService {
   }
 
   static async resetPassword(email, data) {
-    return api.put(`/users/${email}/reset`, {
+    return api.put(`/users/${encodeURIComponent(email)}/reset`, {
       password: data.password
     })
   }

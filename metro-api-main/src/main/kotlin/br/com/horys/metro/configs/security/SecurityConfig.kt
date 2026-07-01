@@ -30,7 +30,7 @@ class SecurityConfig(
             .disable()
             .authorizeRequests()
             .antMatchers(HttpMethod.POST, "/v1/users/**").permitAll()
-            .antMatchers(HttpMethod.PUT, "/v1/users/{email}/reset").permitAll()
+            .antMatchers(HttpMethod.PUT, "/v1/users/*/reset").permitAll()
             .antMatchers(HttpMethod.GET, "/v1/users/basic").permitAll()
             .antMatchers("/v1/processes/clients/**").permitAll()
             .antMatchers("/v1/processes/sellers/**").permitAll()

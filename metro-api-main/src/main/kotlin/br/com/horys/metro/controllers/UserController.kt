@@ -26,9 +26,9 @@ class UserController(
     private val service: UserService
 ) {
     //    @Secured("ROLE_$USER_ROLE_ADMIN")
-    @PutMapping("/{email}/reset")
+    @PutMapping("/{email:.+}/reset")
     fun reset(@PathVariable email: String, @RequestBody request: UserResetRequest) {
-        service.reset(email, request.password)
+        service.reset(java.net.URLDecoder.decode(email, "UTF-8"), request.password)
     }
 
     @PostMapping("/admin")
