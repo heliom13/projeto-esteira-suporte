@@ -65,8 +65,7 @@ const Users = () => {
                         }}
                     />
                     <Popconfirm
-                        title="Excluir usuário"
-                        description={`Tem certeza que deseja excluir "${record.name}"?`}
+                        title={`Excluir "${record.name}"? Esta ação não pode ser desfeita.`}
                         okText="Sim, excluir"
                         cancelText="Cancelar"
                         okButtonProps={{danger: true}}
