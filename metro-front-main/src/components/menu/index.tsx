@@ -11,55 +11,55 @@ export const SideMenu = () => {
     const menuItems = [
         {
             key: "0",
-            label: <Link to={"esteira"}> Esteira de Processos</Link>,
+            label: <Link to={"esteira"}>⚡ Esteira de Processos</Link>,
             icon: <AppstoreOutlined />,
             roles: ["ADMIN", "ANALYST", "PROCESSOR", "SECRETARY"]
         },
         {
             key: "1",
             label: (
-                <Link to={"cliente-comprador"}> Cadastro de Cliente</Link>
+                <Link to={"cliente-comprador"}>👤 Cadastro de Cliente</Link>
             ),
             roles: ["ADMIN", "ANALYST", "SECRETARY"]
         },
         {
             key: "2",
-            label: <Link to={"cliente-vendedor"}> Cadastro de Imóveis</Link>,
+            label: <Link to={"cliente-vendedor"}>🏠 Cadastro de Imóveis</Link>,
             roles: ["ADMIN", "ANALYST", "SECRETARY"]
         },
         {
             key: "3",
-            label: <Link to={"imobiliaria"}> Imobiliária/Corretor</Link>,
+            label: <Link to={"imobiliaria"}>🏢 Imobiliária/Corretor</Link>,
             roles: ["ADMIN", "ANALYST", "SECRETARY"]
         },
         {
             key: "4",
-            label: <Link to={"propostas"}> Propostas</Link>,
+            label: <Link to={"propostas"}>📄 Propostas</Link>,
             roles: ["ADMIN", "ANALYST"]
         },
         {
             key: "5",
-            label: <Link to={"processos"}> Processos</Link>,
+            label: <Link to={"processos"}>🔁 Processos</Link>,
             roles: ["ADMIN", "ANALYST", "PROCESSOR"]
         },
         {
             key: "6",
-            label: <Link to={"bancos"}> Cadastro de fluxos</Link>,
+            label: <Link to={"bancos"}>🏦 Cadastro de fluxos</Link>,
             roles: ["ADMIN", "ANALYST"]
         },
         {
             key: "7",
-            label: <Link to={"passos"}>Cadastro de Passos</Link>,
+            label: <Link to={"passos"}>🪜 Cadastro de Passos</Link>,
             roles: ["ADMIN", "ANALYST"]
         },
         {
             key: "8",
-            label: <Link to={"documentos"}> Documentos</Link>,
+            label: <Link to={"documentos"}>📁 Documentos</Link>,
             roles: ["ADMIN"]
         },
         {
             key: "9",
-            label: <Link to={"usuarios"}> Usuários</Link>,
+            label: <Link to={"usuarios"}>👥 Usuários</Link>,
             roles: ["ADMIN"]
         },
         {
@@ -77,7 +77,7 @@ export const SideMenu = () => {
                         navigate("login");
                     }}
                 >
-          Sair
+          🚪 Sair
         </span>
             ),
             icon: <LogoutOutlined/>,
