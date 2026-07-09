@@ -1,13 +1,13 @@
-// src/components/menu/index.tsx
-import {AppstoreOutlined, LogoutOutlined, PlusCircleOutlined} from "@ant-design/icons";
-import {Menu} from "antd";
-import {Link, useNavigate} from "react-router-dom";
-import {useAuth} from "../../contexts/AuthContext";
+import React, { ReactNode } from 'react';
+import { AppstoreOutlined, LogoutOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { Menu } from 'antd';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 type MenuItem = {
     key: string;
-    label: React.ReactNode;
-    icon?: React.ReactNode;
+    label: ReactNode;
+    icon?: ReactNode;
     roles: string[];
     children?: MenuItem[];
 };

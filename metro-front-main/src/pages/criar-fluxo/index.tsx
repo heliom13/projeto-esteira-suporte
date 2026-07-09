@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Col, Divider, Input, Modal, Row, Select, Space, Spin, Tag, Typography } from 'antd';
 import {
     ArrowDownOutlined,
     ArrowUpOutlined,
     CheckOutlined,
     CloseOutlined,
-    EditOutlined,
     CloudUploadOutlined,
+    EditOutlined,
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 import onNotification from '../../components/notification/notification';
 import { primaryText } from '../../styles/stylesProps';
 import api from '../../services/api';
@@ -25,6 +26,10 @@ type Step = {
 type FlowType = {
     id: number;
     description: string;
+};
+
+type ApiError = {
+    message?: string;
 };
 
 const PHASES: Record<number, string> = {
@@ -84,68 +89,84 @@ const DEFAULT_STEPS: Step[] = [
     { id: 38, fase: 5, description: 'Quitação e encerramento do processo' },
 ];
 
-const CriarFluxo = () => {
+const CriarFluxo: React.FC = () => {
     const { tipo } = useParams<{ tipo: string }>();
+
+    const storageKey = useMemo(() => `metro-fluxo-${tipo ?? 'default'}`, [tipo]);
+    const defaultName = useMemo(
+        () => (tipo === 'bancos-privados' ? 'Bancos Privados' : 'Caixa (CEF)'),
+        [tipo],
+    );
+    const title = tipo === 'bancos-privados' ? '🏦 Fluxo — Bancos Privados' : '🏛️ Fluxo — Caixa (CEF)';
+
     const [steps, setSteps] = useState<Step[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState('');
 
-    // Publicar no sistema
     const [modalVisible, setModalVisible] = useState(false);
     const [flowTypes, setFlowTypes] = useState<FlowType[]>([]);
     const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
     const [publishing, setPublishing] = useState(false);
     const [flowName, setFlowName] = useState('');
 
-    const storageKey = `metro-fluxo-${tipo ?? 'default'}`;
-    const defaultName = tipo === 'bancos-privados' ? 'Bancos Privados' : 'Caixa (CEF)';
-    const title = tipo === 'bancos-privados' ? '🏦 Fluxo — Bancos Privados' : '🏛️ Fluxo — Caixa (CEF)';
-
     useEffect(() => {
         const stored = localStorage.getItem(storageKey);
-        setSteps(stored ? JSON.parse(stored) : DEFAULT_STEPS);
+        setSteps(stored ? (JSON.parse(stored) as Step[]) : DEFAULT_STEPS);
         setEditingId(null);
         setFlowName(defaultName);
-    }, [tipo]);
+    }, [storageKey, defaultName]);
 
-    const persist = (newSteps: Step[]) => {
-        localStorage.setItem(storageKey, JSON.stringify(newSteps));
-        setSteps(newSteps);
-    };
+    const persist = useCallback(
+        (newSteps: Step[]) => {
+            localStorage.setItem(storageKey, JSON.stringify(newSteps));
+            setSteps(newSteps);
+        },
+        [storageKey],
+    );
 
-    const startEdit = (step: Step) => {
+    const startEdit = useCallback((step: Step) => {
         setEditingId(step.id);
         setEditValue(step.description);
-    };
+    }, []);
 
-    const confirmEdit = (id: number) => {
-        if (!editValue.trim()) return;
-        persist(steps.map(s => s.id === id ? { ...s, description: editValue.trim() } : s));
-        setEditingId(null);
-        onNotification('success', { message: 'Salvo', description: 'Etapa atualizada.' });
-    };
+    const cancelEdit = useCallback(() => setEditingId(null), []);
 
-    const cancelEdit = () => setEditingId(null);
+    const confirmEdit = useCallback(
+        (id: number) => {
+            const trimmed = editValue.trim();
+            if (!trimmed) return;
+            persist(steps.map(s => (s.id === id ? { ...s, description: trimmed } : s)));
+            setEditingId(null);
+            onNotification('success', { message: 'Salvo', description: 'Etapa atualizada.' });
+        },
+        [editValue, steps, persist],
+    );
 
-    const moveUp = (index: number) => {
-        if (index === 0) return;
-        const next = [...steps];
-        [next[index - 1], next[index]] = [next[index], next[index - 1]];
-        persist(next);
-    };
+    const moveUp = useCallback(
+        (index: number) => {
+            if (index === 0) return;
+            const next = [...steps];
+            [next[index - 1], next[index]] = [next[index], next[index - 1]];
+            persist(next);
+        },
+        [steps, persist],
+    );
 
-    const moveDown = (index: number) => {
-        if (index === steps.length - 1) return;
-        const next = [...steps];
-        [next[index + 1], next[index]] = [next[index], next[index + 1]];
-        persist(next);
-    };
+    const moveDown = useCallback(
+        (index: number) => {
+            if (index === steps.length - 1) return;
+            const next = [...steps];
+            [next[index + 1], next[index]] = [next[index], next[index + 1]];
+            persist(next);
+        },
+        [steps, persist],
+    );
 
-    const openPublishModal = () => {
+    const openPublishModal = useCallback(() => {
         setPublishing(false);
         setSelectedTypeId(null);
         setFlowName(defaultName);
-        api.get('/flowTypes')
+        api.get<FlowType[]>('/flowTypes')
             .then(res => {
                 setFlowTypes(res.data);
                 setModalVisible(true);
@@ -156,24 +177,28 @@ const CriarFluxo = () => {
                     description: 'Não foi possível carregar os tipos de fluxo.',
                 });
             });
-    };
+    }, [defaultName]);
 
-    const handlePublish = async () => {
+    const closeModal = useCallback(() => {
+        if (!publishing) setModalVisible(false);
+    }, [publishing]);
+
+    const handlePublish = useCallback(async () => {
         if (!selectedTypeId) {
             onNotification('error', { message: 'Atenção', description: 'Selecione um tipo de fluxo.' });
             return;
         }
-        if (!flowName.trim()) {
+        const name = flowName.trim();
+        if (!name) {
             onNotification('error', { message: 'Atenção', description: 'Informe o nome do fluxo.' });
             return;
         }
 
         setPublishing(true);
         try {
-            // Cria todos os passos no backend
             const createdStepIds: { stepId: number; order: number }[] = [];
             for (let i = 0; i < steps.length; i++) {
-                const res = await api.post('/steps', {
+                const res = await api.post<{ id: number }>('/steps', {
                     description: steps[i].description,
                     deadLine: 1,
                     requiredDocument: false,
@@ -182,9 +207,8 @@ const CriarFluxo = () => {
                 createdStepIds.push({ stepId: res.data.id, order: i + 1 });
             }
 
-            // Cria o fluxo com os passos
             await api.post('/flows', {
-                description: flowName.trim(),
+                description: name,
                 typeFlowId: selectedTypeId,
                 steps: createdStepIds,
                 hasClient: true,
@@ -194,20 +218,21 @@ const CriarFluxo = () => {
                 sendMessage: false,
             });
 
-            setPublishing(false);
             setModalVisible(false);
             onNotification('success', {
                 message: 'Fluxo publicado!',
-                description: `"${flowName}" agora aparece no seletor ao virar uma proposta em processo.`,
+                description: `"${name}" agora aparece no seletor ao virar uma proposta em processo.`,
             });
-        } catch (err: any) {
-            setPublishing(false);
+        } catch (err) {
+            const axiosError = err as AxiosError<ApiError>;
             onNotification('error', {
                 message: 'Erro ao publicar',
-                description: err?.response?.data?.message || 'Tente novamente.',
+                description: axiosError.response?.data?.message ?? 'Tente novamente.',
             });
+        } finally {
+            setPublishing(false);
         }
-    };
+    }, [selectedTypeId, flowName, steps]);
 
     return (
         <div>
@@ -218,11 +243,7 @@ const CriarFluxo = () => {
                     </Title>
                 </Col>
                 <Col>
-                    <Button
-                        type="primary"
-                        icon={<CloudUploadOutlined />}
-                        onClick={openPublishModal}
-                    >
+                    <Button type="primary" icon={<CloudUploadOutlined />} onClick={openPublishModal}>
                         Publicar no Sistema
                     </Button>
                 </Col>
@@ -231,11 +252,13 @@ const CriarFluxo = () => {
             {steps.map((step, index) => {
                 const showPhaseHeader = index === 0 || step.fase !== steps[index - 1].fase;
                 const isEditing = editingId === step.id;
+                const isFirst = index === 0;
+                const isLast = index === steps.length - 1;
 
                 return (
                     <div key={step.id}>
                         {showPhaseHeader && (
-                            <Divider orientation="left" style={{ marginTop: index === 0 ? 8 : 24 }}>
+                            <Divider orientation="left" style={{ marginTop: isFirst ? 8 : 24 }}>
                                 <Tag
                                     color={FASE_COLORS[step.fase]}
                                     style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}
@@ -268,7 +291,6 @@ const CriarFluxo = () => {
                                         onChange={e => setEditValue(e.target.value)}
                                         onPressEnter={() => confirmEdit(step.id)}
                                         autoFocus
-                                        style={{ width: '100%' }}
                                     />
                                 ) : (
                                     <Text>{step.description}</Text>
@@ -304,14 +326,14 @@ const CriarFluxo = () => {
                                             size="small"
                                             icon={<ArrowUpOutlined />}
                                             onClick={() => moveUp(index)}
-                                            disabled={index === 0}
+                                            disabled={isFirst}
                                             title="Mover para cima"
                                         />
                                         <Button
                                             size="small"
                                             icon={<ArrowDownOutlined />}
                                             onClick={() => moveDown(index)}
-                                            disabled={index === steps.length - 1}
+                                            disabled={isLast}
                                             title="Mover para baixo"
                                         />
                                     </Space>
@@ -325,9 +347,9 @@ const CriarFluxo = () => {
             <Modal
                 title="Publicar Fluxo no Sistema"
                 visible={modalVisible}
-                onCancel={() => !publishing && setModalVisible(false)}
+                onCancel={closeModal}
                 footer={[
-                    <Button key="cancel" onClick={() => setModalVisible(false)} disabled={publishing}>
+                    <Button key="cancel" onClick={closeModal} disabled={publishing}>
                         Cancelar
                     </Button>,
                     <Button key="publish" type="primary" onClick={handlePublish} loading={publishing}>
@@ -357,12 +379,14 @@ const CriarFluxo = () => {
                             value={selectedTypeId ?? undefined}
                         >
                             {flowTypes.map(ft => (
-                                <Option key={ft.id} value={ft.id}>{ft.description}</Option>
+                                <Option key={ft.id} value={ft.id}>
+                                    {ft.description}
+                                </Option>
                             ))}
                         </Select>
                         {flowTypes.length === 0 && (
                             <Text type="secondary" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
-                                Nenhum tipo encontrado. Cadastre um tipo de fluxo no banco de dados.
+                                Nenhum tipo encontrado. Execute o SQL de setup no banco de dados.
                             </Text>
                         )}
                     </div>

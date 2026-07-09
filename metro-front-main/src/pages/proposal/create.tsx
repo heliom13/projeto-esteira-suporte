@@ -268,10 +268,10 @@ const CreateProposal: React.FC = () => {
                                 precision={2}
                                 decimalSeparator=","
                                 formatter={(value) =>
-                                    `${value}`.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                                    `${value ?? ''}`.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
                                 }
                                 parser={(value) =>
-                                    Number(value!.replace(/\./g, '').replace(',', '.')) as any
+                                    parseFloat((value ?? '').replace(/\./g, '').replace(',', '.')) as 0
                                 }
                             />
                         </Form.Item>
@@ -282,8 +282,8 @@ const CreateProposal: React.FC = () => {
                                 style={{width: '100%'}}
                                 min={0}
                                 precision={0}
-                                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                                parser={(value) => Number(value!.replace(/\./g, '')) as any}
+                                formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                                parser={(value) => parseInt((value ?? '').replace(/\./g, ''), 10) as 0}
                             />
                         </Form.Item>
                     </Col>
