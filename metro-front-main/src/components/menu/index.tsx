@@ -57,7 +57,7 @@ export const SideMenu = () => {
         },
         {
             key: "criar-fluxo",
-            label: "🗂️ Criar Fluxo",
+            label: "🗂️ Fluxo",
             icon: <PlusCircleOutlined />,
             roles: ["ADMIN", "ANALYST"],
             children: [
