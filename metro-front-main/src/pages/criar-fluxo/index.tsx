@@ -196,26 +196,11 @@ const CriarFluxo: React.FC = () => {
 
         setPublishing(true);
         try {
-            const createdStepIds: { stepId: number; order: number }[] = [];
-            for (let i = 0; i < steps.length; i++) {
-                const res = await api.post<{ id: number }>('/steps', {
-                    description: steps[i].description,
-                    deadLine: 1,
-                    requiredDocument: false,
-                    documents: [],
-                });
-                createdStepIds.push({ stepId: res.data.id, order: i + 1 });
-            }
-
-            await api.post('/flows', {
+            await api.post('/flows/batch', {
                 description: name,
                 typeFlowId: selectedTypeId,
-                steps: createdStepIds,
-                hasClient: true,
-                hasProperty: false,
-                hasSellerMain: false,
-                hasSellerSecondary: false,
                 sendMessage: false,
+                steps: steps.map(s => s.description),
             });
 
             setModalVisible(false);
