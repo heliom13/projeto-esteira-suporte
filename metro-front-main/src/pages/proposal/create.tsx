@@ -264,15 +264,27 @@ const CreateProposal: React.FC = () => {
                         <Form.Item label="Valor" name="price">
                             <InputNumber
                                 style={{width: "100%"}}
-                                decimalSeparator=","
                                 prefix="R$"
                                 precision={2}
+                                decimalSeparator=","
+                                formatter={(value) =>
+                                    `${value}`.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                                }
+                                parser={(value) =>
+                                    Number(value!.replace(/\./g, '').replace(',', '.')) as any
+                                }
                             />
                         </Form.Item>
                     </Col>
                     <Col span={8}>
-                        <Form.Item label="Prazo" name="term">
-                            <InputNumber style={{width: '100%'}}/>
+                        <Form.Item label="Prazo (meses)" name="term">
+                            <InputNumber
+                                style={{width: '100%'}}
+                                min={0}
+                                precision={0}
+                                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                                parser={(value) => Number(value!.replace(/\./g, '')) as any}
+                            />
                         </Form.Item>
                     </Col>
 
