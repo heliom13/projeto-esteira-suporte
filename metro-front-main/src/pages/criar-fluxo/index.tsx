@@ -1,20 +1,29 @@
-import React, { CSSProperties, useCallback, useEffect, useState } from 'react';
-import { Button, Col, Divider, Input, Row, Space, Tag, Typography } from 'antd';
-import { CloseOutlined, EditOutlined, HolderOutlined, SaveOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Button, Col, Divider, Input, Modal, Row, Select, Space, Spin, Tag, Typography } from 'antd';
+import {
+    ArrowDownOutlined,
+    ArrowUpOutlined,
+    CheckOutlined,
+    CloseOutlined,
+    EditOutlined,
+    CloudUploadOutlined,
+} from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
-import type { DragEndEvent } from '@dnd-kit/core';
-import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import onNotification from '../../components/notification/notification';
 import { primaryText } from '../../styles/stylesProps';
+import api from '../../services/api';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 type Step = {
     id: number;
     fase: number;
+    description: string;
+};
+
+type FlowType = {
+    id: number;
     description: string;
 };
 
@@ -75,205 +84,290 @@ const DEFAULT_STEPS: Step[] = [
     { id: 38, fase: 5, description: 'Quitação e encerramento do processo' },
 ];
 
-interface SortableStepProps {
-    step: Step;
-    index: number;
-    onChange: (id: number, value: string) => void;
-}
-
-const SortableStep = ({ step, index, onChange }: SortableStepProps) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: step.id });
-
-    const style: CSSProperties = {
-        transform: CSS.Translate.toString(transform),
-        transition,
-        ...(isDragging ? { opacity: 0.85, background: '#e6f4ff', borderRadius: 6 } : {}),
-    };
-
-    return (
-        <div ref={setNodeRef} style={style}>
-            <Row
-                align="middle"
-                style={{ padding: '10px 4px', borderBottom: '1px solid #f0f0f0' }}
-                wrap={false}
-            >
-                <Col flex="32px">
-                    <span
-                        {...attributes}
-                        {...listeners}
-                        style={{ cursor: 'grab', display: 'flex', alignItems: 'center', touchAction: 'none' }}
-                    >
-                        <HolderOutlined style={{ color: '#bbb', fontSize: 18 }} />
-                    </span>
-                </Col>
-                <Col flex="38px">
-                    <Tag style={{ margin: 0, minWidth: 32, textAlign: 'center' }}>{index + 1}</Tag>
-                </Col>
-                <Col flex="auto" style={{ paddingRight: 8 }}>
-                    <Input
-                        value={step.description}
-                        onChange={e => onChange(step.id, e.target.value)}
-                        style={{ width: '100%' }}
-                    />
-                </Col>
-                <Col flex="48px" style={{ textAlign: 'right' }}>
-                    <Tag color={FASE_COLORS[step.fase]} style={{ margin: 0 }}>
-                        F{step.fase}
-                    </Tag>
-                </Col>
-            </Row>
-        </div>
-    );
-};
-
 const CriarFluxo = () => {
     const { tipo } = useParams<{ tipo: string }>();
     const [steps, setSteps] = useState<Step[]>([]);
-    const [pending, setPending] = useState<Step[]>([]);
-    const [editMode, setEditMode] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editValue, setEditValue] = useState('');
+
+    // Publicar no sistema
+    const [modalVisible, setModalVisible] = useState(false);
+    const [flowTypes, setFlowTypes] = useState<FlowType[]>([]);
+    const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
+    const [publishing, setPublishing] = useState(false);
+    const [flowName, setFlowName] = useState('');
 
     const storageKey = `metro-fluxo-${tipo ?? 'default'}`;
+    const defaultName = tipo === 'bancos-privados' ? 'Bancos Privados' : 'Caixa (CEF)';
     const title = tipo === 'bancos-privados' ? '🏦 Fluxo — Bancos Privados' : '🏛️ Fluxo — Caixa (CEF)';
 
     useEffect(() => {
         const stored = localStorage.getItem(storageKey);
         setSteps(stored ? JSON.parse(stored) : DEFAULT_STEPS);
-        setEditMode(false);
+        setEditingId(null);
+        setFlowName(defaultName);
     }, [tipo]);
 
-    const handleEdit = () => {
-        setPending([...steps]);
-        setEditMode(true);
+    const persist = (newSteps: Step[]) => {
+        localStorage.setItem(storageKey, JSON.stringify(newSteps));
+        setSteps(newSteps);
     };
 
-    const handleCancel = () => {
-        setEditMode(false);
+    const startEdit = (step: Step) => {
+        setEditingId(step.id);
+        setEditValue(step.description);
     };
 
-    const handleSave = useCallback(() => {
-        localStorage.setItem(storageKey, JSON.stringify(pending));
-        setSteps([...pending]);
-        setEditMode(false);
-        onNotification('success', {
-            message: 'Sucesso',
-            description: 'Fluxo salvo com sucesso!',
-        });
-    }, [pending, storageKey]);
+    const confirmEdit = (id: number) => {
+        if (!editValue.trim()) return;
+        persist(steps.map(s => s.id === id ? { ...s, description: editValue.trim() } : s));
+        setEditingId(null);
+        onNotification('success', { message: 'Salvo', description: 'Etapa atualizada.' });
+    };
 
-    const handleChange = useCallback((id: number, value: string) => {
-        setPending(prev => prev.map(s => s.id === id ? { ...s, description: value } : s));
-    }, []);
+    const cancelEdit = () => setEditingId(null);
 
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-    );
+    const moveUp = (index: number) => {
+        if (index === 0) return;
+        const next = [...steps];
+        [next[index - 1], next[index]] = [next[index], next[index - 1]];
+        persist(next);
+    };
 
-    const onDragEnd = ({ active, over }: DragEndEvent) => {
-        if (active.id !== over?.id) {
-            setPending(prev => {
-                const activeIndex = prev.findIndex(s => s.id === active.id);
-                const overIndex = prev.findIndex(s => s.id === (over?.id ?? -1));
-                return arrayMove(prev, activeIndex, overIndex);
+    const moveDown = (index: number) => {
+        if (index === steps.length - 1) return;
+        const next = [...steps];
+        [next[index + 1], next[index]] = [next[index], next[index + 1]];
+        persist(next);
+    };
+
+    const openPublishModal = () => {
+        setPublishing(false);
+        setSelectedTypeId(null);
+        setFlowName(defaultName);
+        api.get('/flowTypes')
+            .then(res => {
+                setFlowTypes(res.data);
+                setModalVisible(true);
+            })
+            .catch(() => {
+                onNotification('error', {
+                    message: 'Erro',
+                    description: 'Não foi possível carregar os tipos de fluxo.',
+                });
+            });
+    };
+
+    const handlePublish = async () => {
+        if (!selectedTypeId) {
+            onNotification('error', { message: 'Atenção', description: 'Selecione um tipo de fluxo.' });
+            return;
+        }
+        if (!flowName.trim()) {
+            onNotification('error', { message: 'Atenção', description: 'Informe o nome do fluxo.' });
+            return;
+        }
+
+        setPublishing(true);
+        try {
+            // Cria todos os passos no backend
+            const createdStepIds: { stepId: number; order: number }[] = [];
+            for (let i = 0; i < steps.length; i++) {
+                const res = await api.post('/steps', {
+                    description: steps[i].description,
+                    deadLine: 1,
+                    requiredDocument: false,
+                    documents: [],
+                });
+                createdStepIds.push({ stepId: res.data.id, order: i + 1 });
+            }
+
+            // Cria o fluxo com os passos
+            await api.post('/flows', {
+                description: flowName.trim(),
+                typeFlowId: selectedTypeId,
+                steps: createdStepIds,
+                hasClient: true,
+                hasProperty: false,
+                hasSellerMain: false,
+                hasSellerSecondary: false,
+                sendMessage: false,
+            });
+
+            setPublishing(false);
+            setModalVisible(false);
+            onNotification('success', {
+                message: 'Fluxo publicado!',
+                description: `"${flowName}" agora aparece no seletor ao virar uma proposta em processo.`,
+            });
+        } catch (err: any) {
+            setPublishing(false);
+            onNotification('error', {
+                message: 'Erro ao publicar',
+                description: err?.response?.data?.message || 'Tente novamente.',
             });
         }
     };
 
-    const groupedPhases = Object.keys(PHASES).map(Number).map(faseId => ({
-        faseId,
-        label: PHASES[faseId],
-        steps: steps
-            .map((s, idx) => ({ ...s, order: idx + 1 }))
-            .filter(s => s.fase === faseId),
-    }));
-
     return (
         <div>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 20 }}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
                 <Col>
                     <Title level={3} {...primaryText}>
                         {title}
                     </Title>
                 </Col>
                 <Col>
-                    {!editMode ? (
-                        <Button icon={<EditOutlined />} onClick={handleEdit}>
-                            Editar Fluxo
-                        </Button>
-                    ) : (
-                        <Space>
-                            <Button icon={<CloseOutlined />} onClick={handleCancel}>
-                                Cancelar
-                            </Button>
-                            <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
-                                Salvar
-                            </Button>
-                        </Space>
-                    )}
+                    <Button
+                        type="primary"
+                        icon={<CloudUploadOutlined />}
+                        onClick={openPublishModal}
+                    >
+                        Publicar no Sistema
+                    </Button>
                 </Col>
             </Row>
 
-            {/* VIEW MODE — agrupado por fase */}
-            {!editMode && (
-                <div>
-                    {groupedPhases.map(group => (
-                        <div key={group.faseId} style={{ marginBottom: 28 }}>
-                            <Divider orientation="left" style={{ marginTop: 0 }}>
+            {steps.map((step, index) => {
+                const showPhaseHeader = index === 0 || step.fase !== steps[index - 1].fase;
+                const isEditing = editingId === step.id;
+
+                return (
+                    <div key={step.id}>
+                        {showPhaseHeader && (
+                            <Divider orientation="left" style={{ marginTop: index === 0 ? 8 : 24 }}>
                                 <Tag
-                                    color={FASE_COLORS[group.faseId]}
+                                    color={FASE_COLORS[step.fase]}
                                     style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}
                                 >
-                                    {group.label}
+                                    {PHASES[step.fase]}
                                 </Tag>
                             </Divider>
-                            {group.steps.map(step => (
-                                <Row
-                                    key={step.id}
-                                    align="middle"
-                                    style={{ padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}
-                                    wrap={false}
-                                >
-                                    <Col flex="42px">
-                                        <Tag color="default" style={{ minWidth: 32, textAlign: 'center' }}>
-                                            {step.order}
-                                        </Tag>
-                                    </Col>
-                                    <Col flex="auto">
-                                        <Text>{step.description}</Text>
-                                    </Col>
-                                </Row>
-                            ))}
-                        </div>
-                    ))}
-                </div>
-            )}
+                        )}
 
-            {/* EDIT MODE — lista plana com drag-and-drop */}
-            {editMode && (
-                <div>
-                    <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
-                        Arraste <HolderOutlined /> para reordenar. Edite o texto diretamente. A tag <strong>F1–F5</strong> indica a fase original da etapa.
-                    </Text>
-                    <DndContext
-                        sensors={sensors}
-                        modifiers={[restrictToVerticalAxis]}
-                        onDragEnd={onDragEnd}
-                    >
-                        <SortableContext
-                            items={pending.map(s => s.id)}
-                            strategy={verticalListSortingStrategy}
+                        <Row
+                            align="middle"
+                            wrap={false}
+                            style={{
+                                padding: '8px 12px',
+                                borderBottom: '1px solid #f0f0f0',
+                                background: isEditing ? '#f6ffed' : undefined,
+                                borderRadius: isEditing ? 4 : undefined,
+                            }}
                         >
-                            {pending.map((step, index) => (
-                                <SortableStep
-                                    key={step.id}
-                                    step={step}
-                                    index={index}
-                                    onChange={handleChange}
-                                />
+                            <Col flex="42px">
+                                <Tag color="default" style={{ minWidth: 32, textAlign: 'center' }}>
+                                    {index + 1}
+                                </Tag>
+                            </Col>
+
+                            <Col flex="auto" style={{ paddingRight: 12 }}>
+                                {isEditing ? (
+                                    <Input
+                                        value={editValue}
+                                        onChange={e => setEditValue(e.target.value)}
+                                        onPressEnter={() => confirmEdit(step.id)}
+                                        autoFocus
+                                        style={{ width: '100%' }}
+                                    />
+                                ) : (
+                                    <Text>{step.description}</Text>
+                                )}
+                            </Col>
+
+                            <Col flex="none">
+                                {isEditing ? (
+                                    <Space size={4}>
+                                        <Button
+                                            size="small"
+                                            type="primary"
+                                            icon={<CheckOutlined />}
+                                            onClick={() => confirmEdit(step.id)}
+                                            title="Confirmar"
+                                        />
+                                        <Button
+                                            size="small"
+                                            icon={<CloseOutlined />}
+                                            onClick={cancelEdit}
+                                            title="Cancelar"
+                                        />
+                                    </Space>
+                                ) : (
+                                    <Space size={4}>
+                                        <Button
+                                            size="small"
+                                            icon={<EditOutlined />}
+                                            onClick={() => startEdit(step)}
+                                            title="Editar texto"
+                                        />
+                                        <Button
+                                            size="small"
+                                            icon={<ArrowUpOutlined />}
+                                            onClick={() => moveUp(index)}
+                                            disabled={index === 0}
+                                            title="Mover para cima"
+                                        />
+                                        <Button
+                                            size="small"
+                                            icon={<ArrowDownOutlined />}
+                                            onClick={() => moveDown(index)}
+                                            disabled={index === steps.length - 1}
+                                            title="Mover para baixo"
+                                        />
+                                    </Space>
+                                )}
+                            </Col>
+                        </Row>
+                    </div>
+                );
+            })}
+
+            <Modal
+                title="Publicar Fluxo no Sistema"
+                visible={modalVisible}
+                onCancel={() => !publishing && setModalVisible(false)}
+                footer={[
+                    <Button key="cancel" onClick={() => setModalVisible(false)} disabled={publishing}>
+                        Cancelar
+                    </Button>,
+                    <Button key="publish" type="primary" onClick={handlePublish} loading={publishing}>
+                        Publicar
+                    </Button>,
+                ]}
+            >
+                <Spin spinning={publishing} tip="Criando passos e fluxo...">
+                    <div style={{ marginBottom: 16 }}>
+                        <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+                            Nome do Fluxo
+                        </label>
+                        <Input
+                            value={flowName}
+                            onChange={e => setFlowName(e.target.value)}
+                            placeholder="Ex: Bancos Privados"
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+                            Tipo de Fluxo
+                        </label>
+                        <Select
+                            style={{ width: '100%' }}
+                            placeholder="Selecione o tipo"
+                            onChange={(val: number) => setSelectedTypeId(val)}
+                            value={selectedTypeId ?? undefined}
+                        >
+                            {flowTypes.map(ft => (
+                                <Option key={ft.id} value={ft.id}>{ft.description}</Option>
                             ))}
-                        </SortableContext>
-                    </DndContext>
-                </div>
-            )}
+                        </Select>
+                        {flowTypes.length === 0 && (
+                            <Text type="secondary" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
+                                Nenhum tipo encontrado. Cadastre um tipo de fluxo no banco de dados.
+                            </Text>
+                        )}
+                    </div>
+                </Spin>
+            </Modal>
         </div>
     );
 };
