@@ -1,5 +1,6 @@
 package br.com.horys.metro.controllers
 
+import br.com.horys.metro.controllers.requests.process.FlowBatchRequest
 import br.com.horys.metro.controllers.requests.process.FlowRequest
 import br.com.horys.metro.controllers.response.FlowResponse
 import br.com.horys.metro.models.FlowStep
@@ -22,6 +23,11 @@ class FlowController(
     @PostMapping
     fun save(@Valid @RequestBody request: FlowRequest): FlowResponse {
         return service.save(request)
+    }
+
+    @PostMapping("/batch")
+    fun saveBatch(@Valid @RequestBody request: FlowBatchRequest): FlowResponse {
+        return service.saveBatch(request)
     }
 
     @GetMapping

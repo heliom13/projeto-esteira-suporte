@@ -1,5 +1,6 @@
 package br.com.horys.metro.services
 
+import br.com.horys.metro.controllers.requests.process.FlowBatchRequest
 import br.com.horys.metro.controllers.requests.process.FlowRequest
 import br.com.horys.metro.controllers.response.FlowResponse
 import br.com.horys.metro.exceptions.BusinessException
@@ -158,6 +159,55 @@ class FlowService(
 
         flowStepRepository.saveAll(flowSteps)
         return flowSteps
+    }
+
+    @Transactional
+    fun saveBatch(request: FlowBatchRequest): FlowResponse {
+        val typeFlow = flowTypeRepository.findById(request.typeFlowId)
+            .orElseThrow { BusinessException("Tipo de fluxo inválido") }
+
+        val savedSteps = stepRepository.saveAll(
+            request.steps.map { description ->
+                Step(
+                    id = null,
+                    description = description,
+                    deadline = 1,
+                    requiredDocument = false,
+                    status = Step.Status.NORMAL,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+            }
+        )
+
+        val flow = repository.save(
+            Flow(
+                id = null,
+                description = request.description,
+                status = ACTIVE,
+                type = typeFlow,
+                sendMessage = request.sendMessage,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
+        )
+
+        val flowSteps = flowStepRepository.saveAll(
+            savedSteps.mapIndexed { index, step ->
+                FlowStep(
+                    id = null,
+                    step = step,
+                    orderStep = index + 1,
+                    flow = flow,
+                    status = FlowStep.Status.ACTIVE,
+                    deadline = step.deadline,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+            }
+        )
+
+        return buildFlowResponse(flow, flowSteps)
     }
 
     fun findAll(description: String?): List<Flow> {
