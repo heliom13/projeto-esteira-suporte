@@ -197,7 +197,7 @@ class FlowService(
                 FlowStep(
                     id = null,
                     step = step,
-                    orderStep = index + 1,
+                    orderStep = (index + 1).toDouble(),
                     flow = flow,
                     status = FlowStep.Status.ACTIVE,
                     deadline = step.deadline,
