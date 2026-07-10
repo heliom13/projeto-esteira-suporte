@@ -106,7 +106,6 @@ const DEFAULT_STEPS: Step[] = [
 type RowProps = {
     step: Step;
     index: number;
-    showPhaseHeader: boolean;
     isEditing: boolean;
     editValue: string;
     onEditValueChange: (val: string) => void;
@@ -118,7 +117,6 @@ type RowProps = {
 const SortableStepRow: React.FC<RowProps> = ({
     step,
     index,
-    showPhaseHeader,
     isEditing,
     editValue,
     onEditValueChange,
@@ -139,17 +137,6 @@ const SortableStepRow: React.FC<RowProps> = ({
 
     return (
         <div ref={setNodeRef} style={dragStyle}>
-            {showPhaseHeader && (
-                <Divider orientation="left" style={{ marginTop: index === 0 ? 8 : 24 }}>
-                    <Tag
-                        color={FASE_COLORS[step.fase]}
-                        style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}
-                    >
-                        {PHASES[step.fase]}
-                    </Tag>
-                </Divider>
-            )}
-
             <Row
                 align="middle"
                 wrap={false}
@@ -370,18 +357,28 @@ const CriarFluxo: React.FC = () => {
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
                     {steps.map((step, index) => (
-                        <SortableStepRow
-                            key={step.id}
-                            step={step}
-                            index={index}
-                            showPhaseHeader={index === 0 || step.fase !== steps[index - 1].fase}
-                            isEditing={editingId === step.id}
-                            editValue={editValue}
-                            onEditValueChange={setEditValue}
-                            onStartEdit={startEdit}
-                            onConfirmEdit={confirmEdit}
-                            onCancelEdit={cancelEdit}
-                        />
+                        <React.Fragment key={step.id}>
+                            {(index === 0 || step.fase !== steps[index - 1].fase) && (
+                                <Divider orientation="left" style={{ marginTop: index === 0 ? 8 : 24 }}>
+                                    <Tag
+                                        color={FASE_COLORS[step.fase]}
+                                        style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}
+                                    >
+                                        {PHASES[step.fase]}
+                                    </Tag>
+                                </Divider>
+                            )}
+                            <SortableStepRow
+                                step={step}
+                                index={index}
+                                isEditing={editingId === step.id}
+                                editValue={editValue}
+                                onEditValueChange={setEditValue}
+                                onStartEdit={startEdit}
+                                onConfirmEdit={confirmEdit}
+                                onCancelEdit={cancelEdit}
+                            />
+                        </React.Fragment>
                     ))}
                 </SortableContext>
             </DndContext>
