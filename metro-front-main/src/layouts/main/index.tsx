@@ -25,7 +25,7 @@ export default function MainLayout({children}: any) {
         height: 64,
         paddingInline: 48,
         lineHeight: '64px',
-        backgroundColor: '#4096ff',
+        background: 'linear-gradient(90deg, #c0392b, #e67e22)',
     };
 
 
@@ -122,7 +122,7 @@ export default function MainLayout({children}: any) {
                     <Dropdown overlay={menu} placement="bottomRight">
                         <Badge count={unreadCount} style={{backgroundColor: '#ff4d4f'}} offset={[10, 0]}>
                             <Button icon={<BellOutlined/>} type="primary"
-                                    style={{backgroundColor: '#4096ff', height: '100%', border: 'none'}}/>
+                                    style={{backgroundColor: 'transparent', height: '100%', border: 'none', boxShadow: 'none'}}/>
                         </Badge>
                     </Dropdown>
                 </div>

@@ -339,21 +339,6 @@ const CriarFluxo: React.FC = () => {
 
     const stepIds = useMemo(() => steps.map(s => s.id), [steps]);
 
-    const isBancosPrivados = tipo === 'bancos-privados';
-
-    const phaseTagStyle = useMemo((): React.CSSProperties => {
-        if (isBancosPrivados) {
-            return {
-                fontSize: 13,
-                padding: '3px 12px',
-                borderRadius: 12,
-                background: 'linear-gradient(90deg, #c0392b, #e67e22)',
-                color: '#fff',
-                border: 'none',
-            };
-        }
-        return { fontSize: 13, padding: '3px 12px', borderRadius: 12 };
-    }, [isBancosPrivados]);
 
     return (
         <div>
@@ -377,8 +362,8 @@ const CriarFluxo: React.FC = () => {
                             {(index === 0 || step.fase !== steps[index - 1].fase) && (
                                 <Divider orientation="left" style={{ marginTop: index === 0 ? 8 : 24 }}>
                                     <Tag
-                                        color={isBancosPrivados ? undefined : FASE_COLORS[step.fase]}
-                                        style={phaseTagStyle}
+                                        color={FASE_COLORS[step.fase]}
+                                        style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}
                                     >
                                         {PHASES[step.fase]}
                                     </Tag>
