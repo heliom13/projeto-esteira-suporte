@@ -1,15 +1,29 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Col, Divider, Input, Modal, Row, Select, Space, Spin, Tag, Typography } from 'antd';
 import {
-    ArrowDownOutlined,
-    ArrowUpOutlined,
     CheckOutlined,
     CloseOutlined,
     CloudUploadOutlined,
     EditOutlined,
+    HolderOutlined,
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import type { AxiosError } from 'axios';
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+    SortableContext,
+    verticalListSortingStrategy,
+    useSortable,
+    arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import onNotification from '../../components/notification/notification';
 import { primaryText } from '../../styles/stylesProps';
 import api from '../../services/api';
@@ -89,6 +103,128 @@ const DEFAULT_STEPS: Step[] = [
     { id: 38, fase: 5, description: 'Quitação e encerramento do processo' },
 ];
 
+type RowProps = {
+    step: Step;
+    index: number;
+    showPhaseHeader: boolean;
+    isEditing: boolean;
+    editValue: string;
+    onEditValueChange: (val: string) => void;
+    onStartEdit: (step: Step) => void;
+    onConfirmEdit: (id: number) => void;
+    onCancelEdit: () => void;
+};
+
+const SortableStepRow: React.FC<RowProps> = ({
+    step,
+    index,
+    showPhaseHeader,
+    isEditing,
+    editValue,
+    onEditValueChange,
+    onStartEdit,
+    onConfirmEdit,
+    onCancelEdit,
+}) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id: step.id });
+
+    const dragStyle: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        position: 'relative',
+        zIndex: isDragging ? 1 : undefined,
+    };
+
+    return (
+        <div ref={setNodeRef} style={dragStyle}>
+            {showPhaseHeader && (
+                <Divider orientation="left" style={{ marginTop: index === 0 ? 8 : 24 }}>
+                    <Tag
+                        color={FASE_COLORS[step.fase]}
+                        style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}
+                    >
+                        {PHASES[step.fase]}
+                    </Tag>
+                </Divider>
+            )}
+
+            <Row
+                align="middle"
+                wrap={false}
+                style={{
+                    padding: '8px 12px',
+                    borderBottom: '1px solid #f0f0f0',
+                    background: isEditing ? '#f6ffed' : undefined,
+                    borderRadius: isEditing ? 4 : undefined,
+                }}
+            >
+                <Col flex="36px">
+                    <Button
+                        size="small"
+                        type="text"
+                        icon={<HolderOutlined />}
+                        style={{
+                            cursor: isDragging ? 'grabbing' : 'grab',
+                            touchAction: 'none',
+                            color: '#bbb',
+                        }}
+                        {...attributes}
+                        {...listeners}
+                    />
+                </Col>
+
+                <Col flex="42px">
+                    <Tag color="default" style={{ minWidth: 32, textAlign: 'center' }}>
+                        {index + 1}
+                    </Tag>
+                </Col>
+
+                <Col flex="auto" style={{ paddingRight: 12 }}>
+                    {isEditing ? (
+                        <Input
+                            value={editValue}
+                            onChange={e => onEditValueChange(e.target.value)}
+                            onPressEnter={() => onConfirmEdit(step.id)}
+                            autoFocus
+                        />
+                    ) : (
+                        <Text>{step.description}</Text>
+                    )}
+                </Col>
+
+                <Col flex="none">
+                    {isEditing ? (
+                        <Space size={4}>
+                            <Button
+                                size="small"
+                                type="primary"
+                                icon={<CheckOutlined />}
+                                onClick={() => onConfirmEdit(step.id)}
+                                title="Confirmar"
+                            />
+                            <Button
+                                size="small"
+                                icon={<CloseOutlined />}
+                                onClick={onCancelEdit}
+                                title="Cancelar"
+                            />
+                        </Space>
+                    ) : (
+                        <Button
+                            size="small"
+                            icon={<EditOutlined />}
+                            onClick={() => onStartEdit(step)}
+                            title="Editar texto"
+                        />
+                    )}
+                </Col>
+            </Row>
+        </div>
+    );
+};
+
 const CriarFluxo: React.FC = () => {
     const { tipo } = useParams<{ tipo: string }>();
 
@@ -109,6 +245,10 @@ const CriarFluxo: React.FC = () => {
     const [publishing, setPublishing] = useState(false);
     const [flowName, setFlowName] = useState('');
 
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    );
+
     useEffect(() => {
         const stored = localStorage.getItem(storageKey);
         setSteps(stored ? (JSON.parse(stored) as Step[]) : DEFAULT_STEPS);
@@ -122,6 +262,17 @@ const CriarFluxo: React.FC = () => {
             setSteps(newSteps);
         },
         [storageKey],
+    );
+
+    const handleDragEnd = useCallback(
+        (event: DragEndEvent) => {
+            const { active, over } = event;
+            if (!over || active.id === over.id) return;
+            const oldIndex = steps.findIndex(s => s.id === active.id);
+            const newIndex = steps.findIndex(s => s.id === over.id);
+            persist(arrayMove(steps, oldIndex, newIndex));
+        },
+        [steps, persist],
     );
 
     const startEdit = useCallback((step: Step) => {
@@ -140,26 +291,6 @@ const CriarFluxo: React.FC = () => {
             onNotification('success', { message: 'Salvo', description: 'Etapa atualizada.' });
         },
         [editValue, steps, persist],
-    );
-
-    const moveUp = useCallback(
-        (index: number) => {
-            if (index === 0) return;
-            const next = [...steps];
-            [next[index - 1], next[index]] = [next[index], next[index - 1]];
-            persist(next);
-        },
-        [steps, persist],
-    );
-
-    const moveDown = useCallback(
-        (index: number) => {
-            if (index === steps.length - 1) return;
-            const next = [...steps];
-            [next[index + 1], next[index]] = [next[index], next[index + 1]];
-            persist(next);
-        },
-        [steps, persist],
     );
 
     const openPublishModal = useCallback(() => {
@@ -219,6 +350,8 @@ const CriarFluxo: React.FC = () => {
         }
     }, [selectedTypeId, flowName, steps]);
 
+    const stepIds = useMemo(() => steps.map(s => s.id), [steps]);
+
     return (
         <div>
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
@@ -234,100 +367,24 @@ const CriarFluxo: React.FC = () => {
                 </Col>
             </Row>
 
-            {steps.map((step, index) => {
-                const showPhaseHeader = index === 0 || step.fase !== steps[index - 1].fase;
-                const isEditing = editingId === step.id;
-                const isFirst = index === 0;
-                const isLast = index === steps.length - 1;
-
-                return (
-                    <div key={step.id}>
-                        {showPhaseHeader && (
-                            <Divider orientation="left" style={{ marginTop: isFirst ? 8 : 24 }}>
-                                <Tag
-                                    color={FASE_COLORS[step.fase]}
-                                    style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}
-                                >
-                                    {PHASES[step.fase]}
-                                </Tag>
-                            </Divider>
-                        )}
-
-                        <Row
-                            align="middle"
-                            wrap={false}
-                            style={{
-                                padding: '8px 12px',
-                                borderBottom: '1px solid #f0f0f0',
-                                background: isEditing ? '#f6ffed' : undefined,
-                                borderRadius: isEditing ? 4 : undefined,
-                            }}
-                        >
-                            <Col flex="42px">
-                                <Tag color="default" style={{ minWidth: 32, textAlign: 'center' }}>
-                                    {index + 1}
-                                </Tag>
-                            </Col>
-
-                            <Col flex="auto" style={{ paddingRight: 12 }}>
-                                {isEditing ? (
-                                    <Input
-                                        value={editValue}
-                                        onChange={e => setEditValue(e.target.value)}
-                                        onPressEnter={() => confirmEdit(step.id)}
-                                        autoFocus
-                                    />
-                                ) : (
-                                    <Text>{step.description}</Text>
-                                )}
-                            </Col>
-
-                            <Col flex="none">
-                                {isEditing ? (
-                                    <Space size={4}>
-                                        <Button
-                                            size="small"
-                                            type="primary"
-                                            icon={<CheckOutlined />}
-                                            onClick={() => confirmEdit(step.id)}
-                                            title="Confirmar"
-                                        />
-                                        <Button
-                                            size="small"
-                                            icon={<CloseOutlined />}
-                                            onClick={cancelEdit}
-                                            title="Cancelar"
-                                        />
-                                    </Space>
-                                ) : (
-                                    <Space size={4}>
-                                        <Button
-                                            size="small"
-                                            icon={<EditOutlined />}
-                                            onClick={() => startEdit(step)}
-                                            title="Editar texto"
-                                        />
-                                        <Button
-                                            size="small"
-                                            icon={<ArrowUpOutlined />}
-                                            onClick={() => moveUp(index)}
-                                            disabled={isFirst}
-                                            title="Mover para cima"
-                                        />
-                                        <Button
-                                            size="small"
-                                            icon={<ArrowDownOutlined />}
-                                            onClick={() => moveDown(index)}
-                                            disabled={isLast}
-                                            title="Mover para baixo"
-                                        />
-                                    </Space>
-                                )}
-                            </Col>
-                        </Row>
-                    </div>
-                );
-            })}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
+                    {steps.map((step, index) => (
+                        <SortableStepRow
+                            key={step.id}
+                            step={step}
+                            index={index}
+                            showPhaseHeader={index === 0 || step.fase !== steps[index - 1].fase}
+                            isEditing={editingId === step.id}
+                            editValue={editValue}
+                            onEditValueChange={setEditValue}
+                            onStartEdit={startEdit}
+                            onConfirmEdit={confirmEdit}
+                            onCancelEdit={cancelEdit}
+                        />
+                    ))}
+                </SortableContext>
+            </DndContext>
 
             <Modal
                 title="Publicar Fluxo no Sistema"
@@ -342,7 +399,7 @@ const CriarFluxo: React.FC = () => {
                     </Button>,
                 ]}
             >
-                <Spin spinning={publishing} tip="Criando passos e fluxo...">
+                <Spin spinning={publishing} tip="Publicando fluxo...">
                     <div style={{ marginBottom: 16 }}>
                         <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
                             Nome do Fluxo
