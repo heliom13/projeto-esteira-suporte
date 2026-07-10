@@ -282,7 +282,7 @@ const CriarFluxo: React.FC = () => {
         } finally {
             setSaving(false);
         }
-    }, [existingFlowId, flowTypeId, defaultName, steps]);
+    }, [flowTypeId, defaultName, steps]);
 
     const stepIds = useMemo(() => steps.map(s => s.id), [steps]);
 
