@@ -210,6 +210,52 @@ class FlowService(
         return buildFlowResponse(flow, flowSteps)
     }
 
+    @Transactional
+    fun updateBatch(id: Long, request: FlowBatchRequest): FlowResponse {
+        val flow = repository.findById(id).orElseThrow { FlowNotFoundException() }
+
+        val existingSteps = flowStepRepository.findByFlowOrderedSteps(id)
+        flowStepRepository.saveAll(existingSteps.map {
+            it.copy(status = FlowStep.Status.INACTIVE, updatedAt = LocalDateTime.now())
+        })
+
+        val updatedFlow = repository.save(flow.copy(
+            description = request.description,
+            updatedAt = LocalDateTime.now()
+        ))
+
+        val savedSteps = stepRepository.saveAll(
+            request.steps.map { description ->
+                Step(
+                    id = null,
+                    description = description,
+                    deadline = 1,
+                    requiredDocument = false,
+                    status = Step.Status.NORMAL,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+            }
+        )
+
+        val flowSteps = flowStepRepository.saveAll(
+            savedSteps.mapIndexed { index, step ->
+                FlowStep(
+                    id = null,
+                    step = step,
+                    orderStep = (index + 1).toDouble(),
+                    flow = updatedFlow,
+                    status = FlowStep.Status.ACTIVE,
+                    deadline = step.deadline,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+            }
+        )
+
+        return buildFlowResponse(updatedFlow, flowSteps)
+    }
+
     fun findAll(description: String?): List<Flow> {
         val spec: Specification<Flow> =
             Specification { root: Root<Flow>, query: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder ->

@@ -30,6 +30,11 @@ class FlowController(
         return service.saveBatch(request)
     }
 
+    @PutMapping("/batch/{id}")
+    fun updateBatch(@PathVariable id: Long, @Valid @RequestBody request: FlowBatchRequest): FlowResponse {
+        return service.updateBatch(id, request)
+    }
+
     @GetMapping
     fun findAll(
         @RequestParam(required = false) description: String?

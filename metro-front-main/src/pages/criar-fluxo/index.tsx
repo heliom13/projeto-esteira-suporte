@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Col, Divider, Input, Modal, Row, Select, Space, Spin, Tag, Typography } from 'antd';
+import { Button, Col, Divider, Input, Row, Space, Tag, Typography } from 'antd';
 import {
     CheckOutlined,
     CloseOutlined,
-    CloudUploadOutlined,
     EditOutlined,
     HolderOutlined,
+    SaveOutlined,
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import type { AxiosError } from 'axios';
@@ -29,7 +29,6 @@ import { primaryText } from '../../styles/stylesProps';
 import api from '../../services/api';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 type Step = {
     id: number;
@@ -38,6 +37,11 @@ type Step = {
 };
 
 type FlowType = {
+    id: number;
+    description: string;
+};
+
+type ExistingFlow = {
     id: number;
     description: string;
 };
@@ -115,14 +119,8 @@ type RowProps = {
 };
 
 const SortableStepRow: React.FC<RowProps> = ({
-    step,
-    index,
-    isEditing,
-    editValue,
-    onEditValueChange,
-    onStartEdit,
-    onConfirmEdit,
-    onCancelEdit,
+    step, index, isEditing, editValue,
+    onEditValueChange, onStartEdit, onConfirmEdit, onCancelEdit,
 }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: step.id });
@@ -152,22 +150,16 @@ const SortableStepRow: React.FC<RowProps> = ({
                         size="small"
                         type="text"
                         icon={<HolderOutlined />}
-                        style={{
-                            cursor: isDragging ? 'grabbing' : 'grab',
-                            touchAction: 'none',
-                            color: '#bbb',
-                        }}
+                        style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none', color: '#bbb' }}
                         {...attributes}
                         {...listeners}
                     />
                 </Col>
-
                 <Col flex="42px">
                     <Tag color="default" style={{ minWidth: 32, textAlign: 'center' }}>
                         {index + 1}
                     </Tag>
                 </Col>
-
                 <Col flex="auto" style={{ paddingRight: 12 }}>
                     {isEditing ? (
                         <Input
@@ -180,31 +172,14 @@ const SortableStepRow: React.FC<RowProps> = ({
                         <Text>{step.description}</Text>
                     )}
                 </Col>
-
                 <Col flex="none">
                     {isEditing ? (
                         <Space size={4}>
-                            <Button
-                                size="small"
-                                type="primary"
-                                icon={<CheckOutlined />}
-                                onClick={() => onConfirmEdit(step.id)}
-                                title="Confirmar"
-                            />
-                            <Button
-                                size="small"
-                                icon={<CloseOutlined />}
-                                onClick={onCancelEdit}
-                                title="Cancelar"
-                            />
+                            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => onConfirmEdit(step.id)} title="Confirmar" />
+                            <Button size="small" icon={<CloseOutlined />} onClick={onCancelEdit} title="Cancelar" />
                         </Space>
                     ) : (
-                        <Button
-                            size="small"
-                            icon={<EditOutlined />}
-                            onClick={() => onStartEdit(step)}
-                            title="Editar texto"
-                        />
+                        <Button size="small" icon={<EditOutlined />} onClick={() => onStartEdit(step)} title="Editar texto" />
                     )}
                 </Col>
             </Row>
@@ -225,12 +200,9 @@ const CriarFluxo: React.FC = () => {
     const [steps, setSteps] = useState<Step[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState('');
-
-    const [modalVisible, setModalVisible] = useState(false);
-    const [flowTypes, setFlowTypes] = useState<FlowType[]>([]);
-    const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
-    const [publishing, setPublishing] = useState(false);
-    const [flowName, setFlowName] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [existingFlowId, setExistingFlowId] = useState<number | null>(null);
+    const [flowTypeId, setFlowTypeId] = useState<number | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -240,8 +212,21 @@ const CriarFluxo: React.FC = () => {
         const stored = localStorage.getItem(storageKey);
         setSteps(stored ? (JSON.parse(stored) as Step[]) : DEFAULT_STEPS);
         setEditingId(null);
-        setFlowName(defaultName);
-    }, [storageKey, defaultName]);
+
+        Promise.all([
+            api.get<ExistingFlow[]>('/flows'),
+            api.get<FlowType[]>('/flowTypes'),
+        ]).then(([flowsRes, typesRes]) => {
+            const match = flowsRes.data.find(f => f.description === defaultName);
+            if (match) setExistingFlowId(match.id);
+
+            const keyword = tipo === 'bancos-privados' ? 'privado' : 'caixa';
+            const typeMatch = typesRes.data.find(ft =>
+                ft.description.toLowerCase().includes(keyword)
+            );
+            if (typeMatch) setFlowTypeId(typeMatch.id);
+        }).catch(() => {});
+    }, [storageKey, defaultName, tipo]);
 
     const persist = useCallback(
         (newSteps: Step[]) => {
@@ -280,65 +265,47 @@ const CriarFluxo: React.FC = () => {
         [editValue, steps, persist],
     );
 
-    const openPublishModal = useCallback(() => {
-        setPublishing(false);
-        setSelectedTypeId(null);
-        setFlowName(defaultName);
-        api.get<FlowType[]>('/flowTypes')
-            .then(res => {
-                setFlowTypes(res.data);
-                setModalVisible(true);
-            })
-            .catch(() => {
-                onNotification('error', {
-                    message: 'Erro',
-                    description: 'Não foi possível carregar os tipos de fluxo.',
-                });
+    const handleSave = useCallback(async () => {
+        if (!flowTypeId) {
+            onNotification('error', {
+                message: 'Configuração pendente',
+                description: 'Tipo de fluxo não encontrado. Verifique o banco de dados.',
             });
-    }, [defaultName]);
-
-    const closeModal = useCallback(() => {
-        if (!publishing) setModalVisible(false);
-    }, [publishing]);
-
-    const handlePublish = useCallback(async () => {
-        if (!selectedTypeId) {
-            onNotification('error', { message: 'Atenção', description: 'Selecione um tipo de fluxo.' });
-            return;
-        }
-        const name = flowName.trim();
-        if (!name) {
-            onNotification('error', { message: 'Atenção', description: 'Informe o nome do fluxo.' });
             return;
         }
 
-        setPublishing(true);
+        setSaving(true);
         try {
-            await api.post('/flows/batch', {
-                description: name,
-                typeFlowId: selectedTypeId,
+            const payload = {
+                description: defaultName,
+                typeFlowId: flowTypeId,
                 sendMessage: false,
                 steps: steps.map(s => s.description),
-            });
+            };
 
-            setModalVisible(false);
+            if (existingFlowId) {
+                await api.put(`/flows/batch/${existingFlowId}`, payload);
+            } else {
+                const res = await api.post<ExistingFlow>('/flows/batch', payload);
+                setExistingFlowId(res.data.id);
+            }
+
             onNotification('success', {
-                message: 'Fluxo publicado!',
-                description: `"${name}" agora aparece no seletor ao virar uma proposta em processo.`,
+                message: 'Fluxo salvo!',
+                description: `"${defaultName}" atualizado e disponível para novos processos.`,
             });
         } catch (err) {
             const axiosError = err as AxiosError<ApiError>;
             onNotification('error', {
-                message: 'Erro ao publicar',
+                message: 'Erro ao salvar',
                 description: axiosError.response?.data?.message ?? 'Tente novamente.',
             });
         } finally {
-            setPublishing(false);
+            setSaving(false);
         }
-    }, [selectedTypeId, flowName, steps]);
+    }, [existingFlowId, flowTypeId, defaultName, steps]);
 
     const stepIds = useMemo(() => steps.map(s => s.id), [steps]);
-
 
     return (
         <div>
@@ -349,8 +316,13 @@ const CriarFluxo: React.FC = () => {
                     </Title>
                 </Col>
                 <Col>
-                    <Button type="primary" icon={<CloudUploadOutlined />} onClick={openPublishModal}>
-                        Publicar no Sistema
+                    <Button
+                        type="primary"
+                        icon={<SaveOutlined />}
+                        loading={saving}
+                        onClick={handleSave}
+                    >
+                        Salvar
                     </Button>
                 </Col>
             </Row>
@@ -383,55 +355,6 @@ const CriarFluxo: React.FC = () => {
                     ))}
                 </SortableContext>
             </DndContext>
-
-            <Modal
-                title="Publicar Fluxo no Sistema"
-                visible={modalVisible}
-                onCancel={closeModal}
-                footer={[
-                    <Button key="cancel" onClick={closeModal} disabled={publishing}>
-                        Cancelar
-                    </Button>,
-                    <Button key="publish" type="primary" onClick={handlePublish} loading={publishing}>
-                        Publicar
-                    </Button>,
-                ]}
-            >
-                <Spin spinning={publishing} tip="Publicando fluxo...">
-                    <div style={{ marginBottom: 16 }}>
-                        <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
-                            Nome do Fluxo
-                        </label>
-                        <Input
-                            value={flowName}
-                            onChange={e => setFlowName(e.target.value)}
-                            placeholder="Ex: Bancos Privados"
-                        />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
-                            Tipo de Fluxo
-                        </label>
-                        <Select
-                            style={{ width: '100%' }}
-                            placeholder="Selecione o tipo"
-                            onChange={(val: number) => setSelectedTypeId(val)}
-                            value={selectedTypeId ?? undefined}
-                        >
-                            {flowTypes.map(ft => (
-                                <Option key={ft.id} value={ft.id}>
-                                    {ft.description}
-                                </Option>
-                            ))}
-                        </Select>
-                        {flowTypes.length === 0 && (
-                            <Text type="secondary" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
-                                Nenhum tipo encontrado. Execute o SQL de setup no banco de dados.
-                            </Text>
-                        )}
-                    </div>
-                </Spin>
-            </Modal>
         </div>
     );
 };
