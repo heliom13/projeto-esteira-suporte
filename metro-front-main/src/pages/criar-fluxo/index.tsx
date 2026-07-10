@@ -5,6 +5,7 @@ import {
     CloseOutlined,
     EditOutlined,
     HolderOutlined,
+    MessageOutlined,
     SaveOutlined,
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
@@ -29,11 +30,13 @@ import { primaryText } from '../../styles/stylesProps';
 import api from '../../services/api';
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 type Step = {
     id: number;
     fase: number;
     description: string;
+    observation?: string;
 };
 
 type FlowType = {
@@ -107,15 +110,24 @@ type RowProps = {
     index: number;
     isEditing: boolean;
     editValue: string;
+    isEditingObs: boolean;
+    obsValue: string;
     onEditValueChange: (val: string) => void;
+    onObsValueChange: (val: string) => void;
     onStartEdit: (step: Step) => void;
     onConfirmEdit: (id: number) => void;
     onCancelEdit: () => void;
+    onToggleObs: (step: Step) => void;
+    onConfirmObs: (id: number) => void;
+    onCancelObs: () => void;
+    onClearObs: (id: number) => void;
 };
 
 const SortableStepRow: React.FC<RowProps> = ({
-    step, index, isEditing, editValue,
-    onEditValueChange, onStartEdit, onConfirmEdit, onCancelEdit,
+    step, index, isEditing, editValue, isEditingObs, obsValue,
+    onEditValueChange, onObsValueChange,
+    onStartEdit, onConfirmEdit, onCancelEdit,
+    onToggleObs, onConfirmObs, onCancelObs, onClearObs,
 }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: step.id });
@@ -128,6 +140,8 @@ const SortableStepRow: React.FC<RowProps> = ({
         zIndex: isDragging ? 1 : undefined,
     };
 
+    const hasObs = !!step.observation;
+
     return (
         <div ref={setNodeRef} style={dragStyle}>
             <Row
@@ -135,7 +149,7 @@ const SortableStepRow: React.FC<RowProps> = ({
                 wrap={false}
                 style={{
                     padding: '8px 12px',
-                    borderBottom: '1px solid #f0f0f0',
+                    borderBottom: isEditingObs || hasObs ? 'none' : '1px solid #f0f0f0',
                     background: isEditing ? '#f6ffed' : undefined,
                     borderRadius: isEditing ? 4 : undefined,
                 }}
@@ -174,10 +188,61 @@ const SortableStepRow: React.FC<RowProps> = ({
                             <Button size="small" icon={<CloseOutlined />} onClick={onCancelEdit} title="Cancelar" />
                         </Space>
                     ) : (
-                        <Button size="small" icon={<EditOutlined />} onClick={() => onStartEdit(step)} title="Editar texto" />
+                        <Space size={4}>
+                            <Button size="small" icon={<EditOutlined />} onClick={() => onStartEdit(step)} title="Editar etapa" />
+                            <Button
+                                size="small"
+                                icon={<MessageOutlined />}
+                                onClick={() => onToggleObs(step)}
+                                title="Observação para o cliente"
+                                type={hasObs ? 'primary' : 'default'}
+                                style={hasObs ? { backgroundColor: '#52c41a', borderColor: '#52c41a' } : undefined}
+                            />
+                        </Space>
                     )}
                 </Col>
             </Row>
+
+            {/* Observation row */}
+            {(isEditingObs || hasObs) && (
+                <div
+                    style={{
+                        padding: '4px 12px 10px 90px',
+                        borderBottom: '1px solid #f0f0f0',
+                        background: '#fffbe6',
+                    }}
+                >
+                    {isEditingObs ? (
+                        <Space direction="vertical" style={{ width: '100%' }} size={4}>
+                            <TextArea
+                                value={obsValue}
+                                onChange={e => onObsValueChange(e.target.value)}
+                                placeholder="Escreva uma observação que será enviada junto com a mensagem desta etapa..."
+                                autoSize={{ minRows: 2, maxRows: 4 }}
+                                autoFocus
+                            />
+                            <Space size={4}>
+                                <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => onConfirmObs(step.id)}>
+                                    Salvar observação
+                                </Button>
+                                <Button size="small" icon={<CloseOutlined />} onClick={onCancelObs}>
+                                    Cancelar
+                                </Button>
+                            </Space>
+                        </Space>
+                    ) : (
+                        <Space align="start" style={{ width: '100%' }}>
+                            <Text style={{ fontSize: 12, color: '#595959', flex: 1 }}>
+                                📝 {step.observation}
+                            </Text>
+                            <Space size={4}>
+                                <Button size="small" icon={<EditOutlined />} onClick={() => onToggleObs(step)} title="Editar observação" />
+                                <Button size="small" icon={<CloseOutlined />} onClick={() => onClearObs(step.id)} title="Remover observação" danger />
+                            </Space>
+                        </Space>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
@@ -195,6 +260,8 @@ const CriarFluxo: React.FC = () => {
     const [steps, setSteps] = useState<Step[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState('');
+    const [editingObsId, setEditingObsId] = useState<number | null>(null);
+    const [obsValue, setObsValue] = useState('');
     const [saving, setSaving] = useState(false);
     const [flowTypeId, setFlowTypeId] = useState<number | null>(null);
 
@@ -206,6 +273,7 @@ const CriarFluxo: React.FC = () => {
         const stored = localStorage.getItem(storageKey);
         setSteps(stored ? (JSON.parse(stored) as Step[]) : DEFAULT_STEPS);
         setEditingId(null);
+        setEditingObsId(null);
 
         api.get<FlowType[]>('/flowTypes').then(res => {
             const keyword = tipo === 'bancos-privados' ? 'privado' : 'caixa';
@@ -236,6 +304,7 @@ const CriarFluxo: React.FC = () => {
     const startEdit = useCallback((step: Step) => {
         setEditingId(step.id);
         setEditValue(step.description);
+        setEditingObsId(null);
     }, []);
 
     const cancelEdit = useCallback(() => setEditingId(null), []);
@@ -249,6 +318,34 @@ const CriarFluxo: React.FC = () => {
             onNotification('success', { message: 'Salvo', description: 'Etapa atualizada.' });
         },
         [editValue, steps, persist],
+    );
+
+    const toggleObs = useCallback((step: Step) => {
+        setEditingId(null);
+        if (editingObsId === step.id) {
+            setEditingObsId(null);
+        } else {
+            setEditingObsId(step.id);
+            setObsValue(step.observation ?? '');
+        }
+    }, [editingObsId]);
+
+    const cancelObs = useCallback(() => setEditingObsId(null), []);
+
+    const confirmObs = useCallback(
+        (id: number) => {
+            const trimmed = obsValue.trim();
+            persist(steps.map(s => (s.id === id ? { ...s, observation: trimmed || undefined } : s)));
+            setEditingObsId(null);
+        },
+        [obsValue, steps, persist],
+    );
+
+    const clearObs = useCallback(
+        (id: number) => {
+            persist(steps.map(s => (s.id === id ? { ...s, observation: undefined } : s)));
+        },
+        [steps, persist],
     );
 
     const handleSave = useCallback(async () => {
@@ -265,8 +362,11 @@ const CriarFluxo: React.FC = () => {
             await api.post('/flows/batch/upsert', {
                 description: defaultName,
                 typeFlowId: flowTypeId,
-                sendMessage: false,
-                steps: steps.map(s => s.description),
+                sendMessage: true,
+                steps: steps.map(s => ({
+                    description: s.description,
+                    observation: s.observation ?? null,
+                })),
             });
 
             onNotification('success', {
@@ -325,10 +425,17 @@ const CriarFluxo: React.FC = () => {
                                 index={index}
                                 isEditing={editingId === step.id}
                                 editValue={editValue}
+                                isEditingObs={editingObsId === step.id}
+                                obsValue={obsValue}
                                 onEditValueChange={setEditValue}
+                                onObsValueChange={setObsValue}
                                 onStartEdit={startEdit}
                                 onConfirmEdit={confirmEdit}
                                 onCancelEdit={cancelEdit}
+                                onToggleObs={toggleObs}
+                                onConfirmObs={confirmObs}
+                                onCancelObs={cancelObs}
+                                onClearObs={clearObs}
                             />
                         </React.Fragment>
                     ))}

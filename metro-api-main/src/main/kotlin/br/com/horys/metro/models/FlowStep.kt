@@ -18,6 +18,7 @@ data class FlowStep(
         val flow: Flow,
         @Enumerated(EnumType.STRING)
         val status: Status,
+        val observation: String? = null,
         val createdAt: LocalDateTime,
         val updatedAt: LocalDateTime
 ) {

@@ -14,7 +14,8 @@ class FlowResponse(
         val description: String,
         val order: Double,
         val deadline: Int,
-        val requiredDocument: Boolean
+        val requiredDocument: Boolean,
+        val observation: String? = null
     )
 
 }

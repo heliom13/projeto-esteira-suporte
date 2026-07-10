@@ -17,6 +17,7 @@ data class ProcessResponse(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val nameUser: String,
+    val userId: Long,
     val isUserProcessOwner: Boolean,
     val notifications: List<NotificationResponse>,
     val sendMessage: Boolean,
@@ -81,6 +82,7 @@ data class ProcessResponse(
                 externalId = process.externalId,
                 isUserProcessOwner = isUserProcessOwner,
                 nameUser = process.user.name,
+                userId = process.user.id!!,
                 notifications = notifications.map { NotificationResponse.fromModel(it) },
                 sendMessage = process.flow.sendMessage,
                 comments = comments

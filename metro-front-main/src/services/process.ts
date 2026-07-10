@@ -50,6 +50,7 @@ export class ProcessService {
     static async nextStepProcess(id: any, data: any) {
         return api.put(`/processes/${id}/nexts/`, {
             reasonDelay: data.reason,
+            observation: data.observation ?? null,
         });
     }
 
@@ -71,6 +72,10 @@ export class ProcessService {
             processId: processId,
             commission: comissions
         }))
+    }
+
+    static async changeResponsible(processId: number, userDestiny: number) {
+        return api.patch(`/processes/${processId}/change-users`, { userDestiny });
     }
 
     static async addComment(id: any, data: any) {

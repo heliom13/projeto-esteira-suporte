@@ -183,7 +183,7 @@ class ProcessService(
             )
                 .also {
                     processStepRepository.save(processStep)
-                    processMessageService.sendNextStepSale(processStep)
+                    processMessageService.sendNextStepSale(processStep, request.observation)
                     isFinish(it, processStep)
                 }
         }

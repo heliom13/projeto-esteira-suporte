@@ -8,5 +8,10 @@ class FlowBatchRequest(
     @field:Positive val typeFlowId: Long,
     @field:NotBlank val description: String,
     val sendMessage: Boolean = false,
-    @field:NotEmpty val steps: List<String>
-)
+    @field:NotEmpty val steps: List<StepBatchItem>
+) {
+    class StepBatchItem(
+        @field:NotBlank val description: String,
+        val observation: String? = null
+    )
+}

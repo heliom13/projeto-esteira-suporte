@@ -96,8 +96,8 @@ class FlowService(
                     order = it.orderStep,
                     description = it.step.description,
                     deadline = it.step.deadline,
-                    requiredDocument = it.step.requiredDocument
-
+                    requiredDocument = it.step.requiredDocument,
+                    observation = it.observation
                 )
             }.toList()
         )
@@ -167,10 +167,10 @@ class FlowService(
             .orElseThrow { BusinessException("Tipo de fluxo inválido") }
 
         val savedSteps = stepRepository.saveAll(
-            request.steps.map { description ->
+            request.steps.map { item ->
                 Step(
                     id = null,
-                    description = description,
+                    description = item.description,
                     deadline = 1,
                     requiredDocument = false,
                     status = Step.Status.NORMAL,
@@ -201,6 +201,7 @@ class FlowService(
                     flow = flow,
                     status = FlowStep.Status.ACTIVE,
                     deadline = step.deadline,
+                    observation = request.steps[index].observation,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now()
                 )
@@ -235,10 +236,10 @@ class FlowService(
         ))
 
         val savedSteps = stepRepository.saveAll(
-            request.steps.map { description ->
+            request.steps.map { item ->
                 Step(
                     id = null,
-                    description = description,
+                    description = item.description,
                     deadline = 1,
                     requiredDocument = false,
                     status = Step.Status.NORMAL,
@@ -257,6 +258,7 @@ class FlowService(
                     flow = updatedFlow,
                     status = FlowStep.Status.ACTIVE,
                     deadline = step.deadline,
+                    observation = request.steps[index].observation,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now()
                 )

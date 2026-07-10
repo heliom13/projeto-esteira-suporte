@@ -1,4 +1,4 @@
-import {Button, Col, Divider, Form, Input, List, Mentions, Modal, Row, Spin, Tabs, Typography,} from 'antd'
+import {Button, Col, Divider, Form, Input, List, Mentions, Modal, Row, Spin, Tabs, Typography, Alert,} from 'antd'
 import {useForm} from 'antd/lib/form/Form'
 import moment from 'moment'
 import {useCallback, useEffect, useState} from 'react'
@@ -42,6 +42,8 @@ const ChangeStep = () => {
     const [isReplyModalVisible, setIsReplyModalVisible] = useState(false);
     const [currentCommentId, setCurrentCommentId] = useState(null);
     const [replyForm] = Form.useForm();
+    const [isConfirmNextVisible, setIsConfirmNextVisible] = useState(false);
+    const [nextStepNote, setNextStepNote] = useState('');
 
     const showModal = () => {
         setIsModalVisible(true)
@@ -147,14 +149,16 @@ const ChangeStep = () => {
         async (data) => {
             setLoading(true)
             try {
-                ProcessService.nextStepProcess(id, data)
-                    .then((response) => {
+                ProcessService.nextStepProcess(id, { ...data, observation: nextStepNote })
+                    .then(() => {
                         onNotification('success', {
                             message: 'SUCESSO',
                             description: 'Salvo com sucesso',
                         })
                         setLoading(false)
                         setModalDelay(false)
+                        setIsConfirmNextVisible(false)
+                        setNextStepNote('')
                         navigate('/processos')
                     })
                     .catch((error) => {
@@ -165,10 +169,10 @@ const ChangeStep = () => {
                         setLoading(false)
                     })
             } catch (error) {
-
+                setLoading(false)
             }
         },
-        [id, navigate]
+        [id, navigate, nextStepNote]
     )
 
     const handleReplySubmit = async (commentId, reply) => {
@@ -270,12 +274,8 @@ const ChangeStep = () => {
                                     borderRadius: '4px',
                                 }}
                                 onClick={() => {
-                                    let data = {
-                                        reason: null,
-                                    }
-                                    flowDays > process?.flowStepCurrent?.deadline
-                                        ? setModalDelay(true)
-                                        : nextStep(data)
+                                    setNextStepNote('')
+                                    setIsConfirmNextVisible(true)
                                 }}
                                 disabled={!isUserProcessOwner}
                             >
@@ -297,6 +297,55 @@ const ChangeStep = () => {
                             </Button>
                         </Col>
                     </Row>
+                    <Modal
+                        title="Confirmar mudança de etapa"
+                        visible={isConfirmNextVisible}
+                        onCancel={() => {
+                            setIsConfirmNextVisible(false)
+                            setNextStepNote('')
+                        }}
+                        footer={[
+                            <Button key="cancel" onClick={() => {
+                                setIsConfirmNextVisible(false)
+                                setNextStepNote('')
+                            }}>
+                                Cancelar
+                            </Button>,
+                            <Button
+                                key="confirm"
+                                type="primary"
+                                loading={loading}
+                                onClick={() => {
+                                    setIsConfirmNextVisible(false)
+                                    const data = { reason: null }
+                                    flowDays > process?.flowStepCurrent?.deadline
+                                        ? setModalDelay(true)
+                                        : nextStep(data)
+                                }}
+                            >
+                                Confirmar e Avançar
+                            </Button>,
+                        ]}
+                    >
+                        <Alert
+                            message={`Etapa atual: ${process?.stepCurrent?.step?.description ?? process?.stepCurrent?.description ?? '—'}`}
+                            type="info"
+                            showIcon
+                            style={{ marginBottom: 16 }}
+                        />
+                        <div style={{ marginBottom: 8, fontWeight: 500 }}>
+                            Observação para o cliente <span style={{ color: '#999', fontWeight: 400 }}>(opcional)</span>
+                        </div>
+                        <Input.TextArea
+                            rows={3}
+                            value={nextStepNote}
+                            onChange={e => setNextStepNote(e.target.value)}
+                            placeholder="Ex: Aguardamos o envio dos documentos até sexta-feira..."
+                        />
+                        <div style={{ marginTop: 8, color: '#888', fontSize: 12 }}>
+                            Se preenchida, esta mensagem será incluída no WhatsApp enviado ao cliente, vendedor e corretor.
+                        </div>
+                    </Modal>
                     <Modal
                         visible={modalDelay}
                         onCancel={handleCancel}
