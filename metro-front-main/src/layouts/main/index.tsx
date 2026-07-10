@@ -1,6 +1,6 @@
 import {Badge, Button, Dropdown, Layout, Menu, Typography} from 'antd';
 import React, {useEffect, useState} from 'react';
-import {Link, Outlet, useNavigate} from 'react-router-dom';
+import {Link, Outlet, useNavigate, useLocation} from 'react-router-dom';
 import {SideMenu} from '../../components/menu';
 import styled from 'styled-components';
 import {Header} from "antd/lib/layout/layout";
@@ -15,7 +15,14 @@ export default function MainLayout({children}: any) {
     const [unreadCount, setUnreadCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
     const {user} = useAuth();
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const headerLabel = location.pathname.includes('bancos-privados')
+        ? 'Privados'
+        : location.pathname.includes('criar-fluxo/caixa')
+        ? 'Caixa'
+        : null;
 
     const headerStyle: React.CSSProperties = {
         display: 'flex',
@@ -25,7 +32,8 @@ export default function MainLayout({children}: any) {
         height: 64,
         paddingInline: 48,
         lineHeight: '64px',
-        background: 'linear-gradient(90deg, #c0392b, #e67e22)',
+        backgroundColor: '#4096ff',
+        position: 'relative',
     };
 
 
@@ -110,19 +118,24 @@ export default function MainLayout({children}: any) {
             <Header style={headerStyle}>
                 <div style={{textAlign: 'left', paddingTop: '20px'}}>
                     <Link to="/">
-                        <Title level={4} style={{
-                            color: '#fff',
-                        }}>
+                        <Title level={4} style={{color: '#fff'}}>
                             Suporte Imobiliário
                         </Title>
                     </Link>
                 </div>
+                {headerLabel && (
+                    <div style={{position: 'absolute', left: '50%', transform: 'translateX(-50%)'}}>
+                        <Title level={4} style={{color: '#fff', margin: 0}}>
+                            {headerLabel}
+                        </Title>
+                    </div>
+                )}
                 <div style={{display: 'flex', alignItems: 'center'}}>
                     <span style={{marginRight: '10px', color: '#fff'}}>{user?.name}</span>
                     <Dropdown overlay={menu} placement="bottomRight">
                         <Badge count={unreadCount} style={{backgroundColor: '#ff4d4f'}} offset={[10, 0]}>
                             <Button icon={<BellOutlined/>} type="primary"
-                                    style={{backgroundColor: 'transparent', height: '100%', border: 'none', boxShadow: 'none'}}/>
+                                    style={{backgroundColor: '#4096ff', height: '100%', border: 'none'}}/>
                         </Badge>
                     </Dropdown>
                 </div>
