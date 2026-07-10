@@ -41,11 +41,6 @@ type FlowType = {
     description: string;
 };
 
-type ExistingFlow = {
-    id: number;
-    description: string;
-};
-
 type ApiError = {
     message?: string;
 };
@@ -201,7 +196,6 @@ const CriarFluxo: React.FC = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState('');
     const [saving, setSaving] = useState(false);
-    const [existingFlowId, setExistingFlowId] = useState<number | null>(null);
     const [flowTypeId, setFlowTypeId] = useState<number | null>(null);
 
     const sensors = useSensors(
@@ -213,18 +207,10 @@ const CriarFluxo: React.FC = () => {
         setSteps(stored ? (JSON.parse(stored) as Step[]) : DEFAULT_STEPS);
         setEditingId(null);
 
-        Promise.all([
-            api.get<ExistingFlow[]>('/flows'),
-            api.get<FlowType[]>('/flowTypes'),
-        ]).then(([flowsRes, typesRes]) => {
-            const match = flowsRes.data.find(f => f.description === defaultName);
-            if (match) setExistingFlowId(match.id);
-
+        api.get<FlowType[]>('/flowTypes').then(res => {
             const keyword = tipo === 'bancos-privados' ? 'privado' : 'caixa';
-            const typeMatch = typesRes.data.find(ft =>
-                ft.description.toLowerCase().includes(keyword)
-            );
-            if (typeMatch) setFlowTypeId(typeMatch.id);
+            const match = res.data.find(ft => ft.description.toLowerCase().includes(keyword));
+            if (match) setFlowTypeId(match.id);
         }).catch(() => {});
     }, [storageKey, defaultName, tipo]);
 
@@ -276,19 +262,12 @@ const CriarFluxo: React.FC = () => {
 
         setSaving(true);
         try {
-            const payload = {
+            await api.post('/flows/batch/upsert', {
                 description: defaultName,
                 typeFlowId: flowTypeId,
                 sendMessage: false,
                 steps: steps.map(s => s.description),
-            };
-
-            if (existingFlowId) {
-                await api.put(`/flows/batch/${existingFlowId}`, payload);
-            } else {
-                const res = await api.post<ExistingFlow>('/flows/batch', payload);
-                setExistingFlowId(res.data.id);
-            }
+            });
 
             onNotification('success', {
                 message: 'Fluxo salvo!',

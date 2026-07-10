@@ -30,6 +30,11 @@ class FlowController(
         return service.saveBatch(request)
     }
 
+    @PostMapping("/batch/upsert")
+    fun upsertBatch(@Valid @RequestBody request: FlowBatchRequest): FlowResponse {
+        return service.upsertBatch(request)
+    }
+
     @PutMapping("/batch/{id}")
     fun updateBatch(@PathVariable id: Long, @Valid @RequestBody request: FlowBatchRequest): FlowResponse {
         return service.updateBatch(id, request)

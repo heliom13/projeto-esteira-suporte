@@ -211,6 +211,16 @@ class FlowService(
     }
 
     @Transactional
+    fun upsertBatch(request: FlowBatchRequest): FlowResponse {
+        val existing = findAll(request.description).firstOrNull()
+        return if (existing != null) {
+            updateBatch(existing.id!!, request)
+        } else {
+            saveBatch(request)
+        }
+    }
+
+    @Transactional
     fun updateBatch(id: Long, request: FlowBatchRequest): FlowResponse {
         val flow = repository.findById(id).orElseThrow { FlowNotFoundException() }
 
