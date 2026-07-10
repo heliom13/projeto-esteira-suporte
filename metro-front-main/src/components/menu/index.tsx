@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { AppstoreOutlined, LogoutOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -53,7 +53,6 @@ export const SideMenu = () => {
         {
             key: "criar-fluxo",
             label: "🗂️ Fluxo",
-            icon: <PlusCircleOutlined />,
             roles: ["ADMIN", "ANALYST"],
             children: [
                 {
