@@ -51,11 +51,6 @@ export const SideMenu = () => {
             roles: ["ADMIN", "ANALYST", "PROCESSOR"]
         },
         {
-            key: "6",
-            label: <Link to={"bancos"}>🏦 Cadastro de Fluxos</Link>,
-            roles: ["ADMIN", "ANALYST"]
-        },
-        {
             key: "criar-fluxo",
             label: "🗂️ Fluxo",
             icon: <PlusCircleOutlined />,
