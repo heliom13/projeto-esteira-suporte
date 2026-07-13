@@ -1,62 +1,87 @@
-import {CheckCircleFilled, ClockCircleOutlined, IssuesCloseOutlined,} from '@ant-design/icons'
-import {Space, Timeline, Typography} from 'antd'
+import { CheckCircleFilled, ClockCircleOutlined, IssuesCloseOutlined, MessageOutlined } from '@ant-design/icons'
+import { Badge, Space, Timeline, Typography } from 'antd'
 
-const {Text} = Typography
+const { Text } = Typography
 
-export const TimelineComponent = ({steps, process}) => {
+type StepItem = {
+    processStepId?: string
+    orderStep: string
+    statusStep: string
+    deadline: string
+    flow: string
+    step: string
+    notesCount?: string
+}
+
+type Props = {
+    steps: StepItem[]
+    process: any
+    onNoteClick?: (processStepId: number, notesCount: number) => void
+}
+
+export const TimelineComponent = ({ steps, process, onNoteClick }: Props) => {
     return (
         <Timeline mode="left">
-            {steps.map((step, index) => (
-                <Timeline.Item
-                    key={index}
-                    dot={
-                        (parseInt(step.orderStep) === process?.stepCurrent?.orderStep && (
-                            <ClockCircleOutlined
-                                style={{fontSize: '16px', color: '#8A6D3B'}}
-                            />
+            {steps.map((step, index) => {
+                const notesCount = parseInt(step.notesCount ?? '0', 10)
+                const processStepId = step.processStepId ? parseInt(step.processStepId, 10) : null
+
+                const dot =
+                    (parseInt(step.orderStep) === process?.stepCurrent?.orderStep && (
+                        <ClockCircleOutlined style={{ fontSize: '16px', color: '#8A6D3B' }} />
+                    )) ||
+                    (parseInt(step.orderStep) < process?.stepCurrent?.orderStep &&
+                        step.statusStep !== 'UNFORESEEN' && (
+                            <CheckCircleFilled style={{ fontSize: '16px', color: '#45f0a1' }} />
                         )) ||
-                        (parseInt(step.orderStep) < process?.stepCurrent?.orderStep &&
-                            step.statusStep !== 'UNFORESEEN' && (
-                                <CheckCircleFilled
-                                    style={{fontSize: '16px', color: '#45f0a1'}}
-                                />
-                            )) ||
-                        (step.statusStep === 'UNFORESEEN' && (
-                            <IssuesCloseOutlined style={{fontSize: '16px', color: 'red'}}/>
-                        ))
-                    }
-                >
-                    {step.statusStep === 'UNFORESEEN' ? (
-                        <Text style={{color: 'red'}}>
-                            <Space>
-                                <strong>
-                                    Etapa {index + 1}/{steps.length}:
-                                </strong>
-                                {step.step}
+                    (step.statusStep === 'UNFORESEEN' && (
+                        <IssuesCloseOutlined style={{ fontSize: '16px', color: 'red' }} />
+                    ))
+
+                const textColor = step.statusStep === 'UNFORESEEN' ? 'red' : undefined
+
+                return (
+                    <Timeline.Item key={index} dot={dot}>
+                        <Text style={{ color: textColor }}>
+                            <Space align="center" wrap={false}>
+                                <span>
+                                    <strong>Etapa {index + 1}/{steps.length}:</strong>{' '}
+                                    {step.step}
+                                </span>
+                                {processStepId && onNoteClick && (
+                                    <Badge
+                                        count={notesCount}
+                                        size="small"
+                                        style={{ backgroundColor: '#52c41a' }}
+                                        showZero={false}
+                                    >
+                                        <MessageOutlined
+                                            onClick={e => {
+                                                e.stopPropagation()
+                                                onNoteClick(processStepId, notesCount)
+                                            }}
+                                            style={{
+                                                fontSize: 16,
+                                                color: notesCount > 0 ? '#52c41a' : '#bbb',
+                                                cursor: 'pointer',
+                                                transition: 'color 0.2s',
+                                            }}
+                                            title="Ver / adicionar anotações"
+                                        />
+                                    </Badge>
+                                )}
                             </Space>
-                            <br/>
+                        </Text>
+                        <br />
+                        <Text style={{ color: textColor }}>
                             <Space>
                                 <strong>Prazo:</strong>
                                 {step.deadline} dia(s)
                             </Space>
                         </Text>
-                    ) : (
-                        <Text>
-                            <Space>
-                                <strong>
-                                    Etapa {index + 1}/{steps.length}:
-                                </strong>
-                                {step.step}
-                            </Space>
-                            <br/>
-                            <Space>
-                                <strong>Prazo:</strong>
-                                {step.deadline} dia(s)
-                            </Space>
-                        </Text>
-                    )}
-                </Timeline.Item>
-            ))}
+                    </Timeline.Item>
+                )
+            })}
         </Timeline>
     )
 }

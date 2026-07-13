@@ -1,4 +1,5 @@
 import {Button, Col, Divider, Form, Input, List, Mentions, Modal, Row, Spin, Tabs, Typography, Alert,} from 'antd'
+import { MessageOutlined, SendOutlined } from '@ant-design/icons'
 import {useForm} from 'antd/lib/form/Form'
 import moment from 'moment'
 import {useCallback, useEffect, useState} from 'react'
@@ -44,6 +45,11 @@ const ChangeStep = () => {
     const [replyForm] = Form.useForm();
     const [isConfirmNextVisible, setIsConfirmNextVisible] = useState(false);
     const [nextStepNote, setNextStepNote] = useState('');
+    const [notesModalStepId, setNotesModalStepId] = useState<number | null>(null);
+    const [notesList, setNotesList] = useState<{id: number; content: string; userName: string; createdAt: string}[]>([]);
+    const [notesLoading, setNotesLoading] = useState(false);
+    const [newNoteText, setNewNoteText] = useState('');
+    const [savingNote, setSavingNote] = useState(false);
 
     const showModal = () => {
         setIsModalVisible(true)
@@ -208,6 +214,40 @@ const ChangeStep = () => {
         }
     };
 
+    const openNotesModal = async (processStepId: number) => {
+        setNotesModalStepId(processStepId)
+        setNotesLoading(true)
+        setNotesList([])
+        try {
+            const res = await ProcessService.getStepNotes(processStepId)
+            setNotesList(res.data)
+        } catch {
+            // silencioso
+        } finally {
+            setNotesLoading(false)
+        }
+    }
+
+    const handleAddNote = async () => {
+        if (!newNoteText.trim() || !notesModalStepId) return
+        setSavingNote(true)
+        try {
+            const res = await ProcessService.addStepNote(notesModalStepId, newNoteText.trim())
+            setNotesList(prev => [...prev, res.data])
+            setNewNoteText('')
+            // atualiza o count local nos steps
+            setSteps(prev => prev.map((s: any) =>
+                s.processStepId === String(notesModalStepId)
+                    ? { ...s, notesCount: String(parseInt(s.notesCount ?? '0') + 1) }
+                    : s
+            ))
+        } catch {
+            onNotification('error', { message: 'Erro', description: 'Não foi possível salvar a anotação.' })
+        } finally {
+            setSavingNote(false)
+        }
+    }
+
     const showReplyModal = (commentId) => {
         setCurrentCommentId(commentId);
         setIsReplyModalVisible(true);
@@ -256,7 +296,7 @@ const ChangeStep = () => {
                     <Divider/>
                     <Title level={4}> Passos do Processo </Title>
                     <br/>
-                    <TimelineComponent process={process} steps={steps}/>
+                    <TimelineComponent process={process} steps={steps} onNoteClick={openNotesModal}/>
                     <Divider/>
                     <Row
                         {...rowProps}
@@ -542,6 +582,69 @@ const ChangeStep = () => {
                 </TabPane>
 
             </Tabs>
+            {/* Modal de anotações por etapa */}
+            <Modal
+                title={
+                    <span>
+                        <MessageOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+                        Anotações da etapa
+                    </span>
+                }
+                visible={notesModalStepId !== null}
+                onCancel={() => { setNotesModalStepId(null); setNewNoteText('') }}
+                footer={null}
+                width={520}
+            >
+                <Spin spinning={notesLoading}>
+                    {notesList.length === 0 && !notesLoading && (
+                        <div style={{ textAlign: 'center', color: '#aaa', padding: '16px 0' }}>
+                            Nenhuma anotação ainda. Adicione a primeira abaixo.
+                        </div>
+                    )}
+                    <List
+                        dataSource={notesList}
+                        renderItem={(note: any) => (
+                            <List.Item style={{ alignItems: 'flex-start', padding: '8px 0' }}>
+                                <List.Item.Meta
+                                    title={
+                                        <span style={{ fontSize: 12, color: '#888' }}>
+                                            <strong>{note.userName}</strong>
+                                            {' · '}
+                                            {new Date(note.createdAt).toLocaleString('pt-BR')}
+                                        </span>
+                                    }
+                                    description={
+                                        <span style={{ color: '#333', fontSize: 14 }}>{note.content}</span>
+                                    }
+                                />
+                            </List.Item>
+                        )}
+                    />
+                    <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+                        <Input.TextArea
+                            value={newNoteText}
+                            onChange={e => setNewNoteText(e.target.value)}
+                            placeholder="Adicionar anotação..."
+                            autoSize={{ minRows: 2, maxRows: 4 }}
+                            onPressEnter={e => {
+                                if (!e.shiftKey) { e.preventDefault(); handleAddNote() }
+                            }}
+                        />
+                        <Button
+                            type="primary"
+                            icon={<SendOutlined />}
+                            loading={savingNote}
+                            onClick={handleAddNote}
+                            disabled={!newNoteText.trim()}
+                            style={{ alignSelf: 'flex-end' }}
+                        />
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 11, color: '#aaa' }}>
+                        Enter para enviar · Shift+Enter para nova linha
+                    </div>
+                </Spin>
+            </Modal>
+
             <Modal
                 title="Responder ao Comentário"
                 visible={isReplyModalVisible}

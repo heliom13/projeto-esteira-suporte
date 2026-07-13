@@ -15,6 +15,7 @@ import br.com.horys.metro.repositories.CommentReplyRepository
 import br.com.horys.metro.repositories.CommentRepository
 import br.com.horys.metro.repositories.NotificationRepository
 import br.com.horys.metro.repositories.ProcessRepository
+import br.com.horys.metro.repositories.ProcessStepNoteRepository
 import br.com.horys.metro.repositories.ProcessStepRepository
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
@@ -29,6 +30,7 @@ class SearchProcessService(
     private val processRepository: ProcessRepository,
     private val searchClientService: SearchClientService,
     private val processStepRepository: ProcessStepRepository,
+    private val processStepNoteRepository: ProcessStepNoteRepository,
     private val searchPropertyService: SearchPropertyService,
     private val sellerService: SellerService,
     private val userService: UserService,
@@ -68,14 +70,16 @@ class SearchProcessService(
     }
 
     fun getSteps(id: Long): List<HashMap<String, String>> {
-
         return processStepRepository.findFlowSteps(id).map {
+            val notesCount = processStepNoteRepository.countByProcessStep_Id(it.id!!)
             hashMapOf(
+                "processStepId" to it.id.toString(),
                 "orderStep" to it.orderStep.toString(),
                 "statusStep" to it.step.status.toString(),
                 "deadline" to it.step.deadline.toString(),
                 "flow" to it.process.flow.description,
-                "step" to it.getDescriptionStep()
+                "step" to it.getDescriptionStep(),
+                "notesCount" to notesCount.toString()
             )
         }.toList()
     }

@@ -78,6 +78,14 @@ export class ProcessService {
         return api.patch(`/processes/${processId}/change-users`, { userDestiny });
     }
 
+    static async getStepNotes(processStepId: number) {
+        return api.get(`/process-steps/${processStepId}/notes`);
+    }
+
+    static async addStepNote(processStepId: number, content: string) {
+        return api.post(`/process-steps/${processStepId}/notes`, { content });
+    }
+
     static async addComment(id: any, data: any) {
         return api.post(`/processes/${id}/comments`, {
             content: data.content,
