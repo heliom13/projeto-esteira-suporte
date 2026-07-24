@@ -1,16 +1,20 @@
 package br.com.horys.metro.configs
 
+import br.com.horys.metro.models.FlowType
 import br.com.horys.metro.models.User
+import br.com.horys.metro.repositories.FlowTypeRepository
 import br.com.horys.metro.repositories.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 @Component
 class DataInitializer(
     private val userRepository: UserRepository,
-    private val bCryptPasswordEncoder: BCryptPasswordEncoder
+    private val bCryptPasswordEncoder: BCryptPasswordEncoder,
+    private val flowTypeRepository: FlowTypeRepository
 ) : CommandLineRunner {
 
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -44,6 +48,22 @@ class DataInitializer(
             log.info(">>> Usuário Helion criado com ID: ${user.id}")
         } else {
             log.info(">>> Usuário Helion já existe no banco.")
+        }
+
+        val hasRegularizacao = flowTypeRepository.findAll()
+            .any { it.description.lowercase().contains("regulariz") }
+        if (!hasRegularizacao) {
+            flowTypeRepository.save(
+                FlowType(
+                    id = null,
+                    description = "Regularização",
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+            )
+            log.info(">>> FlowType 'Regularização' criado.")
+        } else {
+            log.info(">>> FlowType 'Regularização' já existe.")
         }
     }
 }
