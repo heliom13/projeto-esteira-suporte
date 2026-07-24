@@ -11,7 +11,7 @@ type StepItem = {
     processStepStatus?: string
     deadline: string
     stepStartedAt?: string
-    flow: string
+    flow?: string
     step: string
     notesCount?: string
 }
