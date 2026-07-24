@@ -6,6 +6,7 @@ import {
     EditOutlined,
     HolderOutlined,
     MessageOutlined,
+    PlusOutlined,
     SaveOutlined,
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
@@ -32,37 +33,18 @@ import api from '../../services/api';
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-type Step = {
-    id: number;
-    fase: number;
-    description: string;
-    observation?: string;
-};
+type Phase = { id: number; label: string; color: string };
+type Step = { id: number; fase: number; description: string; observation?: string };
+type FlowType = { id: number; description: string };
+type ApiError = { message?: string };
 
-type FlowType = {
-    id: number;
-    description: string;
-};
-
-type ApiError = {
-    message?: string;
-};
-
-const PHASES: Record<number, string> = {
-    1: 'Fase 1: Prospecção, Planejamento e Análise Cadastral',
-    2: 'Fase 2: Instrução do Processo e Avaliação do Imóvel',
-    3: 'Fase 3: Compliance Jurídico e Análise de Risco Operacional',
-    4: 'Fase 4: Confecção Contratual e Assinatura',
-    5: 'Fase 5: Atos Notariais, Registrais e Quitação',
-};
-
-const FASE_COLORS: Record<number, string> = {
-    1: 'blue',
-    2: 'green',
-    3: 'orange',
-    4: 'purple',
-    5: 'red',
-};
+const DEFAULT_PHASES: Phase[] = [
+    { id: 1, label: 'Fase 1: Prospecção, Planejamento e Análise Cadastral', color: 'blue' },
+    { id: 2, label: 'Fase 2: Instrução do Processo e Avaliação do Imóvel', color: 'green' },
+    { id: 3, label: 'Fase 3: Compliance Jurídico e Análise de Risco Operacional', color: 'orange' },
+    { id: 4, label: 'Fase 4: Confecção Contratual e Assinatura', color: 'purple' },
+    { id: 5, label: 'Fase 5: Atos Notariais, Registrais e Quitação', color: 'red' },
+];
 
 const DEFAULT_STEPS: Step[] = [
     { id: 1,  fase: 1, description: 'Primeiro contato e qualificação do cliente' },
@@ -105,15 +87,17 @@ const DEFAULT_STEPS: Step[] = [
     { id: 38, fase: 5, description: 'Quitação e encerramento do processo' },
 ];
 
+// ── Step row ──────────────────────────────────────────────────────────────────
+
 type RowProps = {
     step: Step;
-    index: number;
+    globalIndex: number;
     isEditing: boolean;
     editValue: string;
     isEditingObs: boolean;
     obsValue: string;
-    onEditValueChange: (val: string) => void;
-    onObsValueChange: (val: string) => void;
+    onEditValueChange: (v: string) => void;
+    onObsValueChange: (v: string) => void;
     onStartEdit: (step: Step) => void;
     onConfirmEdit: (id: number) => void;
     onCancelEdit: () => void;
@@ -124,7 +108,7 @@ type RowProps = {
 };
 
 const SortableStepRow: React.FC<RowProps> = ({
-    step, index, isEditing, editValue, isEditingObs, obsValue,
+    step, globalIndex, isEditing, editValue, isEditingObs, obsValue,
     onEditValueChange, onObsValueChange,
     onStartEdit, onConfirmEdit, onCancelEdit,
     onToggleObs, onConfirmObs, onCancelObs, onClearObs,
@@ -166,7 +150,7 @@ const SortableStepRow: React.FC<RowProps> = ({
                 </Col>
                 <Col flex="42px">
                     <Tag color="default" style={{ minWidth: 32, textAlign: 'center' }}>
-                        {index + 1}
+                        {globalIndex + 1}
                     </Tag>
                 </Col>
                 <Col flex="auto" style={{ paddingRight: 12 }}>
@@ -203,15 +187,8 @@ const SortableStepRow: React.FC<RowProps> = ({
                 </Col>
             </Row>
 
-            {/* Observation row */}
             {(isEditingObs || hasObs) && (
-                <div
-                    style={{
-                        padding: '4px 12px 10px 90px',
-                        borderBottom: '1px solid #f0f0f0',
-                        background: '#fffbe6',
-                    }}
-                >
+                <div style={{ padding: '4px 12px 10px 90px', borderBottom: '1px solid #f0f0f0', background: '#fffbe6' }}>
                     {isEditingObs ? (
                         <Space direction="vertical" style={{ width: '100%' }} size={4}>
                             <TextArea
@@ -225,16 +202,12 @@ const SortableStepRow: React.FC<RowProps> = ({
                                 <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => onConfirmObs(step.id)}>
                                     Salvar observação
                                 </Button>
-                                <Button size="small" icon={<CloseOutlined />} onClick={onCancelObs}>
-                                    Cancelar
-                                </Button>
+                                <Button size="small" icon={<CloseOutlined />} onClick={onCancelObs}>Cancelar</Button>
                             </Space>
                         </Space>
                     ) : (
                         <Space align="start" style={{ width: '100%' }}>
-                            <Text style={{ fontSize: 12, color: '#595959', flex: 1 }}>
-                                📝 {step.observation}
-                            </Text>
+                            <Text style={{ fontSize: 12, color: '#595959', flex: 1 }}>📝 {step.observation}</Text>
                             <Space size={4}>
                                 <Button size="small" icon={<EditOutlined />} onClick={() => onToggleObs(step)} title="Editar observação" />
                                 <Button size="small" icon={<CloseOutlined />} onClick={() => onClearObs(step.id)} title="Remover observação" danger />
@@ -247,42 +220,262 @@ const SortableStepRow: React.FC<RowProps> = ({
     );
 };
 
+// ── Phase container (sortable at outer level, DnD context for steps inside) ──
+
+type PhaseContainerProps = {
+    phase: Phase;
+    steps: Step[];
+    globalOffset: number;
+    isEditingPhase: boolean;
+    editingPhaseLabel: string;
+    onEditPhaseLabelChange: (v: string) => void;
+    onStartEditPhase: () => void;
+    onConfirmEditPhase: () => void;
+    onCancelEditPhase: () => void;
+    onStepsDragEnd: (e: DragEndEvent) => void;
+    onAddStep: (description: string) => void;
+    editingId: number | null;
+    editValue: string;
+    editingObsId: number | null;
+    obsValue: string;
+    onEditValueChange: (v: string) => void;
+    onObsValueChange: (v: string) => void;
+    onStartEdit: (step: Step) => void;
+    onConfirmEdit: (id: number) => void;
+    onCancelEdit: () => void;
+    onToggleObs: (step: Step) => void;
+    onConfirmObs: (id: number) => void;
+    onCancelObs: () => void;
+    onClearObs: (id: number) => void;
+};
+
+const SortablePhaseContainer: React.FC<PhaseContainerProps> = ({
+    phase, steps, globalOffset,
+    isEditingPhase, editingPhaseLabel, onEditPhaseLabelChange,
+    onStartEditPhase, onConfirmEditPhase, onCancelEditPhase,
+    onStepsDragEnd, onAddStep,
+    editingId, editValue, editingObsId, obsValue,
+    onEditValueChange, onObsValueChange,
+    onStartEdit, onConfirmEdit, onCancelEdit,
+    onToggleObs, onConfirmObs, onCancelObs, onClearObs,
+}) => {
+    const [addingStep, setAddingStep] = useState(false);
+    const [newStepDesc, setNewStepDesc] = useState('');
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id: phase.id });
+
+    const innerSensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    );
+
+    const stepIds = useMemo(() => steps.map(s => s.id), [steps]);
+
+    const phaseStyle: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div ref={setNodeRef} style={phaseStyle}>
+            <Divider orientation="left" style={{ marginTop: 16, marginBottom: 4 }}>
+                <Space align="center" size={4}>
+                    <Button
+                        size="small"
+                        type="text"
+                        icon={<HolderOutlined />}
+                        style={{ cursor: isDragging ? 'grabbing' : 'grab', color: '#aaa', touchAction: 'none' }}
+                        title="Arrastar fase"
+                        {...attributes}
+                        {...listeners}
+                    />
+                    {isEditingPhase ? (
+                        <>
+                            <Input
+                                value={editingPhaseLabel}
+                                onChange={e => onEditPhaseLabelChange(e.target.value)}
+                                onPressEnter={onConfirmEditPhase}
+                                style={{ width: 340 }}
+                                autoFocus
+                            />
+                            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={onConfirmEditPhase} title="Confirmar" />
+                            <Button size="small" icon={<CloseOutlined />} onClick={onCancelEditPhase} title="Cancelar" />
+                        </>
+                    ) : (
+                        <>
+                            <Tag color={phase.color} style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}>
+                                {phase.label}
+                            </Tag>
+                            <Button size="small" type="text" icon={<EditOutlined />} onClick={onStartEditPhase} title="Editar nome da fase" />
+                        </>
+                    )}
+                </Space>
+            </Divider>
+
+            <DndContext sensors={innerSensors} collisionDetection={closestCenter} onDragEnd={onStepsDragEnd}>
+                <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
+                    {steps.map((step, idx) => (
+                        <SortableStepRow
+                            key={step.id}
+                            step={step}
+                            globalIndex={globalOffset + idx}
+                            isEditing={editingId === step.id}
+                            editValue={editValue}
+                            isEditingObs={editingObsId === step.id}
+                            obsValue={obsValue}
+                            onEditValueChange={onEditValueChange}
+                            onObsValueChange={onObsValueChange}
+                            onStartEdit={onStartEdit}
+                            onConfirmEdit={onConfirmEdit}
+                            onCancelEdit={onCancelEdit}
+                            onToggleObs={onToggleObs}
+                            onConfirmObs={onConfirmObs}
+                            onCancelObs={onCancelObs}
+                            onClearObs={onClearObs}
+                        />
+                    ))}
+                </SortableContext>
+            </DndContext>
+
+            <div style={{ padding: '8px 12px 12px' }}>
+                {addingStep ? (
+                    <Row align="middle" wrap={false} style={{ padding: '6px 0' }}>
+                        <Col flex="78px" />
+                        <Col flex="auto" style={{ paddingRight: 12 }}>
+                            <Input
+                                value={newStepDesc}
+                                onChange={e => setNewStepDesc(e.target.value)}
+                                onPressEnter={() => {
+                                    if (newStepDesc.trim()) {
+                                        onAddStep(newStepDesc.trim());
+                                        setNewStepDesc('');
+                                        setAddingStep(false);
+                                    }
+                                }}
+                                placeholder="Nome da etapa..."
+                                autoFocus
+                            />
+                        </Col>
+                        <Col flex="none">
+                            <Space size={4}>
+                                <Button
+                                    size="small"
+                                    type="primary"
+                                    icon={<CheckOutlined />}
+                                    onClick={() => {
+                                        if (newStepDesc.trim()) {
+                                            onAddStep(newStepDesc.trim());
+                                            setNewStepDesc('');
+                                            setAddingStep(false);
+                                        }
+                                    }}
+                                />
+                                <Button
+                                    size="small"
+                                    icon={<CloseOutlined />}
+                                    onClick={() => { setAddingStep(false); setNewStepDesc(''); }}
+                                />
+                            </Space>
+                        </Col>
+                    </Row>
+                ) : (
+                    <Button
+                        type="dashed"
+                        icon={<PlusOutlined />}
+                        onClick={() => setAddingStep(true)}
+                        style={{ width: '100%' }}
+                    >
+                        Adicionar etapa
+                    </Button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 const CriarFluxo: React.FC = () => {
     const { tipo } = useParams<{ tipo: string }>();
 
     const storageKey = useMemo(() => `metro-fluxo-${tipo ?? 'default'}`, [tipo]);
+    const phasesStorageKey = useMemo(() => `metro-fases-${tipo ?? 'default'}`, [tipo]);
     const defaultName = useMemo(
-        () => (tipo === 'bancos-privados' ? 'Bancos Privados' : 'Caixa (CEF)'),
+        () => tipo === 'bancos-privados' ? 'Bancos Privados'
+            : tipo === 'regularizacao' ? 'Regularização'
+            : 'Caixa (CEF)',
         [tipo],
     );
-    const title = tipo === 'bancos-privados' ? '🏦 Fluxo — Bancos Privados' : '🏛️ Fluxo — Caixa (CEF)';
+    const title = tipo === 'bancos-privados' ? '🏦 Fluxo — Bancos Privados'
+        : tipo === 'regularizacao' ? '📋 Fluxo — Regularização'
+        : '🏛️ Fluxo — Caixa (CEF)';
 
+    const [phases, setPhases] = useState<Phase[]>(DEFAULT_PHASES);
     const [steps, setSteps] = useState<Step[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState('');
     const [editingObsId, setEditingObsId] = useState<number | null>(null);
     const [obsValue, setObsValue] = useState('');
+    const [editingPhaseId, setEditingPhaseId] = useState<number | null>(null);
+    const [editingPhaseLabel, setEditingPhaseLabel] = useState('');
     const [saving, setSaving] = useState(false);
     const [flowTypeId, setFlowTypeId] = useState<number | null>(null);
 
-    const sensors = useSensors(
+    const phaseSensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     );
 
+    const defaultSteps = useMemo(
+        () => tipo === 'regularizacao' ? [] : DEFAULT_STEPS,
+        [tipo],
+    );
+    const defaultPhases = useMemo(
+        () => tipo === 'regularizacao'
+            ? [{ id: 1, label: 'Regularização', color: 'blue' }]
+            : DEFAULT_PHASES,
+        [tipo],
+    );
+
     useEffect(() => {
-        const stored = localStorage.getItem(storageKey);
-        setSteps(stored ? (JSON.parse(stored) as Step[]) : DEFAULT_STEPS);
+        const storedSteps = localStorage.getItem(storageKey);
+        setSteps(storedSteps ? (JSON.parse(storedSteps) as Step[]) : defaultSteps);
+
+        const storedPhases = localStorage.getItem(phasesStorageKey);
+        setPhases(storedPhases ? (JSON.parse(storedPhases) as Phase[]) : defaultPhases);
+
         setEditingId(null);
         setEditingObsId(null);
+        setEditingPhaseId(null);
 
         api.get<FlowType[]>('/flowTypes').then(res => {
-            const keyword = tipo === 'bancos-privados' ? 'privado' : 'caixa';
+            const keyword = tipo === 'bancos-privados' ? 'privado'
+                : tipo === 'regularizacao' ? 'regulariz'
+                : 'caixa';
             const match = res.data.find(ft => ft.description.toLowerCase().includes(keyword));
             if (match) setFlowTypeId(match.id);
         }).catch(() => {});
-    }, [storageKey, defaultName, tipo]);
+    }, [storageKey, phasesStorageKey, tipo]);
 
-    const persist = useCallback(
+    const stepsByPhase = useMemo(() => {
+        const map: Record<number, Step[]> = {};
+        phases.forEach(p => { map[p.id] = []; });
+        steps.forEach(s => { if (map[s.fase]) map[s.fase].push(s); });
+        return map;
+    }, [phases, steps]);
+
+    const phaseOffsets = useMemo(() => {
+        const offsets: Record<number, number> = {};
+        let offset = 0;
+        phases.forEach(p => {
+            offsets[p.id] = offset;
+            offset += (stepsByPhase[p.id] ?? []).length;
+        });
+        return offsets;
+    }, [phases, stepsByPhase]);
+
+    const phaseIds = useMemo(() => phases.map(p => p.id), [phases]);
+
+    const persistSteps = useCallback(
         (newSteps: Step[]) => {
             localStorage.setItem(storageKey, JSON.stringify(newSteps));
             setSteps(newSteps);
@@ -290,15 +483,38 @@ const CriarFluxo: React.FC = () => {
         [storageKey],
     );
 
-    const handleDragEnd = useCallback(
+    const persistPhases = useCallback(
+        (newPhases: Phase[]) => {
+            localStorage.setItem(phasesStorageKey, JSON.stringify(newPhases));
+            setPhases(newPhases);
+        },
+        [phasesStorageKey],
+    );
+
+    const handlePhasesDragEnd = useCallback(
         (event: DragEndEvent) => {
             const { active, over } = event;
             if (!over || active.id === over.id) return;
-            const oldIndex = steps.findIndex(s => s.id === active.id);
-            const newIndex = steps.findIndex(s => s.id === over.id);
-            persist(arrayMove(steps, oldIndex, newIndex));
+            const oldIdx = phases.findIndex(p => p.id === active.id);
+            const newIdx = phases.findIndex(p => p.id === over.id);
+            const newPhases = arrayMove(phases, oldIdx, newIdx);
+            persistPhases(newPhases);
+            persistSteps(newPhases.flatMap(p => stepsByPhase[p.id] ?? []));
         },
-        [steps, persist],
+        [phases, stepsByPhase, persistPhases, persistSteps],
+    );
+
+    const handleStepsDragEnd = useCallback(
+        (faseId: number, event: DragEndEvent) => {
+            const { active, over } = event;
+            if (!over || active.id === over.id) return;
+            const phaseSteps = stepsByPhase[faseId] ?? [];
+            const oldIdx = phaseSteps.findIndex(s => s.id === active.id);
+            const newIdx = phaseSteps.findIndex(s => s.id === over.id);
+            const reordered = arrayMove(phaseSteps, oldIdx, newIdx);
+            persistSteps(phases.flatMap(p => p.id === faseId ? reordered : (stepsByPhase[p.id] ?? [])));
+        },
+        [phases, stepsByPhase, persistSteps],
     );
 
     const startEdit = useCallback((step: Step) => {
@@ -313,11 +529,11 @@ const CriarFluxo: React.FC = () => {
         (id: number) => {
             const trimmed = editValue.trim();
             if (!trimmed) return;
-            persist(steps.map(s => (s.id === id ? { ...s, description: trimmed } : s)));
+            persistSteps(steps.map(s => (s.id === id ? { ...s, description: trimmed } : s)));
             setEditingId(null);
             onNotification('success', { message: 'Salvo', description: 'Etapa atualizada.' });
         },
-        [editValue, steps, persist],
+        [editValue, steps, persistSteps],
     );
 
     const toggleObs = useCallback((step: Step) => {
@@ -335,18 +551,43 @@ const CriarFluxo: React.FC = () => {
     const confirmObs = useCallback(
         (id: number) => {
             const trimmed = obsValue.trim();
-            persist(steps.map(s => (s.id === id ? { ...s, observation: trimmed || undefined } : s)));
+            persistSteps(steps.map(s => (s.id === id ? { ...s, observation: trimmed || undefined } : s)));
             setEditingObsId(null);
         },
-        [obsValue, steps, persist],
+        [obsValue, steps, persistSteps],
     );
 
     const clearObs = useCallback(
         (id: number) => {
-            persist(steps.map(s => (s.id === id ? { ...s, observation: undefined } : s)));
+            persistSteps(steps.map(s => (s.id === id ? { ...s, observation: undefined } : s)));
         },
-        [steps, persist],
+        [steps, persistSteps],
     );
+
+    const handleAddStep = useCallback(
+        (faseId: number, description: string) => {
+            const maxId = steps.length > 0 ? Math.max(...steps.map(s => s.id)) : 0;
+            persistSteps([...steps, { id: maxId + 1, fase: faseId, description }]);
+        },
+        [steps, persistSteps],
+    );
+
+    const startEditPhase = useCallback((phase: Phase) => {
+        setEditingPhaseId(phase.id);
+        setEditingPhaseLabel(phase.label);
+        setEditingId(null);
+        setEditingObsId(null);
+    }, []);
+
+    const cancelEditPhase = useCallback(() => setEditingPhaseId(null), []);
+
+    const confirmEditPhase = useCallback(() => {
+        const trimmed = editingPhaseLabel.trim();
+        if (!trimmed) return;
+        persistPhases(phases.map(p => (p.id === editingPhaseId ? { ...p, label: trimmed } : p)));
+        setEditingPhaseId(null);
+        onNotification('success', { message: 'Fase atualizada', description: 'Nome da fase salvo.' });
+    }, [editingPhaseLabel, editingPhaseId, phases, persistPhases]);
 
     const handleSave = useCallback(async () => {
         if (!flowTypeId) {
@@ -358,17 +599,17 @@ const CriarFluxo: React.FC = () => {
         }
 
         setSaving(true);
+        const flatSteps = phases.flatMap(p => stepsByPhase[p.id] ?? []);
         try {
             await api.post('/flows/batch/upsert', {
                 description: defaultName,
                 typeFlowId: flowTypeId,
                 sendMessage: true,
-                steps: steps.map(s => ({
+                steps: flatSteps.map(s => ({
                     description: s.description,
                     observation: s.observation ?? null,
                 })),
             });
-
             onNotification('success', {
                 message: 'Fluxo salvo!',
                 description: `"${defaultName}" atualizado e disponível para novos processos.`,
@@ -382,62 +623,51 @@ const CriarFluxo: React.FC = () => {
         } finally {
             setSaving(false);
         }
-    }, [flowTypeId, defaultName, steps]);
-
-    const stepIds = useMemo(() => steps.map(s => s.id), [steps]);
+    }, [flowTypeId, defaultName, phases, stepsByPhase]);
 
     return (
         <div>
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
                 <Col>
-                    <Title level={3} {...primaryText}>
-                        {title}
-                    </Title>
+                    <Title level={3} {...primaryText}>{title}</Title>
                 </Col>
                 <Col>
-                    <Button
-                        type="primary"
-                        icon={<SaveOutlined />}
-                        loading={saving}
-                        onClick={handleSave}
-                    >
+                    <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={handleSave}>
                         Salvar
                     </Button>
                 </Col>
             </Row>
 
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
-                    {steps.map((step, index) => (
-                        <React.Fragment key={step.id}>
-                            {(index === 0 || step.fase !== steps[index - 1].fase) && (
-                                <Divider orientation="left" style={{ marginTop: index === 0 ? 8 : 24 }}>
-                                    <Tag
-                                        color={FASE_COLORS[step.fase]}
-                                        style={{ fontSize: 13, padding: '3px 12px', borderRadius: 12 }}
-                                    >
-                                        {PHASES[step.fase]}
-                                    </Tag>
-                                </Divider>
-                            )}
-                            <SortableStepRow
-                                step={step}
-                                index={index}
-                                isEditing={editingId === step.id}
-                                editValue={editValue}
-                                isEditingObs={editingObsId === step.id}
-                                obsValue={obsValue}
-                                onEditValueChange={setEditValue}
-                                onObsValueChange={setObsValue}
-                                onStartEdit={startEdit}
-                                onConfirmEdit={confirmEdit}
-                                onCancelEdit={cancelEdit}
-                                onToggleObs={toggleObs}
-                                onConfirmObs={confirmObs}
-                                onCancelObs={cancelObs}
-                                onClearObs={clearObs}
-                            />
-                        </React.Fragment>
+            <DndContext sensors={phaseSensors} collisionDetection={closestCenter} onDragEnd={handlePhasesDragEnd}>
+                <SortableContext items={phaseIds} strategy={verticalListSortingStrategy}>
+                    {phases.map(phase => (
+                        <SortablePhaseContainer
+                            key={phase.id}
+                            phase={phase}
+                            steps={stepsByPhase[phase.id] ?? []}
+                            globalOffset={phaseOffsets[phase.id] ?? 0}
+                            isEditingPhase={editingPhaseId === phase.id}
+                            editingPhaseLabel={editingPhaseLabel}
+                            onEditPhaseLabelChange={setEditingPhaseLabel}
+                            onStartEditPhase={() => startEditPhase(phase)}
+                            onConfirmEditPhase={confirmEditPhase}
+                            onCancelEditPhase={cancelEditPhase}
+                            onStepsDragEnd={e => handleStepsDragEnd(phase.id, e)}
+                            onAddStep={desc => handleAddStep(phase.id, desc)}
+                            editingId={editingId}
+                            editValue={editValue}
+                            editingObsId={editingObsId}
+                            obsValue={obsValue}
+                            onEditValueChange={setEditValue}
+                            onObsValueChange={setObsValue}
+                            onStartEdit={startEdit}
+                            onConfirmEdit={confirmEdit}
+                            onCancelEdit={cancelEdit}
+                            onToggleObs={toggleObs}
+                            onConfirmObs={confirmObs}
+                            onCancelObs={cancelObs}
+                            onClearObs={clearObs}
+                        />
                     ))}
                 </SortableContext>
             </DndContext>

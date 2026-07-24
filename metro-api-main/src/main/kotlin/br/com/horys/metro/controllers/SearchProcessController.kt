@@ -2,6 +2,7 @@ package br.com.horys.metro.controllers
 
 import br.com.horys.metro.controllers.response.CommentResponse
 import br.com.horys.metro.controllers.response.InvoiceResponse
+import br.com.horys.metro.controllers.response.ProcessDocumentResponse
 import br.com.horys.metro.controllers.response.ProcessExternalResponse
 import br.com.horys.metro.controllers.response.ProcessResponse
 import br.com.horys.metro.controllers.response.ProcessSellerExternalResponse
@@ -64,6 +65,11 @@ class SearchProcessController(
     fun findSaleByExternalId(@PathVariable externalId: String): List<ProcessExternalResponse.StepResponse> {
         return service.getByExternalId(externalId).map { ProcessExternalResponse.StepResponse.fromModel(it) }
             .sortedBy { it.orderStep }
+    }
+
+    @GetMapping("/documents")
+    fun getDocumentsByClient(@RequestParam clientId: Long): List<ProcessDocumentResponse> {
+        return service.getDocumentsByClient(clientId)
     }
 
     @GetMapping("/{id}/comments")

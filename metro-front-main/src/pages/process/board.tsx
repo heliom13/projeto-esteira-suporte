@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Select, Spin, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ProcessService } from '../../services/process';
@@ -55,18 +55,13 @@ const Board: React.FC = () => {
     const [users, setUsers]           = useState<User[]>([]);
     const [editingId, setEditingId]   = useState<number | null>(null);
     const [saving, setSaving]         = useState<number | null>(null);
-    const selectRef                   = useRef<any>(null);
     const navigate = useNavigate();
 
-    const load = () => {
+    useEffect(() => {
         setLoading(true);
         ProcessService.getProcess()
             .then(res => { setProcesses(res.data); setLoading(false); })
             .catch(() => setLoading(false));
-    };
-
-    useEffect(() => {
-        load();
         AuthService.findAll().then(res => setUsers(res.data)).catch(() => {});
     }, []);
 
@@ -81,7 +76,6 @@ const Board: React.FC = () => {
                     : p
             ));
         } catch {
-            // falha silenciosa — dados permanecem inalterados
         } finally {
             setSaving(null);
             setEditingId(null);
@@ -167,20 +161,15 @@ const Board: React.FC = () => {
                                                     </span>
                                                 </td>
 
-                                                {/* Célula de Responsável — editável */}
                                                 <td
                                                     style={{ ...td, minWidth: 160 }}
                                                     onClick={e => {
                                                         e.stopPropagation();
-                                                        if (!isSaving) {
-                                                            setEditingId(isEditing ? null : p.id);
-                                                            setTimeout(() => selectRef.current?.focus(), 50);
-                                                        }
+                                                        if (!isSaving) setEditingId(isEditing ? null : p.id);
                                                     }}
                                                 >
                                                     {isEditing ? (
                                                         <Select
-                                                            ref={selectRef}
                                                             size="small"
                                                             defaultValue={p.userId}
                                                             style={{ width: '100%' }}

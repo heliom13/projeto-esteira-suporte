@@ -222,7 +222,6 @@ const ChangeStep = () => {
             const res = await ProcessService.getStepNotes(processStepId)
             setNotesList(res.data)
         } catch {
-            // silencioso
         } finally {
             setNotesLoading(false)
         }
@@ -235,7 +234,6 @@ const ChangeStep = () => {
             const res = await ProcessService.addStepNote(notesModalStepId, newNoteText.trim())
             setNotesList(prev => [...prev, res.data])
             setNewNoteText('')
-            // atualiza o count local nos steps
             setSteps(prev => prev.map((s: any) =>
                 s.processStepId === String(notesModalStepId)
                     ? { ...s, notesCount: String(parseInt(s.notesCount ?? '0') + 1) }

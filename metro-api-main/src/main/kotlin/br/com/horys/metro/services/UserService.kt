@@ -8,6 +8,7 @@ import br.com.horys.metro.controllers.response.UserResponse
 import br.com.horys.metro.exceptions.BusinessException
 import br.com.horys.metro.models.User
 import br.com.horys.metro.repositories.UserRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Pageable
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -37,7 +38,11 @@ class UserService(
 
     fun delete(id: Long) {
         userRepository.findById(id).orElseThrow { BusinessException(USER_NOT_FOUND_MESSAGE) }
-        userRepository.deleteById(id)
+        try {
+            userRepository.deleteById(id)
+        } catch (e: DataIntegrityViolationException) {
+            throw BusinessException("Usuário não pode ser excluído pois possui processos, propostas ou notificações vinculados.")
+        }
     }
 
     fun reset(email: String, password: String) {

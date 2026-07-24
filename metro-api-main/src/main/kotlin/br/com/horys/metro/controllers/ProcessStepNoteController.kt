@@ -39,8 +39,7 @@ class ProcessStepNoteController(
             ProcessStepNote(
                 processStep = processStep,
                 content = request.content,
-                userName = user.name,
-                createdAt = LocalDateTime.now()
+                userName = user.name
             )
         )
         return NoteResponse(note.id!!, note.content, note.userName, note.createdAt)

@@ -23,4 +23,8 @@ export class DocumentsService {
   static async deleteDocument(id: number) {
     return api.delete(`/typesDocument/${id}`)
   }
+
+  static async getDocumentsByClient(clientId: number) {
+    return api.get(`/processes/documents?clientId=${clientId}`);
+  }
 }

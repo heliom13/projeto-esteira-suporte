@@ -22,6 +22,8 @@ export default function MainLayout({children}: any) {
         ? 'Privados'
         : location.pathname.includes('criar-fluxo/caixa')
         ? 'Caixa'
+        : location.pathname.includes('regularizacao')
+        ? 'Regularização'
         : null;
 
     const headerStyle: React.CSSProperties = {
@@ -114,7 +116,7 @@ export default function MainLayout({children}: any) {
     );
 
     return (
-        <Layout style={{minHeight: '100vh'}}>
+        <Layout style={{minHeight: '100vh', overflow: 'hidden'}}>
             <Header style={headerStyle}>
                 <div style={{textAlign: 'left', paddingTop: '20px'}}>
                     <Link to="/">
@@ -140,11 +142,22 @@ export default function MainLayout({children}: any) {
                     </Dropdown>
                 </div>
             </Header>
-            <Layout>
-                <Sider style={{background: '#fff'}} width={250}>
+            <Layout style={{overflow: 'hidden'}}>
+                <Sider
+                    style={{
+                        background: '#fff',
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                        height: 'calc(100vh - 64px)',
+                        position: 'sticky',
+                        top: 64,
+                        left: 0,
+                    }}
+                    width={250}
+                >
                     <SideMenu/>
                 </Sider>
-                <Content style={{margin: '0 16px'}}>
+                <Content style={{margin: '0 16px', overflowX: 'auto', minWidth: 0}}>
                     <div
                         style={{
                             padding: 24,

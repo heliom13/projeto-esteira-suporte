@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {Button, Col, DatePicker, Divider, Form, Input, Row, Select, Spin, Typography,} from "antd";
+import {Alert, Button, Col, DatePicker, Divider, Form, Input, Row, Select, Spin, Typography,} from "antd";
 import {buttonProps} from "../../components/button";
 import {rowProps} from "../../utils/FormUtils";
 import {required, validateMessages} from "../../utils/ValidatorFields";
@@ -11,6 +11,7 @@ import {ClientService} from "../../services/client";
 import {primaryText} from "../../styles/stylesProps";
 import {useForm} from "antd/lib/form/Form";
 import moment from "moment";
+import {CopyOutlined, CheckOutlined} from "@ant-design/icons";
 
 const {Option} = Select;
 const FormItem = Form.Item;
@@ -18,10 +19,24 @@ const {Title} = Typography;
 
 const ClientForm = () => {
     const [loading, setLoading] = useState(false);
+    const [externalId, setExternalId] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
     const DatePickerT: any = DatePicker;
     const navigate = useNavigate();
     const params = useParams();
     const [form] = useForm();
+
+    const docLink = externalId
+        ? `${window.location.origin}/external/documentos/${externalId}`
+        : null;
+
+    const handleCopy = () => {
+        if (!docLink) return;
+        navigator.clipboard.writeText(docLink).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
 
     const onSubmit = useCallback(async (data: any) => {
         if (params.id) {
@@ -88,6 +103,7 @@ const ClientForm = () => {
         try {
             ClientService.getClient(params.id).then((response) => {
                 setLoading(false);
+                setExternalId(response.data.externalId ?? null);
                 form.setFieldsValue({
                     name: response.data.name,
                     cpf: response.data.document,
@@ -129,6 +145,33 @@ const ClientForm = () => {
             <Title level={3} {...primaryText}>
                 {params.id ? " Atualizar Cliente" : "Cadastro de Cliente"}
             </Title>
+
+            {docLink && (
+                <Alert
+                    style={{ marginBottom: 24 }}
+                    type="info"
+                    showIcon
+                    message="Link de Documentação"
+                    description={
+                        <Input
+                            readOnly
+                            value={docLink}
+                            addonAfter={
+                                <Button
+                                    type="text"
+                                    size="small"
+                                    icon={copied ? <CheckOutlined style={{ color: '#52c41a' }} /> : <CopyOutlined />}
+                                    onClick={handleCopy}
+                                    style={{ border: 'none', padding: 0 }}
+                                >
+                                    {copied ? 'Copiado!' : 'Copiar'}
+                                </Button>
+                            }
+                        />
+                    }
+                />
+            )}
+
             <Form
                 layout="vertical"
                 validateMessages={validateMessages}

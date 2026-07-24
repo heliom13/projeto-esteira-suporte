@@ -109,18 +109,16 @@ const Clients = () => {
         {
             title: "Acesso externo",
             render: (r: ClientProps) => (
-                <span>
-          <a
-              href={`https://sistema.suporteimobiliario.com/external/cliente-comprador/${r.externalId}`}
-              target="_blank"
-              rel="noreferrer"
-          >
-            {" "}
-              https://sistema.suporteimobiliario.com/external/cliente-comprador/
-              {r.externalId}{" "}
-          </a>
-        </span>
+                <a
+                    href={`https://sistema.suporteimobiliario.com/external/cliente-comprador/${r.externalId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: 12, wordBreak: 'break-all' }}
+                >
+                    Ver link
+                </a>
             ),
+            width: 100,
         },
         {
             title: "Ação",
@@ -193,6 +191,7 @@ const Clients = () => {
                 columns={columns}
                 dataSource={clients}
                 rowKey={(r: ClientProps) => r.id}
+                scroll={{ x: 'max-content' }}
                 {...marginTop}
             />
             <Modal

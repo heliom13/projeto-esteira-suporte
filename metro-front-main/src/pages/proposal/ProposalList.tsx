@@ -1,290 +1,162 @@
-import React, {useCallback, useState} from "react";
-import {Button, Modal, Select, Space, Spin, Table} from "antd";
-import {ColumnsType} from "antd/es/table";
-import {ProposalDetail} from "./ProposalInterface";
+import React, { useEffect, useState } from "react";
+import { Button, Modal, Select, Space, Spin, Table, Tag } from "antd";
+import { ColumnsType } from "antd/es/table";
 import api from "../../services/api";
-import {EditOutlined, PlusOutlined, SearchOutlined} from "@ant-design/icons";
-import {buttonRadius} from "../../components/button";
-import {useNavigate} from "react-router-dom";
+import { EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { buttonRadius } from "../../components/button";
+import { useNavigate } from "react-router-dom";
 import onNotification from "../../components/notification/notification";
 
-const {Option} = Select;
+const { Option } = Select;
+
+const PROPOSAL_TYPES = [
+    { value: 'CONSORTIUM', label: 'Consórcio' },
+    { value: 'CONSIGNMENT', label: 'Consignado' },
+    { value: 'CONTRACT', label: 'Contrato' },
+    { value: 'CASH', label: 'À Vista' },
+    { value: 'FINANCING', label: 'Financiamento' },
+    { value: 'LOAN', label: 'Empréstimo' },
+    { value: 'REGULARIZATION', label: 'Regularização' },
+];
+
+type ProposalRow = any & { _type: string; _typeLabel: string };
 
 const ProposalList: React.FC = () => {
-    const [proposals, setProposals] = useState<ProposalDetail[]>([]);
-    const [selectedType, setSelectedType] = useState<string | null>(null);
-    const [columns, setColumns] = useState<ColumnsType<ProposalDetail>>([]);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [allProposals, setAllProposals] = useState<ProposalRow[]>([]);
+    const [filterType, setFilterType] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [flows, setFlows] = useState<{ id: number, description: string }[]>([]);
-    const [selectedFlow, setSelectedFlow] = useState(null);
+    const [flows, setFlows] = useState<{ id: number; description: string }[]>([]);
+    const [selectedFlow, setSelectedFlow] = useState<number | null>(null);
     const [proposalId, setProposalId] = useState<number>(0);
+    const [proposalType, setProposalType] = useState<string>('');
     const navigate = useNavigate();
 
-
-    const fetchData = useCallback(() => {
-        if (selectedType) {
-            api.get(`/${selectedType?.toLowerCase()}s`)
-                .then(response => {
-                    setProposals(response.data);
-                    setLoading(false);
-                })
-                .catch(error => {
-                    setLoading(false);
-                    console.error(`Error fetching ${selectedType} proposals:`, error);
-                    onNotification("error", {
-                        message: "Erro",
-                        description: "Erro ao buscar propostas! ",
-                    });
-                });
-        }
-
-    }, [selectedType]);
-
-    const search = useCallback(() => {
-        if (!selectedType) {
-            onNotification("error", {
-                message: "Erro",
-                description: "Por favor, selecione um tipo de proposta antes de buscar.",
-            });
-            return;
-        }
-        if (selectedType) {
-            setLoading(true);
-            fetchData()
-            let newColumns: ColumnsType<ProposalDetail> = [
-                // Common columns for all types
-                {
-                    title: "ID",
-                    dataIndex: "proposal",
-                    render: (proposal) => proposal.id,
-                },
-                {
-                    title: "Cliente",
-                    dataIndex: "proposal",
-                    render: (proposal) => proposal.client.name,
-                },
-            ];
-
-            if (selectedType === "CONTRACT" || selectedType === "CASH" || selectedType === "CONSIGNMENT" || selectedType === "FINANCING" || selectedType === "LOAN") {
-                newColumns.push(
-                    {
-                        title: "Banco",
-                        dataIndex: "bank",
-                        key: "bank",
-                    },
-                );
-            }
-
-            if (selectedType !== "CASH") {
-                newColumns.push(
-                    {
-                        title: "Valor",
-                        dataIndex: "price",
-                        render: (r) => (
-                            <p>
-                                {r?.toLocaleString("pt-br", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                })}
-                            </p>
-                        ),
-                    },
-                );
-            }
-
-            if (selectedType !== "CASH" && selectedType !== "CONTRACT" && selectedType !== "REGULARIZATION") {
-                newColumns.push({
-                    title: "Prazo",
-                    dataIndex: "term",
-                    key: "term",
-                })
-            }
-
-            if (selectedType === "CONTRACT") {
-                newColumns.push({
-                        title: "Modelo",
-                        dataIndex: "model",
-                    },
-                    {
-                        title: "Entrada",
-                        dataIndex: "entry",
-                    }
-                );
-            }
-
-            if (selectedType === "CASH" || selectedType === "FINANCING") {
-                newColumns.push({
-                    title: "Imóvel",
-                    dataIndex: "property",
-                    render: (property) => property?.description,
-                });
-            }
-
-            if (selectedType === "CASH" || selectedType === "FINANCING") {
-                newColumns.push({
-                    title: "Corretor",
-                    dataIndex: "seller",
-                    render: (seller) => seller?.name,
-                });
-            }
-
-            if (selectedType === "FINANCING") {
-                newColumns.push({
-                    title: "Modalidade",
-                    dataIndex: "modality",
-                });
-            }
-
-            if (selectedType === "CASH") {
-                newColumns.push(
-                    {
-                        title: "zone",
-                        dataIndex: "zone",
-                    },
-                );
-            }
-
-            if (selectedType === "CONSORTIUM" || selectedType === "FINANCING" || selectedType === "CASH" || selectedType === "CONTRACT") {
-                newColumns.push({
-                    title: "Bem",
-                    dataIndex: "asset",
-                });
-            }
-
-            if (selectedType === "LOAN" || selectedType === "FINANCING") {
-                newColumns.push({
-                    title: "Produto",
-                    dataIndex: "product",
-                });
-            }
-
-            if (selectedType === "REGULARIZATION") {
-                newColumns.push(
-                    {
-                        title: "Inscrição IMOB.",
-                        dataIndex: "registration",
-                    },
-                    {
-                        title: "Serviço",
-                        dataIndex: "service",
-                    },
-                    {
-                        title: "Pagamento",
-                        dataIndex: "payment",
-                        key: "payment",
-                    });
-            }
-
-            newColumns.push(
-                {
-                    title: 'Editar',
-                    key: 'edit',
-                    render: (text, record) => (
-                        <EditOutlined
-                            style={{color: "#FF8C00"}}
-                            onClick={() => navigate(`/propostas/cadastrar/${record.proposal.id}`)}
-                        />
-
-                    ),
-                }
+    const loadAll = () => {
+        setLoading(true);
+        Promise.all(
+            PROPOSAL_TYPES.map(t =>
+                api.get(`/${t.value.toLowerCase()}s`)
+                    .then(res => (res.data as any[]).map(item => ({ ...item, _type: t.value, _typeLabel: t.label })))
+                    .catch(() => [])
             )
-
-            newColumns.push(
-                {
-                    title: "Ações",
-                    key: "actions",
-                    render: (_, record) => (
-                        <Button type="primary" onClick={() => viewProposalDetails(record.proposal.id)}>
-                            Virar Processo
-                        </Button>
-                    ),
-                },
-            )
-
-            setColumns(newColumns);
-        }
-    }, [fetchData, selectedType]);
-    const handleTypeChange = (value: string) => {
-        setSelectedType(value);
+        ).then(results => {
+            setAllProposals(results.flat());
+            setLoading(false);
+        });
     };
 
-    const viewProposalDetails = (id: number) => {
+    useEffect(() => { loadAll(); }, []);
+
+    const displayed = filterType
+        ? allProposals.filter(p => p._type === filterType)
+        : allProposals;
+
+    const viewProposalDetails = (id: number, type: string) => {
         api.get('/flows')
             .then(response => {
                 setFlows(response.data);
                 setIsModalVisible(true);
                 setProposalId(id);
+                setProposalType(type);
             })
-            .catch(error => {
-                console.error(`Error fetching flows:`, error);
-            });
+            .catch(() => {});
     };
 
     const handleSave = () => {
-        const url = `/${selectedType?.toLowerCase()}s/approve`;
-        api.post(url, {id: proposalId, flowId: selectedFlow})
-            .then(response => {
+        api.post(`/${proposalType.toLowerCase()}s/approve`, { id: proposalId, flowId: selectedFlow })
+            .then(() => {
                 setIsModalVisible(false);
-                fetchData()
-                onNotification("success", {
-                    message: "Sucesso",
-                    description: "Processo criado! ",
-                });
+                loadAll();
+                onNotification("success", { message: "Sucesso", description: "Processo criado!" });
             })
-            .catch(error => {
-                console.error(`Error approving proposal:`, error);
-                onNotification("error", {
-                    message: "Erro",
-                    description: "Erro ao criar processo! ",
-                });
+            .catch(() => {
+                onNotification("error", { message: "Erro", description: "Erro ao criar processo!" });
             });
     };
+
+    const columns: ColumnsType<ProposalRow> = [
+        {
+            title: 'ID',
+            render: (r: ProposalRow) => r.proposal?.id,
+            sorter: (a: ProposalRow, b: ProposalRow) => (a.proposal?.id ?? 0) - (b.proposal?.id ?? 0),
+        },
+        {
+            title: 'Cliente',
+            render: (r: ProposalRow) => r.proposal?.client?.name ?? '—',
+            sorter: (a: ProposalRow, b: ProposalRow) =>
+                (a.proposal?.client?.name ?? '').localeCompare(b.proposal?.client?.name ?? ''),
+        },
+        {
+            title: 'Tipo',
+            render: (r: ProposalRow) => <Tag>{r._typeLabel}</Tag>,
+        },
+        {
+            title: 'Valor',
+            render: (r: ProposalRow) =>
+                r.price != null
+                    ? r.price.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' })
+                    : '—',
+        },
+        {
+            title: 'Editar',
+            render: (r: ProposalRow) => (
+                <EditOutlined
+                    style={{ color: '#FF8C00' }}
+                    onClick={() => navigate(`/propostas/cadastrar/${r.proposal?.id}`)}
+                />
+            ),
+        },
+        {
+            title: 'Ações',
+            render: (r: ProposalRow) => (
+                <Button type="primary" size="small" onClick={() => viewProposalDetails(r.proposal?.id, r._type)}>
+                    Virar Processo
+                </Button>
+            ),
+        },
+    ];
 
     return (
         <Spin spinning={loading}>
             <h2>Listagem de Propostas</h2>
-            <Modal title="Escolha um fluxo" visible={isModalVisible} onOk={handleSave}
-                   onCancel={() => setIsModalVisible(false)}>
-                <Select onChange={value => setSelectedFlow(value)} style={{width: '100%'}}>
+            <Modal
+                title="Escolha um fluxo"
+                visible={isModalVisible}
+                onOk={handleSave}
+                onCancel={() => setIsModalVisible(false)}
+            >
+                <Select onChange={(value: number) => setSelectedFlow(value)} style={{ width: '100%' }}>
                     {flows.map(flow => (
                         <Option key={flow.id} value={flow.id}>{flow.description}</Option>
                     ))}
                 </Select>
             </Modal>
-            <Space direction="vertical" size="small">
-                <label>Tipo de Proposta</label>
-                <Select onChange={handleTypeChange} style={{width: '200px', marginBottom: '20px'}}>
-                    <Option value="CONSORTIUM">Consórcio</Option>
-                    <Option value="CONSIGNMENT">Consignado</Option>
-                    <Option value="CONTRACT">Contrato</Option>
-                    <Option value="CASH">A vista</Option>
-                    <Option value="FINANCING">Financiamento</Option>
-                    <Option value="LOAN">Empréstimo</Option>
-                    <Option value="REGULARIZATION">Regularização</Option>
+            <Space style={{ marginBottom: 16 }}>
+                <Select
+                    allowClear
+                    placeholder="Filtrar por tipo"
+                    onChange={(value: string) => setFilterType(value ?? null)}
+                    style={{ width: 200 }}
+                >
+                    {PROPOSAL_TYPES.map(t => (
+                        <Option key={t.value} value={t.value}>{t.label}</Option>
+                    ))}
                 </Select>
-                <Space>
-                    <Button
-                        type="primary"
-                        icon={<SearchOutlined/>}
-                        onClick={() => search()}
-                        {...buttonRadius}
-                    >
-                        Buscar
-                    </Button>
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined/>}
-                        onClick={() => navigate("cadastrar")}
-                        {...buttonRadius}
-                    >
-                        Cadastrar
-                    </Button>
-                </Space>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => navigate('cadastrar')}
+                    {...buttonRadius}
+                >
+                    Cadastrar
+                </Button>
             </Space>
-            <br/>
-            <br/>
-            <Table dataSource={proposals} columns={columns} rowKey="id"/>
+            <Table
+                dataSource={displayed}
+                columns={columns}
+                rowKey={(r: ProposalRow) => `${r._type}-${r.proposal?.id}`}
+            />
         </Spin>
     );
 };

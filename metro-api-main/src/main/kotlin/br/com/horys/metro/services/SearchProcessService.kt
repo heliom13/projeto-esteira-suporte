@@ -1,6 +1,7 @@
 package br.com.horys.metro.services
 
 import br.com.horys.metro.controllers.response.CommentResponse
+import br.com.horys.metro.controllers.response.ProcessDocumentResponse
 import br.com.horys.metro.controllers.response.ProcessResponse
 import br.com.horys.metro.exceptions.ProcessNotFoundException
 import br.com.horys.metro.models.Client
@@ -17,6 +18,7 @@ import br.com.horys.metro.repositories.NotificationRepository
 import br.com.horys.metro.repositories.ProcessRepository
 import br.com.horys.metro.repositories.ProcessStepNoteRepository
 import br.com.horys.metro.repositories.ProcessStepRepository
+import br.com.horys.metro.repositories.StepDocumentRepository
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
 import javax.persistence.criteria.CriteriaBuilder
@@ -31,6 +33,7 @@ class SearchProcessService(
     private val searchClientService: SearchClientService,
     private val processStepRepository: ProcessStepRepository,
     private val processStepNoteRepository: ProcessStepNoteRepository,
+    private val stepDocumentRepository: StepDocumentRepository,
     private val searchPropertyService: SearchPropertyService,
     private val sellerService: SellerService,
     private val userService: UserService,
@@ -70,18 +73,24 @@ class SearchProcessService(
     }
 
     fun getSteps(id: Long): List<HashMap<String, String>> {
-        return processStepRepository.findFlowSteps(id).map {
-            val notesCount = processStepNoteRepository.countByProcessStep_Id(it.id!!)
+        val steps = processStepRepository.findFlowSteps(id)
+        val stepIds = steps.mapNotNull { it.id }
+        val countMap = if (stepIds.isEmpty()) emptyMap()
+            else processStepNoteRepository.countGroupedByIds(stepIds)
+                .associate { (it[0] as Long) to (it[1] as Long) }
+        return steps.map {
             hashMapOf(
                 "processStepId" to it.id.toString(),
                 "orderStep" to it.orderStep.toString(),
                 "statusStep" to it.step.status.toString(),
+                "processStepStatus" to it.status.toString(),
                 "deadline" to it.step.deadline.toString(),
+                "stepStartedAt" to it.createdAt.toString(),
                 "flow" to it.process.flow.description,
                 "step" to it.getDescriptionStep(),
-                "notesCount" to notesCount.toString()
+                "notesCount" to (countMap[it.id] ?: 0L).toString()
             )
-        }.toList()
+        }
     }
 
     fun findById(id: Long): Process {
@@ -135,6 +144,23 @@ class SearchProcessService(
     fun getComments(id: Long): List<Comment> {
         val process = processRepository.findById(id).orElseThrow { ProcessNotFoundException() }
         return commentRepository.findByProcessIdOrderByCreatedAtDesc(process.id!!)
+    }
+
+    fun getDocumentsByClient(clientId: Long): List<ProcessDocumentResponse> {
+        return processRepository.findByClient_IdAndStatus(clientId, Process.Status.ACTIVE)
+            .map { process ->
+                val documents = stepDocumentRepository
+                    .findByStep_IdAndDeletedFalse(process.stepCurrent.id!!)
+                    .map { it.typeDocument.description }
+                ProcessDocumentResponse(
+                    processId = process.id!!,
+                    clientId = process.client?.id ?: 0L,
+                    clientName = process.client?.name ?: "—",
+                    propertyId = process.property?.id ?: 0L,
+                    propertyName = process.property?.description ?: "—",
+                    documents = documents
+                )
+            }
     }
 
     fun getReplies(commentId: Long): List<CommentReply> {

@@ -1,142 +1,119 @@
-import {
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
-import {
-  Button,
-  Col,
-  Form,
-  Input,
-  Popconfirm,
-  Row,
-  Space,
-  Spin,
-  Table,
-  Typography,
-} from "antd";
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { buttonRadius } from "../../components/button";
-import onNotification from "../../components/notification/notification";
-import { DocumentsService } from "../../services/documents";
-import { marginTop, primaryText } from "../../styles/stylesProps";
-import { rowProps } from "../../utils/FormUtils";
-const { Title } = Typography;
-const { Text } = Typography;
-const FormItem = Form.Item;
+import { ExportOutlined, FolderOpenOutlined } from "@ant-design/icons";
+import { Alert, Button, Col, Form, Row, Select, Spin, Typography } from "antd";
+import { useEffect, useState } from "react";
+import { ClientService } from "../../services/client";
+import { primaryText } from "../../styles/stylesProps";
 
-type DocumentProps = {
-  id: number;
-  description: string;
-};
+const { Title, Text } = Typography;
+
+type Client = { id: number; name: string; linkDrive?: string };
+
+function extractDriveFolderId(url: string): string | null {
+  const match = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
 
 const Documents = () => {
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
-  const [documentsList, setDocumentsList] = useState([]);
-  const navigate = useNavigate();
-
-  const handleDelete = (id: number) => {
-    setLoading(true);
-    DocumentsService.deleteDocument(id)
-      .then(() => {
-        onNotification("success", {
-          message: "Sucesso",
-          description: "Documento excluído com sucesso",
-        });
-        fetchDocuments();
-      })
-      .catch(() => {
-        setLoading(false);
-        onNotification("error", {
-          message: "Erro",
-          description: "Não foi possível excluir o documento",
-        });
-      });
-  };
-
-  const fetchDocuments = useCallback(() => {
-    setLoading(true);
-    DocumentsService.typesDocuments()
-      .then((response) => {
-        setLoading(false);
-        setDocumentsList(response.data);
-      })
-      .catch((error) => {
-        setLoading(false);
-        onNotification("error", {
-          message: "Erro",
-          description: "Erro ao carregar os dados",
-        });
-      });
-  }, []);
+  const [selected, setSelected] = useState<Client | null>(null);
 
   useEffect(() => {
-    fetchDocuments();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setLoading(true);
+    ClientService.getClients()
+      .then((res) => setClients(res.data))
+      .finally(() => setLoading(false));
   }, []);
 
-  const columns = [
-    {
-      title: "Descrição",
-      render: (r: DocumentProps) => <Text> {r.description} </Text>,
-      sorter: (a: any, b: any) => a.description.localeCompare(b.description),
-    },
-    {
-      title: "Ação",
-      render: (r: DocumentProps) => (
-        <Space size="middle">
-          <EditOutlined
-            style={{ color: "#FF8C00" }}
-            onClick={() => navigate(`atualizar/${r.id}`)}
-          />
-          <Popconfirm
-            title="Deseja excluir este documento?"
-            onConfirm={() => handleDelete(r.id)}
-            okText="Sim"
-            cancelText="Não"
-          >
-            <DeleteOutlined style={{ color: "#B22222" }} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const folderId = selected?.linkDrive
+    ? extractDriveFolderId(selected.linkDrive)
+    : null;
+
+  const embedUrl = folderId
+    ? `https://drive.google.com/embeddedfolderview?id=${folderId}#list`
+    : null;
+
   return (
-    <Spin spinning={loading} tip="Carregando...">
+    <Spin spinning={loading} tip="Carregando clientes...">
       <Title level={3} {...primaryText}>
         Documentos
       </Title>
+
       <Form layout="vertical">
-        <Row {...rowProps}>
-          <Col span={12}>
-            <FormItem colon={false} label="Descrição" name="description">
-              <Input />
-            </FormItem>
+        <Row gutter={[16, 0]}>
+          <Col xs={24} md={14} lg={10}>
+            <Form.Item label="Cliente" colon={false}>
+              <Select
+                showSearch
+                allowClear
+                placeholder="Selecione ou pesquise um cliente..."
+                optionFilterProp="label"
+                onChange={(clientId: number) => {
+                  const client = clients.find((c) => c.id === clientId) ?? null;
+                  setSelected(client);
+                }}
+                options={clients.map((c) => ({ value: c.id, label: c.name }))}
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
           </Col>
+
+          {selected && folderId && (
+            <Col xs={24} md={10} style={{ display: "flex", alignItems: "flex-end", paddingBottom: 24 }}>
+              <Button
+                icon={<ExportOutlined />}
+                href={selected.linkDrive!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Abrir no Drive
+              </Button>
+            </Col>
+          )}
         </Row>
-        <Space>
-          <Button type="primary" icon={<SearchOutlined />} {...buttonRadius}>
-            Pesquisar
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate("cadastrar")}
-            {...buttonRadius}
-          >
-            Cadastrar
-          </Button>
-        </Space>
       </Form>
-      <Table
-        columns={columns}
-        dataSource={documentsList}
-        {...marginTop}
-        rowKey={(r: DocumentProps) => r.id}
-      />
+
+      {!selected && (
+        <div style={{
+          textAlign: "center",
+          padding: "60px 0",
+          color: "#aaa",
+        }}>
+          <FolderOpenOutlined style={{ fontSize: 48, marginBottom: 12, display: "block" }} />
+          <Text type="secondary">Selecione um cliente para visualizar os documentos.</Text>
+        </div>
+      )}
+
+      {selected && !folderId && (
+        <Alert
+          type="warning"
+          showIcon
+          message="Pasta do Drive não configurada"
+          description={`O cliente "${selected.name}" não tem uma pasta do Google Drive vinculada. Acesse o cadastro do cliente e preencha o campo "Link do Drive".`}
+          style={{ maxWidth: 520 }}
+        />
+      )}
+
+      {selected && folderId && (
+        <div style={{
+          borderRadius: 8,
+          overflow: "hidden",
+          border: "1px solid #e6e9ef",
+          marginTop: 8,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        }}>
+          <iframe
+            src={embedUrl!}
+            title={`Documentos — ${selected.name}`}
+            width="100%"
+            height="620"
+            style={{ border: "none", display: "block" }}
+            allow="autoplay"
+          />
+        </div>
+      )}
     </Spin>
   );
 };
+
 export default Documents;
