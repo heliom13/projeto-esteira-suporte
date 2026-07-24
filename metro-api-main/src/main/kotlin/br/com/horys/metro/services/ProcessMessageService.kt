@@ -8,6 +8,7 @@ import br.com.horys.metro.models.Property
 import br.com.horys.metro.repositories.FlowStepRepository
 import br.com.horys.metro.services.message.MessageRequest
 import br.com.horys.metro.services.message.MessageService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -15,6 +16,7 @@ class ProcessMessageService(
     private val messageService: MessageService,
     private val flowStepRepository: FlowStepRepository
 ) {
+    private val log = LoggerFactory.getLogger(this::class.java)
     companion object {
         const val linkFront = "https://sistema.suporteimobiliario.com/external"
         const val messageLink = " \nVocê pode acompanhar todo o seu processo por este link a seguir 👉 "
@@ -112,9 +114,12 @@ class ProcessMessageService(
     }
 
     fun sendNextStepSale(processStep: ProcessStep, runtimeNote: String? = null) {
+        log.info(">>> [MSG] sendNextStepSale chamado — processo=${processStep.process.id}, flow.sendMessage=${processStep.process.flow.sendMessage}")
         if (!processStep.process.flow.sendMessage) {
+            log.warn(">>> [MSG] BLOQUEADO: flow.sendMessage=false para o fluxo '${processStep.process.flow.description}' — nenhuma mensagem será enviada")
             return
         }
+        log.info(">>> [MSG] sendMessage=true, prosseguindo com envio...")
 
         val nameProperty = processStep.process.property?.description ?: "imóvel"
         val etapa = processStep.getDescriptionStep()

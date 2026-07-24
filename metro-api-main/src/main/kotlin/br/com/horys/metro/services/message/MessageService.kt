@@ -18,11 +18,13 @@ class MessageService(
     fun sendMessage(messageRequest: MessageRequest) {
         GlobalScope.launch {
             try {
+                log.info(">>> [WHATSAPP] Enviando para ${messageRequest.phone} ...")
                 withContext(Dispatchers.IO) {
                     whatsAppClient.sendMessage(messageRequest)
                 }
+                log.info(">>> [WHATSAPP] Enviado com sucesso para ${messageRequest.phone}")
             } catch (e: Exception) {
-                log.error(e.message, e.cause)
+                log.error(">>> [WHATSAPP] ERRO ao enviar para ${messageRequest.phone}: ${e.message}", e.cause)
             }
         }
     }
