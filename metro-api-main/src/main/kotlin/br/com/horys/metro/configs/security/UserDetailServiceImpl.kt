@@ -15,7 +15,7 @@ class UserDetailServiceImpl(private val userRepository: UserRepository) : UserDe
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
     override fun loadUserByUsername(username: String?): UserDetails {
         try {
-            val user = userRepository.findByEmail(username)
+            val user = userRepository.findByEmailIgnoreCase(username)
 
             if (!user.isPresent)
                 throw UsernameNotFoundException("Usuário não encontrado: $username")

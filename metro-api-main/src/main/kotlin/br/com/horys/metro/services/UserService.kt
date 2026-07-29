@@ -29,7 +29,7 @@ class UserService(
 
     fun getLoggedInUser(): User {
         val username = SecurityContextHolder.getContext().authentication.name
-        return userRepository.findByEmail(username).orElseThrow { BusinessException(USER_NOT_FOUND_MESSAGE) }
+        return userRepository.findByEmailIgnoreCase(username).orElseThrow { BusinessException(USER_NOT_FOUND_MESSAGE) }
     }
 
     fun findById(userDestiny: Long): User {
@@ -46,7 +46,7 @@ class UserService(
     }
 
     fun reset(email: String, password: String) {
-        val user = userRepository.findByEmail(email).orElseThrow { BusinessException("user not found") }
+        val user = userRepository.findByEmailIgnoreCase(email).orElseThrow { BusinessException("user not found") }
         userRepository.save(
             user.copy(
                 password = bCryptPasswordEncoder.encode(password)
