@@ -122,7 +122,7 @@ class UserService(
     fun executeAdmin(request: CreateUserRequest): UserResponse {
         try {
 
-            userRepository.findByEmail(request.email)
+            userRepository.findByEmailIgnoreCase(request.email)
                 .ifPresent { throw BusinessException("Já existe um usuário com o mesmo email!") }
 
             userRepository.findByUsername(request.username)
@@ -148,7 +148,7 @@ class UserService(
         val user = userRepository.findById(id).orElseThrow { RuntimeException("Usuário não encontrado id: $id") }
 
         if (user.email != updateUserRequest.email) {
-            userRepository.findByEmail(updateUserRequest.email)
+            userRepository.findByEmailIgnoreCase(updateUserRequest.email)
                 .ifPresent { throw BusinessException("Já existe um usuário com o mesmo email!") }
         }
 
