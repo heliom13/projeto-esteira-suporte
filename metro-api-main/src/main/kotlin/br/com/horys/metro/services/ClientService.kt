@@ -30,7 +30,7 @@ class ClientService(
             client.copy(
                 name = request.name,
                 document = request.document,
-                birthday = LocalDate.parse(request.birthday),
+                birthday = request.birthday?.let { LocalDate.parse(it) },
                 email = request.email,
                 phone = request.phone,
                 address = request.address,

@@ -6,6 +6,7 @@ import {useNavigate, useParams} from 'react-router-dom'
 import onNotification from '../../components/notification/notification'
 import {buttonRadius, buttonRed} from '../../components/button'
 import {ArrowLeftOutlined, DeleteOutlined} from '@ant-design/icons'
+import {useWorkspace} from '../../contexts/WorkspaceContext'
 
 const {Text, Title} = Typography
 
@@ -23,6 +24,8 @@ const ProcessInvoice = () => {
     const [invoiceData, setInvoiceData] = useState<InvoiceProps>()
     const {id} = useParams()
     const navigate = useNavigate()
+    const {workspace} = useWorkspace()
+    const processosPath = workspace === "regularizacao" ? "/regularizacao/processos" : "/processos"
 
     const fetchData = () => {
         let invoiceID = ''
@@ -61,7 +64,7 @@ const ProcessInvoice = () => {
 
     const removeInvoice = (id) => {
         ProcessService.removeInvoice(id).then((response) => {
-            navigate('/processos')
+            navigate(processosPath)
             onNotification('success', {
                 message: 'Sucesso',
                 description: 'Removido com sucesso',
@@ -104,7 +107,7 @@ const ProcessInvoice = () => {
                 {...buttonRadius}
                 type="primary"
                 icon={<ArrowLeftOutlined/>}
-                onClick={() => navigate('/processos')}
+                onClick={() => navigate(processosPath)}
             >
                 Voltar
             </Button>

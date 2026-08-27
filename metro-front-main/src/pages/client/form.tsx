@@ -9,6 +9,7 @@ import onNotification from "../../components/notification/notification";
 import {useNavigate, useParams} from "react-router-dom";
 import {ClientService} from "../../services/client";
 import {primaryText} from "../../styles/stylesProps";
+import {useWorkspace} from "../../contexts/WorkspaceContext";
 import {useForm} from "antd/lib/form/Form";
 import moment from "moment";
 import {CopyOutlined, CheckOutlined} from "@ant-design/icons";
@@ -25,6 +26,10 @@ const ClientForm = () => {
     const navigate = useNavigate();
     const params = useParams();
     const [form] = useForm();
+    const {workspace} = useWorkspace();
+    const isRegularizacao = workspace === "regularizacao";
+    const optionalRules = isRegularizacao ? [] : required;
+    const clientesPath = isRegularizacao ? "/regularizacao/clientes" : "/cliente-comprador";
 
     const docLink = externalId
         ? `${window.location.origin}/external/documentos/${externalId}`
@@ -49,7 +54,7 @@ const ClientForm = () => {
                             message: "Sucesso",
                             description: "Salvo com sucesso",
                         });
-                        navigate("/cliente-comprador");
+                        navigate(clientesPath);
                     })
                     .catch((error) => {
                         setLoading(false);
@@ -76,7 +81,7 @@ const ClientForm = () => {
                             message: "Sucesso",
                             description: "Salvo com sucesso",
                         });
-                        navigate("/cliente-comprador");
+                        navigate(clientesPath);
                     })
                     .catch((error) => {
 
@@ -191,11 +196,14 @@ const ClientForm = () => {
                             name="cpf"
                             rules={[
                                 {
-                                    required: true,
+                                    required: !isRegularizacao,
                                     message: "Por favor digite o CPF",
                                 },
                                 () => ({
                                     validator(_, value) {
+                                        if (!value) {
+                                            return Promise.resolve();
+                                        }
                                         if (cpf.isValid(value)) {
                                             return Promise.resolve();
                                         }
@@ -223,7 +231,7 @@ const ClientForm = () => {
                             colon={false}
                             label="Profissão"
                             name="job"
-                            rules={required}
+                            rules={optionalRules}
                         >
                             <Input placeholder="Digite a sua profissão"/>
                         </FormItem>
@@ -235,7 +243,7 @@ const ClientForm = () => {
                             colon={false}
                             label="Endereço"
                             name="address"
-                            rules={required}
+                            rules={optionalRules}
                         >
                             <Input placeholder="Digite o seu endereço"/>
                         </FormItem>
@@ -245,7 +253,7 @@ const ClientForm = () => {
                             colon={false}
                             label="Estado Civil"
                             name="maritalStatus"
-                            rules={required}
+                            rules={optionalRules}
                         >
                             <Select allowClear placeholder="Estado Civil">
                                 <Option value="MARRIED">CASADO(A)</Option>
@@ -260,7 +268,7 @@ const ClientForm = () => {
                             colon={false}
                             label="Data de Nascimento"
                             name="birthday"
-                            rules={required}
+                            rules={optionalRules}
                         >
                             <DatePickerT format={dateFormat} placeholder="Selecione a data"/>
                         </FormItem>
@@ -295,7 +303,7 @@ const ClientForm = () => {
                             colon={false}
                             label="E-mail"
                             name="mail"
-                            rules={[{required: true}, {type: "email"}]}
+                            rules={[{required: !isRegularizacao}, {type: "email"}]}
                         >
                             <Input type="email" placeholder="E-mail"/>
                         </FormItem>

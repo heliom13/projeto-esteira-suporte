@@ -12,6 +12,7 @@ import {rowProps} from '../../utils/FormUtils'
 import DelayForm from './delayForm'
 import {AuthService} from "../../services/auth";
 import api from "../../services/api";
+import {useWorkspace} from "../../contexts/WorkspaceContext";
 
 const {Title} = Typography
 const {TabPane} = Tabs;
@@ -37,6 +38,8 @@ const ChangeStep = () => {
     const [steps, setSteps] = useState<StepProps[]>([])
     const [stepId, setStepId] = useState(0)
     const navigate = useNavigate()
+    const {workspace} = useWorkspace()
+    const processosPath = workspace === "regularizacao" ? "/regularizacao/processos" : "/processos"
     const [isUserProcessOwner, setIsUserProcessOwner] = useState(false)
     const [users, setUsers] = useState([]);
     const [replies, setReplies] = useState({});
@@ -129,7 +132,7 @@ const ChangeStep = () => {
                         })
                         setLoading(false)
                         setIsModalVisible(false)
-                        navigate('/processos')
+                        navigate(processosPath)
                     })
                     .catch((error) => {
                         onNotification('error', {
@@ -165,7 +168,7 @@ const ChangeStep = () => {
                         setModalDelay(false)
                         setIsConfirmNextVisible(false)
                         setNextStepNote('')
-                        navigate('/processos')
+                        navigate(processosPath)
                     })
                     .catch((error) => {
                         onNotification('error', {

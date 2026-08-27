@@ -11,6 +11,7 @@ import {SellerService} from "../../services/seller";
 import {primaryText} from "../../styles/stylesProps";
 import {rowProps} from "../../utils/FormUtils";
 import {required, validateMessages} from "../../utils/ValidatorFields";
+import {useWorkspace} from "../../contexts/WorkspaceContext";
 
 const {Title} = Typography;
 const FormItem = Form.Item;
@@ -33,6 +34,9 @@ const PropertySellForm = () => {
     const [flows, setFlows] = useState<Flow[]>([]);
     const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
     const navigate = useNavigate();
+    const {workspace} = useWorkspace();
+    const isRegularizacao = workspace === "regularizacao";
+    const optionalRules = isRegularizacao ? [] : required;
 
     const handleFlowSelect = (selectedOption) => {
         const selectedFlow = flows.find(flow => flow.id === selectedOption.value) || null;
@@ -50,7 +54,7 @@ const PropertySellForm = () => {
                             message: "Sucesso",
                             description: "Salvo com sucesso",
                         });
-                        navigate("/processos");
+                        navigate(isRegularizacao ? "/regularizacao/processos" : "/processos");
                     })
                     .catch((error) => {
 
@@ -132,7 +136,7 @@ const PropertySellForm = () => {
                             colon={false}
                             label="Cliente"
                             name="client"
-                            rules={required}
+                            rules={optionalRules}
                         >
                             <Select
                                 placeholder="Escolha"
@@ -153,7 +157,7 @@ const PropertySellForm = () => {
                             colon={false}
                             label="Imovél"
                             name="property"
-                            rules={required}
+                            rules={optionalRules}
                         >
                             <Select
                                 placeholder="Escolha"

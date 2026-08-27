@@ -9,6 +9,7 @@ import {rowProps} from '../../utils/FormUtils'
 import {CheckOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons'
 import {useForm} from 'antd/lib/form/Form'
 import onNotification from '../../components/notification/notification'
+import {useWorkspace} from '../../contexts/WorkspaceContext'
 
 const {Title} = Typography
 const FormItem = Form.Item
@@ -29,6 +30,8 @@ const EndProcess = () => {
     const [comissionDone, setComissionsDone] = useState<ComissionProps[]>([])
     const [formComission] = useForm()
     const navigate = useNavigate()
+    const {workspace} = useWorkspace()
+    const processosPath = workspace === "regularizacao" ? "/regularizacao/processos" : "/processos"
 
     const fetchData = () => {
         setLoading(true)
@@ -145,7 +148,7 @@ const EndProcess = () => {
                         description: 'Salvo com sucesso!',
                     })
                     setLoading(false)
-                    navigate('/processos')
+                    navigate(processosPath)
                 })
                 .catch((error) => {
                     setLoading(false)

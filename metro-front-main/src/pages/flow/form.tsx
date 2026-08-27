@@ -16,6 +16,7 @@ import {arrayMove, SortableContext, useSortable, verticalListSortingStrategy,} f
 import {CSS} from '@dnd-kit/utilities';
 import type {ColumnsType} from 'antd/es/table';
 import {required} from "../../utils/ValidatorFields";
+import {useWorkspace} from "../../contexts/WorkspaceContext";
 
 const FormItem = Form.Item
 const {Option} = Select
@@ -50,6 +51,8 @@ const FlowForm = () => {
     const [flow, setFlow] = useState<FlowProps[]>([])
     const [form] = useForm()
     const navigate = useNavigate()
+    const {workspace} = useWorkspace()
+    const bancosPath = workspace === "regularizacao" ? "/regularizacao/fluxos" : "/bancos"
 
     const optionsSteps = steps.map(
         (step: { id: number; description: string }) => (
@@ -235,7 +238,7 @@ const FlowForm = () => {
                                 description: 'Atualizado com sucesso!',
                             })
                             setLoading(false)
-                            navigate('/bancos')
+                            navigate(bancosPath)
                         })
                         .catch(error => {
                             setLoading(false)
@@ -265,7 +268,7 @@ const FlowForm = () => {
                                 description: 'Salvo com sucesso!',
                             })
                             setLoading(false)
-                            navigate('/bancos')
+                            navigate(bancosPath)
                         })
                         .catch((error) => {
 

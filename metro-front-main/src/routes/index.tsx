@@ -67,6 +67,24 @@ export default function AppRoutes() {
                             <Route path="regularizacao">
                                 <Route path="" element={<RegularizacaoHome/>}/>
                                 <Route path="cadastrar" element={<CreateProposal/>}/>
+                                <Route path="clientes">
+                                    <Route path="" element={<Clients/>}/>
+                                    <Route path="cadastrar" element={<ClientForm/>}/>
+                                    <Route path="atualizar/:id" element={<ClientForm/>}/>
+                                </Route>
+                                <Route path="fluxos">
+                                    <Route path="" element={<Flows/>}/>
+                                    <Route path="cadastrar" element={<FlowForm/>}/>
+                                    <Route path="visualizar/:id" element={<Flow/>}/>
+                                    <Route path="atualizar/:id" element={<FlowForm/>}/>
+                                </Route>
+                                <Route path="processos">
+                                    <Route path="" element={<Processes/>}/>
+                                    <Route path="cadastrar" element={<PropertySellForm/>}/>
+                                    <Route path="mudar-etapa/:id" element={<ChangeStep/>}/>
+                                    <Route path="finalizar-processo/:id" element={<EndProcess/>}/>
+                                    <Route path="nota/:id" element={<ProcessInvoice/>}/>
+                                </Route>
                             </Route>
                         </Route>
                     </Route>

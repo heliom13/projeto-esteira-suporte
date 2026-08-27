@@ -6,9 +6,10 @@ import {Layout} from 'antd';
 import {LogoutOutlined, SwapOutlined} from '@ant-design/icons';
 import {useAuth} from '../../contexts/AuthContext';
 import {useWorkspace} from '../../contexts/WorkspaceContext';
+import {RegularizacaoMenu} from '../../components/menu/regularizacaoMenu';
 
 const {Title} = Typography;
-const {Content} = Layout;
+const {Sider, Content} = Layout;
 
 const headerStyle: React.CSSProperties = {
     display: 'flex',
@@ -42,7 +43,7 @@ export default function RegularizacaoLayout() {
         <Layout style={{height: '100vh', overflow: 'hidden'}}>
             <Header style={headerStyle}>
                 <div style={{textAlign: 'left', paddingTop: '20px'}}>
-                    <Link to="/">
+                    <Link to="/regularizacao">
                         <Title level={4} style={{color: '#fff'}}>
                             Regularização
                         </Title>
@@ -68,18 +69,23 @@ export default function RegularizacaoLayout() {
                     </Button>
                 </div>
             </Header>
-            <Content style={{margin: '0 16px', overflowY: 'auto', overflowX: 'auto', height: 'calc(100vh - 64px)'}}>
-                <div
-                    style={{
-                        padding: 24,
-                        paddingTop: 20,
-                        background: '#fff',
-                        minHeight: 360,
-                    }}
-                >
-                    <Outlet/>
-                </div>
-            </Content>
+            <Layout style={{height: 'calc(100vh - 64px)'}}>
+                <Sider style={{background: '#fff', overflowY: 'auto', overflowX: 'hidden', height: '100%'}} width={220}>
+                    <RegularizacaoMenu/>
+                </Sider>
+                <Content style={{margin: '0 16px', overflowY: 'auto', overflowX: 'auto', height: '100%'}}>
+                    <div
+                        style={{
+                            padding: 24,
+                            paddingTop: 20,
+                            background: '#fff',
+                            minHeight: 360,
+                        }}
+                    >
+                        <Outlet/>
+                    </div>
+                </Content>
+            </Layout>
         </Layout>
     );
 }
