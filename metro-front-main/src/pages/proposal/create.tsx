@@ -256,19 +256,46 @@ const CreateProposal: React.FC = () => {
                         </Form.Item>
                     </Col>
 
-                    <Col span={8}>
-                        <Form.Item label="Banco" name="bank">
-                            <Select onChange={handleBankChange} style={{width: '100%'}}>
-                                <Option value="BB">BB</Option>
-                                <Option value="BRADESCO">BRADESCO</Option>
-                                <Option value="CAIXA">CAIXA</Option>
-                                <Option value="INTER">INTER</Option>
-                                <Option value="ITAU">ITAU</Option>
-                                <Option value="SANTANDER">SANTANDER</Option>
-                                <Option value="NENHUM">NENHUM</Option>
-                            </Select>
-                        </Form.Item>
-                    </Col>
+                    {proposalType === "REGULARIZATION" ? (
+                        <Col span={8}>
+                            <Form.Item label="Tipo de Regularização" name="service">
+                                <Select style={{width: '100%'}}>
+                                    <Option value="IPTU">IPTU</Option>
+                                    <Option value="ITBI">ITBI</Option>
+                                    <Option value="AVERBAÇÃO">AVERBAÇÃO</Option>
+                                    <Option value="ESCRITURA">ESCRITURA</Option>
+                                    <Option value="RETIFICAÇÃO">RETIFICAÇÃO</Option>
+                                    <Option value="SPU - FORO">SPU - FORO</Option>
+                                    <Option value="REG. FUNDIÁRIA">REG. FUNDIÁRIA</Option>
+                                    <Option value="DESPACHANTE">DESPACHANTE</Option>
+                                    <Option value="HABITE-SE">HABITE-SE</Option>
+                                    <Option value="LAUDO RT">LAUDO RT</Option>
+                                    <Option value="VISTORIA">VISTORIA</Option>
+                                    <Option value="COMPLETO">COMPLETO</Option>
+                                    <Option value="TRANSMUNICIPALIDADE">TRANSMUNICIPALIDADE</Option>
+                                    <Option value="PROCURAÇÃO">PROCURAÇÃO</Option>
+                                    <Option value="INVENTÁRIO">INVENTÁRIO</Option>
+                                    <Option value="AVALIAÇÃO">AVALIAÇÃO</Option>
+                                    <Option value="BOLETO IPTU">BOLETO IPTU</Option>
+                                    <Option value="LAUDÊMIO">LAUDÊMIO</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    ) : (
+                        <Col span={8}>
+                            <Form.Item label="Banco" name="bank">
+                                <Select onChange={handleBankChange} style={{width: '100%'}}>
+                                    <Option value="BB">BB</Option>
+                                    <Option value="BRADESCO">BRADESCO</Option>
+                                    <Option value="CAIXA">CAIXA</Option>
+                                    <Option value="INTER">INTER</Option>
+                                    <Option value="ITAU">ITAU</Option>
+                                    <Option value="SANTANDER">SANTANDER</Option>
+                                    <Option value="NENHUM">NENHUM</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    )}
                 </Row>
 
                 <Row gutter={16}>
@@ -541,33 +568,9 @@ const CreateProposal: React.FC = () => {
                 {proposalType && proposalType === "REGULARIZATION" && (
                     <>
                         <Row gutter={16}>
-                            <Col span={6}>
+                            <Col span={8}>
                                 <Form.Item label="Inscrição Imobiliária" name="registration">
                                     <Input/>
-                                </Form.Item>
-                            </Col>
-                            <Col span={8}>
-                                <Form.Item label="Serviço" name="service">
-                                    <Select>
-                                        <Option value="IPTU">IPTU</Option>
-                                        <Option value="ITBI">ITBI</Option>
-                                        <Option value="AVERBAÇÃO">AVERBAÇÃO</Option>
-                                        <Option value="ESCRITURA">ESCRITURA</Option>
-                                        <Option value="RETIFICAÇÃO">RETIFICAÇÃO</Option>
-                                        <Option value="SPU - FORO">SPU - FORO</Option>
-                                        <Option value="REG. FUNDIÁRIA">REG. FUNDIÁRIA</Option>
-                                        <Option value="DESPACHANTE">DESPACHANTE</Option>
-                                        <Option value="HABITE-SE">HABITE-SE</Option>
-                                        <Option value="LAUDO RT">LAUDO RT</Option>
-                                        <Option value="VISTORIA">VISTORIA</Option>
-                                        <Option value="COMPLETO">COMPLETO</Option>
-                                        <Option value="TRANSMUNICIPALIDADE">TRANSMUNICIPALIDADE</Option>
-                                        <Option value="PROCURAÇÃO">PROCURAÇÃO</Option>
-                                        <Option value="INVENTÁRIO">INVENTÁRIO</Option>
-                                        <Option value="AVALIAÇÃO">AVALIAÇÃO</Option>
-                                        <Option value="BOLETO IPTU">BOLETO IPTU</Option>
-                                        <Option value="LAUDÊMIO">LAUDÊMIO</Option>
-                                    </Select>
                                 </Form.Item>
                             </Col>
                             <Col span={8}>
