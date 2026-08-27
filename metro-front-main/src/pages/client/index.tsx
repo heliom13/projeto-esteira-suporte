@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import {Badge, Button, Col, Form, Input, Modal, Popconfirm, Row, Space, Spin, Table, Tooltip, Typography,} from "antd";
+import {Button, Col, Form, Input, Modal, Popconfirm, Row, Space, Spin, Table, Typography,} from "antd";
 import {useCallback, useEffect, useState} from "react";
 import {buttonRadius} from "../../components/button";
 import {DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, SearchOutlined,} from "@ant-design/icons";
@@ -8,11 +8,9 @@ import {rowProps} from "../../utils/FormUtils";
 import {marginTop, primaryText} from "../../styles/stylesProps";
 import {useNavigate} from "react-router-dom";
 import {ClientService} from "../../services/client";
-import {ClientActivityService, ActiveCounts} from "../../services/clientActivity";
 import onNotification from "../../components/notification/notification";
 import Client from "./view";
 import {useForm} from "antd/lib/form/Form";
-import {useWorkspace} from "../../contexts/WorkspaceContext";
 
 const FormItem = Form.Item;
 const {Title} = Typography;
@@ -32,18 +30,8 @@ const Clients = () => {
     const [openModalView, setOpenModalView] = useState(false);
     const [clientId, setClientId] = useState(0);
     const [form] = useForm();
-    const [crossActiveCounts, setCrossActiveCounts] = useState<ActiveCounts>({});
-    const {workspace} = useWorkspace();
-    const isRegularizacao = workspace === "regularizacao";
 
     const navigate = useNavigate();
-
-    const fetchCrossActiveCounts = useCallback(() => {
-        const request = isRegularizacao
-            ? ClientActivityService.getFinancingActiveCounts()
-            : ClientActivityService.getRegularizationActiveCounts();
-        request.then(setCrossActiveCounts).catch(() => setCrossActiveCounts({}));
-    }, [isRegularizacao]);
 
     const fetchClients = useCallback(() => {
         setLoading(true);
@@ -100,27 +88,10 @@ const Clients = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => fetchClients(), []);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => fetchCrossActiveCounts(), [isRegularizacao]);
-
-    const crossActiveLabel = isRegularizacao ? "financiamento(s) ativo(s)" : "regularização(ões) ativa(s)";
-
     const columns = [
         {
             title: "Nome",
-            render: (r: ClientProps) => {
-                const count = crossActiveCounts[r.id] || 0;
-                if (!count) {
-                    return <span> {r.name} </span>;
-                }
-                return (
-                    <Tooltip title={`${count} ${crossActiveLabel}`}>
-                        <Badge count={count} size="small" offset={[6, -2]}>
-                            <span> {r.name} </span>
-                        </Badge>
-                    </Tooltip>
-                );
-            },
+            render: (r: ClientProps) => <span> {r.name} </span>,
             sorter: (a: any, b: any) => a.name.localeCompare(b.name),
         },
         {

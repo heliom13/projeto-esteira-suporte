@@ -1,4 +1,4 @@
-import {Button, Col, Form, Input, Modal, Popconfirm, Row, Space, Spin, Table, Tooltip, Typography,} from "antd";
+import {Badge, Button, Col, Form, Input, Modal, Popconfirm, Row, Space, Spin, Table, Tooltip, Typography,} from "antd";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import "moment/locale/pt-br";
 import {buttonLeft, buttonRadius} from "../../components/button";
@@ -65,24 +65,47 @@ const Processes = () => {
     moment.locale("pt-br");
 
     const categoriesByClient = useMemo(() => {
-        const map: Record<number, { financiamento?: ProcessProps; regularizacao?: ProcessProps }> = {};
+        const map: Record<number, { financiamento: ProcessProps[]; regularizacao: ProcessProps[] }> = {};
         (processData as ProcessProps[]).forEach((process) => {
+            if (process.status !== "ACTIVE") return;
             const clientId = process.client?.id;
             if (!clientId) return;
-            if (!map[clientId]) map[clientId] = {};
+            if (!map[clientId]) map[clientId] = {financiamento: [], regularizacao: []};
             if (isRegularizacaoFlow(process.stepCurrent.flowType)) {
-                map[clientId].regularizacao = process;
+                map[clientId].regularizacao.push(process);
             } else {
-                map[clientId].financiamento = process;
+                map[clientId].financiamento.push(process);
             }
         });
         return map;
     }, [processData]);
 
+    const renderClientName = (r: ProcessProps) => {
+        const clientId = r.client?.id;
+        const categories = clientId ? categoriesByClient[clientId] : undefined;
+        const isOwnRegularizacao = isRegularizacaoFlow(r.stepCurrent.flowType);
+        const otherCount = isOwnRegularizacao
+            ? (categories?.financiamento.length || 0)
+            : (categories?.regularizacao.length || 0);
+        const otherLabel = isOwnRegularizacao ? "financiamento(s) ativo(s)" : "regularização(ões) ativa(s)";
+
+        if (!otherCount) {
+            return <p>{r.client?.name}</p>;
+        }
+
+        return (
+            <Tooltip title={`${otherCount} ${otherLabel}`}>
+                <Badge count={otherCount} size="small" offset={[6, -2]}>
+                    <span>{r.client?.name}</span>
+                </Badge>
+            </Tooltip>
+        );
+    };
+
     const renderCrossCategory = (r: ProcessProps, field: "flow" | "etapa") => {
         const clientId = r.client?.id;
         const categories = clientId ? categoriesByClient[clientId] : undefined;
-        const hasBoth = !!(categories?.financiamento && categories?.regularizacao);
+        const hasBoth = !!(categories?.financiamento.length && categories?.regularizacao.length);
 
         const ownValue = field === "flow" ? r.stepCurrent.flow : r.stepCurrent.step.description;
 
@@ -91,11 +114,11 @@ const Processes = () => {
         }
 
         const financiamentoValue = field === "flow"
-            ? categories!.financiamento!.stepCurrent.flow
-            : categories!.financiamento!.stepCurrent.step.description;
+            ? categories!.financiamento[0].stepCurrent.flow
+            : categories!.financiamento[0].stepCurrent.step.description;
         const regularizacaoValue = field === "flow"
-            ? categories!.regularizacao!.stepCurrent.flow
-            : categories!.regularizacao!.stepCurrent.step.description;
+            ? categories!.regularizacao[0].stepCurrent.flow
+            : categories!.regularizacao[0].stepCurrent.step.description;
 
         return (
             <div>
@@ -225,7 +248,7 @@ const Processes = () => {
         },
         {
             title: "Cliente",
-            render: (r: ProcessProps) => <p>{r.client.name}</p>,
+            render: (r: ProcessProps) => renderClientName(r),
             sorter: (a: any, b: any) => a.client.name.localeCompare(b.client.name),
         },
         {
