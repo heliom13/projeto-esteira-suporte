@@ -116,7 +116,7 @@ export default function MainLayout({children}: any) {
     );
 
     return (
-        <Layout style={{minHeight: '100vh', overflow: 'hidden'}}>
+        <Layout style={{height: '100vh', overflow: 'hidden'}}>
             <Header style={headerStyle}>
                 <div style={{textAlign: 'left', paddingTop: '20px'}}>
                     <Link to="/">
@@ -142,22 +142,19 @@ export default function MainLayout({children}: any) {
                     </Dropdown>
                 </div>
             </Header>
-            <Layout style={{overflow: 'hidden'}}>
+            <Layout style={{height: 'calc(100vh - 64px)'}}>
                 <Sider
                     style={{
                         background: '#fff',
                         overflowY: 'auto',
                         overflowX: 'hidden',
-                        height: 'calc(100vh - 64px)',
-                        position: 'sticky',
-                        top: 64,
-                        left: 0,
+                        height: '100%',
                     }}
                     width={250}
                 >
                     <SideMenu/>
                 </Sider>
-                <Content style={{margin: '0 16px', overflowX: 'auto', minWidth: 0}}>
+                <Content style={{margin: '0 16px', overflowY: 'auto', overflowX: 'auto', height: '100%', minWidth: 0}}>
                     <div
                         style={{
                             padding: 24,
