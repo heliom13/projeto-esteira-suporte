@@ -49,9 +49,6 @@ type ProcessProps = {
     };
 };
 
-const isRegularizacaoFlow = (flowType: string) =>
-    (flowType || "").toLowerCase().includes("regulariz");
-
 const Processes = () => {
     const [loading, setLoading] = useState(false);
     const [processData, setProcessData] = useState([]);
@@ -64,38 +61,37 @@ const Processes = () => {
 
     moment.locale("pt-br");
 
-    const categoriesByClient = useMemo(() => {
-        const map: Record<number, { financiamento: ProcessProps[]; regularizacao: ProcessProps[] }> = {};
+    // Todos os processos ATIVOS de cada cliente, juntando Financiamento e
+    // Regularização — independente de qual fluxo cada um usa, já que as duas
+    // áreas mostram a mesma lista de processos.
+    const activeProcessesByClient = useMemo(() => {
+        const map: Record<number, ProcessProps[]> = {};
         (processData as ProcessProps[]).forEach((process) => {
             if (process.status !== "ACTIVE") return;
             const clientId = process.client?.id;
             if (!clientId) return;
-            if (!map[clientId]) map[clientId] = {financiamento: [], regularizacao: []};
-            if (isRegularizacaoFlow(process.stepCurrent.flowType)) {
-                map[clientId].regularizacao.push(process);
-            } else {
-                map[clientId].financiamento.push(process);
-            }
+            if (!map[clientId]) map[clientId] = [];
+            map[clientId].push(process);
         });
         return map;
     }, [processData]);
 
-    const renderClientName = (r: ProcessProps) => {
+    const getOtherActiveProcesses = (r: ProcessProps) => {
         const clientId = r.client?.id;
-        const categories = clientId ? categoriesByClient[clientId] : undefined;
-        const isOwnRegularizacao = isRegularizacaoFlow(r.stepCurrent.flowType);
-        const otherCount = isOwnRegularizacao
-            ? (categories?.financiamento.length || 0)
-            : (categories?.regularizacao.length || 0);
-        const otherLabel = isOwnRegularizacao ? "financiamento(s) ativo(s)" : "regularização(ões) ativa(s)";
+        const all = clientId ? activeProcessesByClient[clientId] || [] : [];
+        return all.filter((p) => p.id !== r.id);
+    };
 
-        if (!otherCount) {
+    const renderClientName = (r: ProcessProps) => {
+        const others = getOtherActiveProcesses(r);
+
+        if (!others.length) {
             return <p>{r.client?.name}</p>;
         }
 
         return (
-            <Tooltip title={`${otherCount} ${otherLabel}`}>
-                <Badge count={otherCount} size="small" offset={[6, -2]}>
+            <Tooltip title={`${others.length} outro(s) processo(s) ativo(s) ligado(s) a este cliente`}>
+                <Badge count={others.length} size="small" offset={[6, -2]}>
                     <span>{r.client?.name}</span>
                 </Badge>
             </Tooltip>
@@ -103,27 +99,24 @@ const Processes = () => {
     };
 
     const renderCrossCategory = (r: ProcessProps, field: "flow" | "etapa") => {
-        const clientId = r.client?.id;
-        const categories = clientId ? categoriesByClient[clientId] : undefined;
-        const hasBoth = !!(categories?.financiamento.length && categories?.regularizacao.length);
-
+        const others = getOtherActiveProcesses(r);
         const ownValue = field === "flow" ? r.stepCurrent.flow : r.stepCurrent.step.description;
 
-        if (!hasBoth) {
+        if (!others.length) {
             return <p>{ownValue}</p>;
         }
 
-        const financiamentoValue = field === "flow"
-            ? categories!.financiamento[0].stepCurrent.flow
-            : categories!.financiamento[0].stepCurrent.step.description;
-        const regularizacaoValue = field === "flow"
-            ? categories!.regularizacao[0].stepCurrent.flow
-            : categories!.regularizacao[0].stepCurrent.step.description;
-
         return (
             <div>
-                <div>Financiamento: {financiamentoValue}</div>
-                <div>Regularização: {regularizacaoValue}</div>
+                <div>{ownValue}</div>
+                {others.map((other) => {
+                    const otherValue = field === "flow" ? other.stepCurrent.flow : other.stepCurrent.step.description;
+                    return (
+                        <div key={other.id} style={{color: "#8c8c8c", fontSize: 12}}>
+                            {field === "flow" ? otherValue : `${other.stepCurrent.flow}: ${otherValue}`}
+                        </div>
+                    );
+                })}
             </div>
         );
     };
