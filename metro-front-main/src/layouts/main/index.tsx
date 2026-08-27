@@ -4,9 +4,10 @@ import {Link, Outlet, useNavigate, useLocation} from 'react-router-dom';
 import {SideMenu} from '../../components/menu';
 import styled from 'styled-components';
 import {Header} from "antd/lib/layout/layout";
-import {BellOutlined} from '@ant-design/icons';
+import {BellOutlined, SwapOutlined} from '@ant-design/icons';
 import api from "../../services/api";
 import {useAuth} from '../../contexts/AuthContext';
+import {useWorkspace} from '../../contexts/WorkspaceContext';
 
 const {Title} = Typography;
 const {Sider, Content} = Layout;
@@ -15,8 +16,14 @@ export default function MainLayout({children}: any) {
     const [unreadCount, setUnreadCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
     const {user} = useAuth();
+    const {setWorkspace} = useWorkspace();
     const navigate = useNavigate();
     const location = useLocation();
+
+    const handleSwitchWorkspace = () => {
+        setWorkspace(null);
+        navigate("/escolha");
+    };
 
     const headerLabel = location.pathname.includes('bancos-privados')
         ? 'Privados'
@@ -134,6 +141,14 @@ export default function MainLayout({children}: any) {
                 )}
                 <div style={{display: 'flex', alignItems: 'center'}}>
                     <span style={{marginRight: '10px', color: '#fff'}}>{user?.name}</span>
+                    <Button
+                        icon={<SwapOutlined/>}
+                        type="primary"
+                        onClick={handleSwitchWorkspace}
+                        style={{backgroundColor: '#4096ff', border: '1px solid rgba(255,255,255,0.5)', marginRight: 8}}
+                    >
+                        Trocar de área
+                    </Button>
                     <Dropdown overlay={menu} placement="bottomRight">
                         <Badge count={unreadCount} style={{backgroundColor: '#ff4d4f'}} offset={[10, 0]}>
                             <Button icon={<BellOutlined/>} type="primary"

@@ -1,6 +1,7 @@
 package br.com.horys.metro.services
 
 import br.com.horys.metro.controllers.client.CreateClientRequest
+import br.com.horys.metro.controllers.client.QuickClientRequest
 import br.com.horys.metro.controllers.client.UpdateClientRequest
 import br.com.horys.metro.exceptions.ClientNotFoundException
 import br.com.horys.metro.models.Client
@@ -16,6 +17,10 @@ class ClientService(
 ) {
 
     fun save(request: CreateClientRequest): Client {
+        return clientRepository.save(request.toModel())
+    }
+
+    fun saveQuick(request: QuickClientRequest): Client {
         return clientRepository.save(request.toModel())
     }
 

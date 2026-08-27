@@ -5,14 +5,17 @@ import GlobalStyle from './styles/global'
 import ptBR from 'antd/lib/locale/pt_BR'
 import './App.less'
 import { AuthProvider } from './contexts/AuthContext'
+import { WorkspaceProvider } from './contexts/WorkspaceContext'
 
 function App() {
   return (
     <AuthProvider>
-      <ConfigProvider locale={ptBR}>
-        <GlobalStyle />
-        <AppRoutes />
-      </ConfigProvider>
+      <WorkspaceProvider>
+        <ConfigProvider locale={ptBR}>
+          <GlobalStyle />
+          <AppRoutes />
+        </ConfigProvider>
+      </WorkspaceProvider>
     </AuthProvider>
   )
 }

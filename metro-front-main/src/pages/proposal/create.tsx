@@ -1,6 +1,6 @@
 import React, {useCallback, useState} from "react";
 import {Button, Col, Form, Input, InputNumber, Row, Select, Spin} from "antd";
-import {useNavigate, useParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {ClientService} from "../../services/client";
 import {PropertyService} from "../../services/property";
 import {SellerService} from "../../services/seller";
@@ -22,6 +22,9 @@ const CreateProposal: React.FC = () => {
     const [product, setProduct] = useState<string | null>(null);
     const [term, setTerm] = useState<number | null>(null);
     const {id} = useParams();
+    const location = useLocation();
+    const preset = location.state as {clientId?: number; clientName?: string} | null;
+    const isPresetRegularization = !!preset?.clientId;
 
     const optionClients = clients.map((client: { id: number; name: string }) => (
         <Option key={client.id} value={client.id}>
@@ -59,6 +62,14 @@ const CreateProposal: React.FC = () => {
     React.useEffect(() => {
         fetchData();
         if (id) fetchProposalData(id)
+        if (isPresetRegularization && preset) {
+            setProposalType("REGULARIZATION");
+            form.setFieldsValue({
+                clientId: {value: preset.clientId, label: preset.clientName},
+                type: "REGULARIZATION",
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fetchData]);
 
     const fetchProposalData = async (id: string) => {
@@ -160,7 +171,7 @@ const CreateProposal: React.FC = () => {
                     message: "Sucesso",
                     description: id ? "Proposta Atualizada " : "Proposta Criada ",
                 });
-                navigate("/propostas")
+                navigate(isPresetRegularization ? "/regularizacao" : "/propostas")
             })
             .catch(error => {
                 setLoading(false)
@@ -220,6 +231,7 @@ const CreateProposal: React.FC = () => {
                                 showSearch
                                 labelInValue
                                 allowClear
+                                disabled={isPresetRegularization}
                                 filterOption={(input, option: any) =>
                                     option.children.toLowerCase().indexOf(input.toLowerCase()) >=
                                     0
@@ -232,7 +244,7 @@ const CreateProposal: React.FC = () => {
 
                     <Col span={8}>
                         <Form.Item label="Tipo" name="type" rules={[{required: true}]}>
-                            <Select onChange={handleTypeChange} style={{width: '100%'}} disabled={!!id}>
+                            <Select onChange={handleTypeChange} style={{width: '100%'}} disabled={!!id || isPresetRegularization}>
                                 <Option value="CONSORTIUM">Consórcio</Option>
                                 <Option value="CONSIGNMENT">Consignado</Option>
                                 <Option value="CONTRACT">Contrato</Option>

@@ -37,6 +37,10 @@ import UsersCreate from "../pages/users/create";
 import UsersEdit from "../pages/users/edit";
 import MondayBoard from "../pages/monday";
 import CriarFluxo from "../pages/criar-fluxo";
+import RequireWorkspace from "./RequireWorkspace";
+import WorkspaceSelect from "../pages/workspace-select";
+import RegularizacaoLayout from "../layouts/regularizacao";
+import RegularizacaoHome from "../pages/regularizacao";
 
 export default function AppRoutes() {
     return (
@@ -57,6 +61,16 @@ export default function AppRoutes() {
                     />
                 </Route>
                 <Route element={<PrivateRoute/>}>
+                    <Route path="escolha" element={<WorkspaceSelect/>}/>
+                    <Route element={<RequireWorkspace workspace="regularizacao"/>}>
+                        <Route element={<RegularizacaoLayout/>}>
+                            <Route path="regularizacao">
+                                <Route path="" element={<RegularizacaoHome/>}/>
+                                <Route path="cadastrar" element={<CreateProposal/>}/>
+                            </Route>
+                        </Route>
+                    </Route>
+                    <Route element={<RequireWorkspace workspace="financiamento"/>}>
                     <Route element={<MainLayout/>}>
                         <Route path="/" element={<Home/>}/>
                         <Route path="esteira" element={<Board/>}/>
@@ -116,6 +130,7 @@ export default function AppRoutes() {
                         <Route path="criar-fluxo" element={<RoleBasedRoute requiredRoles={["ADMIN", "ANALYST"]}/>}>
                             <Route path=":tipo" element={<CriarFluxo/>}/>
                         </Route>
+                    </Route>
                     </Route>
                 </Route>
                 <Route path="403" element={<Error403/>}/>

@@ -24,6 +24,13 @@ class ClientController(
         return clientService.save(request)
     }
 
+    @PostMapping("/quick")
+    fun saveQuick(
+        @Valid @RequestBody request: QuickClientRequest
+    ): Client {
+        return clientService.saveQuick(request)
+    }
+
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @Valid @RequestBody request: UpdateClientRequest): Client {
         return clientService.update(id, request)
