@@ -16,13 +16,13 @@ export const RegularizacaoMenu = () => {
         },
         {
             key: "3",
-            icon: <ApartmentOutlined/>,
-            label: <Link to="/regularizacao/fluxos">Fluxos</Link>,
+            icon: <ProfileOutlined/>,
+            label: <Link to="/regularizacao/processos">Processos</Link>,
         },
         {
             key: "4",
-            icon: <ProfileOutlined/>,
-            label: <Link to="/regularizacao/processos">Processos</Link>,
+            icon: <ApartmentOutlined/>,
+            label: <Link to="/regularizacao/fluxos">Fluxos</Link>,
         },
     ];
 
