@@ -1,5 +1,5 @@
 import {Button, Col, Form, Input, Modal, Popconfirm, Row, Space, Spin, Table, Tooltip, Typography,} from "antd";
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import "moment/locale/pt-br";
 import {buttonLeft, buttonRadius} from "../../components/button";
 import {
@@ -30,6 +30,7 @@ type ProcessProps = {
     nameUser: string;
     createdAt: any;
     client: {
+        id: number;
         name: string;
     };
     externalId: string;
@@ -37,6 +38,7 @@ type ProcessProps = {
         description: string;
         deadline: any;
         flow: string;
+        flowType: string;
         step: {
             description: string;
         };
@@ -46,6 +48,9 @@ type ProcessProps = {
         description: string;
     };
 };
+
+const isRegularizacaoFlow = (flowType: string) =>
+    (flowType || "").toLowerCase().includes("regulariz");
 
 const Processes = () => {
     const [loading, setLoading] = useState(false);
@@ -58,6 +63,47 @@ const Processes = () => {
     const [processId, setProcessId] = useState(null);
 
     moment.locale("pt-br");
+
+    const categoriesByClient = useMemo(() => {
+        const map: Record<number, { financiamento?: ProcessProps; regularizacao?: ProcessProps }> = {};
+        (processData as ProcessProps[]).forEach((process) => {
+            const clientId = process.client?.id;
+            if (!clientId) return;
+            if (!map[clientId]) map[clientId] = {};
+            if (isRegularizacaoFlow(process.stepCurrent.flowType)) {
+                map[clientId].regularizacao = process;
+            } else {
+                map[clientId].financiamento = process;
+            }
+        });
+        return map;
+    }, [processData]);
+
+    const renderCrossCategory = (r: ProcessProps, field: "flow" | "etapa") => {
+        const clientId = r.client?.id;
+        const categories = clientId ? categoriesByClient[clientId] : undefined;
+        const hasBoth = !!(categories?.financiamento && categories?.regularizacao);
+
+        const ownValue = field === "flow" ? r.stepCurrent.flow : r.stepCurrent.step.description;
+
+        if (!hasBoth) {
+            return <p>{ownValue}</p>;
+        }
+
+        const financiamentoValue = field === "flow"
+            ? categories!.financiamento!.stepCurrent.flow
+            : categories!.financiamento!.stepCurrent.step.description;
+        const regularizacaoValue = field === "flow"
+            ? categories!.regularizacao!.stepCurrent.flow
+            : categories!.regularizacao!.stepCurrent.step.description;
+
+        return (
+            <div>
+                <div>Financiamento: {financiamentoValue}</div>
+                <div>Regularização: {regularizacaoValue}</div>
+            </div>
+        );
+    };
 
     const fetchData = () => {
         setLoading(true);
@@ -184,13 +230,13 @@ const Processes = () => {
         },
         {
             title: "Fluxo",
-            render: (r: ProcessProps) => <p>{r.stepCurrent.flow}</p>,
+            render: (r: ProcessProps) => renderCrossCategory(r, "flow"),
             sorter: (a: any, b: any) =>
                 a.stepCurrent.flow.localeCompare(b.stepCurrent.flow),
         },
         {
             title: "Etapa",
-            render: (r: ProcessProps) => <p>{r.stepCurrent.step.description}</p>,
+            render: (r: ProcessProps) => renderCrossCategory(r, "etapa"),
         },
         {
             title: "Dias do Processo",
