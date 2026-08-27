@@ -35,7 +35,7 @@ const WorkspaceSelect: React.FC = () => {
 
     const handleSelect = (workspace: Workspace) => {
         setWorkspace(workspace);
-        navigate("/");
+        navigate(workspace === "regularizacao" ? "/regularizacao" : "/");
     };
 
     return (
