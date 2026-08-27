@@ -56,7 +56,7 @@ const FlowForm = () => {
 
     const optionsSteps = steps.map(
         (step: { id: number; description: string }) => (
-            <Option value={step.id} id={step.id}>
+            <Option key={step.id} value={step.id} id={step.id}>
                 {step.description}
             </Option>
         )
@@ -64,7 +64,7 @@ const FlowForm = () => {
 
     const optionsFlowTypes = flowTypes.map(
         (flowType: { id: number; description: string }) => (
-            <Option value={flowType.id} id={flowType.id}>
+            <Option key={flowType.id} value={flowType.id} id={flowType.id}>
                 {flowType.description}
             </Option>
         )
