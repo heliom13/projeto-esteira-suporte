@@ -1,38 +1,33 @@
-import {Menu} from "antd";
 import {Link} from "react-router-dom";
-import {HomeOutlined, TeamOutlined, ApartmentOutlined, ProfileOutlined} from "@ant-design/icons";
+import {AnimatedMenu} from "./AnimatedMenu";
 
 export const RegularizacaoMenu = () => {
     const menuItems = [
         {
             key: "1",
-            icon: <HomeOutlined/>,
-            label: <Link to="/regularizacao">Início</Link>,
+            label: <Link to="/regularizacao">🏠 Início</Link>,
         },
         {
             key: "2",
-            icon: <TeamOutlined/>,
-            label: <Link to="/regularizacao/clientes">Clientes</Link>,
+            label: <Link to="/regularizacao/clientes">👤 Clientes</Link>,
         },
         {
             key: "3",
-            icon: <ProfileOutlined/>,
-            label: <Link to="/regularizacao/processos">Processos</Link>,
+            label: <Link to="/regularizacao/processos">🔁 Processos</Link>,
         },
         {
             key: "4",
-            icon: <ApartmentOutlined/>,
-            label: <Link to="/regularizacao/fluxos">Fluxos</Link>,
+            label: <Link to="/regularizacao/fluxos">🗂️ Fluxos</Link>,
         },
     ];
 
     return (
-        <Menu theme="light" style={{height: "fit-content"}} mode="inline">
+        <AnimatedMenu theme="light" style={{height: "fit-content"}} mode="inline">
             {menuItems.map((item) => (
-                <Menu.Item key={item.key} icon={item.icon}>
+                <AnimatedMenu.Item key={item.key}>
                     {item.label}
-                </Menu.Item>
+                </AnimatedMenu.Item>
             ))}
-        </Menu>
+        </AnimatedMenu>
     );
 };

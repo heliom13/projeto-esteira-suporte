@@ -3,6 +3,7 @@ import { AppstoreOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { AnimatedMenu } from './AnimatedMenu';
 
 type MenuItem = {
     key: string;
@@ -128,12 +129,12 @@ export const SideMenu = () => {
     };
 
     return (
-        <Menu
+        <AnimatedMenu
             theme={"light"}
             style={{height: "fit-content"}}
             mode="inline"
         >
             {menuItems.map(renderItem)}
-        </Menu>
+        </AnimatedMenu>
     );
 };
