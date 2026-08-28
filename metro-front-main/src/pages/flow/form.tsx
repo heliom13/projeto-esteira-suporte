@@ -71,8 +71,18 @@ const FlowForm = () => {
     )
 
     const handleAddStep = useCallback(async () => {
-        let value = form.getFieldValue('steps')
-        setStepsOrder((documents) => [...documents, value])
+        const value = form.getFieldValue('steps')
+        if (!value) return
+        setStepsOrder((documents) => [
+            ...documents,
+            {
+                key: value.value,
+                order: documents.length + 1,
+                label: value.label,
+                description: value.label,
+            },
+        ])
+        form.setFieldsValue({steps: undefined})
     }, [form])
 
     useEffect(() => {
