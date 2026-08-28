@@ -332,6 +332,7 @@ const FlowForm = () => {
                                     0
                                 }
                                 allowClear
+                                virtual={false}
                             >
                                 {optionsFlowTypes}
                             </Select>
@@ -358,6 +359,7 @@ const FlowForm = () => {
                                     0
                                 }
                                 allowClear
+                                virtual={false}
                             >
                                 {optionsSteps}
                             </Select>
