@@ -1,4 +1,4 @@
-import {Badge, Button, Col, Form, Input, Modal, Popconfirm, Row, Space, Spin, Table, Tooltip, Typography,} from "antd";
+import {Badge, Button, Col, Form, Input, Modal, Popconfirm, Row, Space, Spin, Table, Tag, Tooltip, Typography,} from "antd";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import "moment/locale/pt-br";
 import {buttonLeft, buttonRadius} from "../../components/button";
@@ -49,6 +49,9 @@ type ProcessProps = {
     };
 };
 
+const isRegularizacaoFlow = (flowType: string) =>
+    (flowType || "").toLowerCase().includes("regulariz");
+
 const Processes = () => {
     const [loading, setLoading] = useState(false);
     const [processData, setProcessData] = useState([]);
@@ -84,17 +87,25 @@ const Processes = () => {
 
     const renderClientName = (r: ProcessProps) => {
         const others = getOtherActiveProcesses(r);
+        const areaTag = isRegularizacaoFlow(r.stepCurrent.flowType)
+            ? <Tag color="green">Regularização</Tag>
+            : <Tag color="blue">Financiamento</Tag>;
 
-        if (!others.length) {
-            return <p>{r.client?.name}</p>;
-        }
+        const nameElement = !others.length
+            ? <span>{r.client?.name}</span>
+            : (
+                <Tooltip title={`${others.length} outro(s) processo(s) ativo(s) ligado(s) a este cliente`}>
+                    <Badge count={others.length} size="small" offset={[6, -2]}>
+                        <span>{r.client?.name}</span>
+                    </Badge>
+                </Tooltip>
+            );
 
         return (
-            <Tooltip title={`${others.length} outro(s) processo(s) ativo(s) ligado(s) a este cliente`}>
-                <Badge count={others.length} size="small" offset={[6, -2]}>
-                    <span>{r.client?.name}</span>
-                </Badge>
-            </Tooltip>
+            <div>
+                <div>{nameElement}</div>
+                {areaTag}
+            </div>
         );
     };
 
