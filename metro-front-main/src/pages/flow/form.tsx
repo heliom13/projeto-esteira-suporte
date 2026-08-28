@@ -54,21 +54,25 @@ const FlowForm = () => {
     const {workspace} = useWorkspace()
     const bancosPath = workspace === "regularizacao" ? "/regularizacao/fluxos" : "/bancos"
 
-    const optionsSteps = steps.map(
-        (step: { id: number; description: string }) => (
-            <Option key={step.id} value={step.id} id={step.id}>
-                {step.description}
-            </Option>
+    const optionsSteps = steps
+        .filter((step, index, all) => all.findIndex((s) => s.id === step.id) === index)
+        .map(
+            (step: { id: number; description: string }) => (
+                <Option key={step.id} value={step.id} id={step.id}>
+                    {step.description}
+                </Option>
+            )
         )
-    )
 
-    const optionsFlowTypes = flowTypes.map(
-        (flowType: { id: number; description: string }) => (
-            <Option key={flowType.id} value={flowType.id} id={flowType.id}>
-                {flowType.description}
-            </Option>
+    const optionsFlowTypes = flowTypes
+        .filter((flowType, index, all) => all.findIndex((f) => f.id === flowType.id) === index)
+        .map(
+            (flowType: { id: number; description: string }) => (
+                <Option key={flowType.id} value={flowType.id} id={flowType.id}>
+                    {flowType.description}
+                </Option>
+            )
         )
-    )
 
     const handleAddStep = useCallback(async () => {
         const value = form.getFieldValue('steps')
