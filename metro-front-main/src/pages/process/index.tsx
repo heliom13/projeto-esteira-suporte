@@ -20,6 +20,7 @@ import onNotification from "../../components/notification/notification";
 import {useForm} from "antd/lib/form/Form";
 import {AuthService} from "../../services/auth";
 import api from "../../services/api";
+import {useWorkspace} from "../../contexts/WorkspaceContext";
 
 const {Title} = Typography;
 const FormItem = Form.Item;
@@ -49,10 +50,11 @@ type ProcessProps = {
     };
 };
 
-const isRegularizacaoFlow = (flowType: string) =>
-    (flowType || "").toLowerCase().includes("regulariz");
-
 const Processes = () => {
+    const {workspace} = useWorkspace();
+    const otherAreaTag = workspace === "regularizacao"
+        ? <Tag color="blue">Financiamento</Tag>
+        : <Tag color="green">Regularização</Tag>;
     const [loading, setLoading] = useState(false);
     const [processData, setProcessData] = useState([]);
     const [users, setUsers] = useState([]);
@@ -87,9 +89,6 @@ const Processes = () => {
 
     const renderClientName = (r: ProcessProps) => {
         const others = getOtherActiveProcesses(r);
-        const areaTag = isRegularizacaoFlow(r.stepCurrent.flowType)
-            ? <Tag color="green">Regularização</Tag>
-            : <Tag color="blue">Financiamento</Tag>;
 
         const nameElement = !others.length
             ? <span>{r.client?.name}</span>
@@ -104,7 +103,7 @@ const Processes = () => {
         return (
             <div>
                 <div>{nameElement}</div>
-                {areaTag}
+                {otherAreaTag}
             </div>
         );
     };
