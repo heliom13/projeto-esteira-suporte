@@ -13,9 +13,11 @@ export class AuthService {
     return api.get('users')
   }
 
-  static async resetPassword(email, data) {
-    return api.put(`/users/${encodeURIComponent(email)}/reset`, {
-      password: data.password
-    })
+  static async forgotPassword(email: string) {
+    return api.post('/users/forgot-password', {email})
+  }
+
+  static async resetPasswordWithToken(token: string, password: string) {
+    return api.post('/users/reset-password', {token, password})
   }
 }

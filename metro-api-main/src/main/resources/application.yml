@@ -23,6 +23,23 @@ spring:
   sql:
     init:
       mode: always
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME:}
+    password: ${GMAIL_APP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 message:
   token: ${TOKEN_MESSAGE:token}
+
+app:
+  front-url: ${APP_FRONT_URL:https://metro-front-tuna.onrender.com}

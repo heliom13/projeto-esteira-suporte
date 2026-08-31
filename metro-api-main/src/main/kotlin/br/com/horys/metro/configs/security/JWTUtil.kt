@@ -63,4 +63,33 @@ class JWTUtil {
         }
         return null
     }
+
+    fun generatePasswordResetToken(email: String): String {
+        val claims = mutableMapOf<String, Any>(PASSWORD_RESET_CLAIM to true)
+
+        return Jwts.builder()
+            .setClaims(claims)
+            .setSubject(email)
+            .setExpiration(Date(System.currentTimeMillis() + passwordResetExpiration))
+            .signWith(SignatureAlgorithm.HS256, secret.toByteArray())
+            .compact()
+    }
+
+    fun getEmailFromPasswordResetToken(token: String): String? {
+        val claims = getClaimsToken(token) ?: return null
+        val isResetToken = claims[PASSWORD_RESET_CLAIM] as? Boolean ?: false
+        val expirationDate = claims.expiration
+        val now = Date(System.currentTimeMillis())
+
+        if (!isResetToken || expirationDate == null || !now.before(expirationDate)) {
+            return null
+        }
+
+        return claims.subject
+    }
+
+    companion object {
+        private const val PASSWORD_RESET_CLAIM = "passwordReset"
+        private const val passwordResetExpiration: Long = 1800000 // 30 minutos
+    }
 }

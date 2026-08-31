@@ -25,6 +25,7 @@ import Login from "../pages/login";
 import PrivateRoute from "./privateRoute";
 import Home from "../pages/home";
 import ForgotPassword from "../pages/login/edit";
+import ResetPassword from "../pages/login/resetPassword";
 import EndProcess from "../pages/process/endProcess";
 import ProcessInvoice from "../pages/process/invoice";
 import Board from "../pages/process/board";
@@ -48,6 +49,7 @@ export default function AppRoutes() {
             <Routes>
                 <Route path="login" element={<Login/>}/>
                 <Route path="redefinir-senha" element={<ForgotPassword/>}/>
+                <Route path="redefinir-senha/:token" element={<ResetPassword/>}/>
 
                 <Route path="external" element={<MobileLayout/>}>
                     <Route

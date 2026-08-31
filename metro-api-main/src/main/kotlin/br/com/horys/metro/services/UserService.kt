@@ -5,14 +5,18 @@ import br.com.horys.metro.controllers.requests.ListUserRequest
 import br.com.horys.metro.controllers.requests.UpdateUserRequest
 import br.com.horys.metro.controllers.requests.UserRequest
 import br.com.horys.metro.controllers.response.UserResponse
+import br.com.horys.metro.configs.security.JWTUtil
 import br.com.horys.metro.exceptions.BusinessException
 import br.com.horys.metro.models.User
 import br.com.horys.metro.repositories.UserRepository
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Pageable
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.Locale
 import javax.persistence.EntityManager
 import javax.persistence.PersistenceContext
@@ -24,6 +28,9 @@ import javax.persistence.criteria.Root
 class UserService(
     private val userRepository: UserRepository,
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
+    private val jwtUtil: JWTUtil,
+    private val emailService: EmailService,
+    @Value("\${app.front-url}") private val frontUrl: String,
     @PersistenceContext private val manager: EntityManager
 ) {
 
@@ -52,6 +59,23 @@ class UserService(
                 password = bCryptPasswordEncoder.encode(password)
             )
         )
+    }
+
+    fun forgotPassword(email: String) {
+        val user = userRepository.findByEmailIgnoreCase(email).orElse(null) ?: return
+
+        val token = jwtUtil.generatePasswordResetToken(user.email)
+        val encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8.toString())
+        val resetLink = "$frontUrl/redefinir-senha/$encodedToken"
+
+        emailService.sendPasswordResetEmail(user.email, resetLink)
+    }
+
+    fun resetPasswordWithToken(token: String, password: String) {
+        val email = jwtUtil.getEmailFromPasswordResetToken(token)
+            ?: throw BusinessException("Link de redefinição inválido ou expirado.")
+
+        reset(email, password)
     }
 
     fun create(request: UserRequest): User {

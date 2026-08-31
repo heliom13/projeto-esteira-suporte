@@ -1,41 +1,33 @@
 import onNotification from '../../components/notification/notification'
 import { AuthService } from '../../services/auth'
 import { useNavigate } from 'react-router-dom'
-import { Button, Col, Form, Input, Row, Space, Typography } from 'antd'
+import { Button, Form, Input, Space, Typography } from 'antd'
 import { primaryText } from '../../styles/stylesProps'
-import { buttonProps, buttonRadius } from '../../components/button'
-import { ArrowLeftOutlined, CheckOutlined } from '@ant-design/icons'
+import { buttonProps } from '../../components/button'
+import { ArrowLeftOutlined, SendOutlined } from '@ant-design/icons'
 import { useForm } from 'antd/lib/form/Form'
-const { Title } = Typography
+import { useState } from 'react'
+const { Title, Paragraph } = Typography
 
 const ForgotPassword = () => {
   const navigate = useNavigate()
   const [form] = useForm()
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
 
-  const onFinish = (values: any) => {
-    const email = form.getFieldValue('mail')
-
-    if (values.password === values.passwordConfirm) {
-      AuthService.resetPassword(email, values)
-        .then((response) => {
-          onNotification('success', {
-            message: 'Sucesso',
-            description: 'Realize o login',
-          })
-          navigate('/login')
-        })
-        .catch((error) => {
-          onNotification('error', {
-            message: 'Erro',
-            description: 'Erro ao mudar a senha',
-          })
-        })
-    } else {
-      onNotification('error', {
-        message: 'Erro',
-        description: 'As senhas não coincidem',
+  const onFinish = (values: { mail: string }) => {
+    setLoading(true)
+    AuthService.forgotPassword(values.mail)
+      .then(() => {
+        setSent(true)
       })
-    }
+      .catch(() => {
+        onNotification('error', {
+          message: 'Erro',
+          description: 'Não foi possível enviar o e-mail. Tente novamente.',
+        })
+      })
+      .finally(() => setLoading(false))
   }
 
   return (
@@ -49,56 +41,67 @@ const ForgotPassword = () => {
         height: '100%',
       }}
     >
-      <Form
-        autoComplete="off"
-        layout="vertical"
-        onFinish={onFinish}
-        form={form}
-      >
-        <Title level={2} {...primaryText}>
-          Esqueci a senha
-        </Title>
-        <Form.Item
-          label="E-mail"
-          name="mail"
-          rules={[{ required: true }, { type: 'email' }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Digite a nova senha"
-          name="password"
-          rules={[{ required: true, message: 'Por favor, digite a senha!' }]}
-        >
-          <Input.Password />
-        </Form.Item>
-        <Form.Item
-          label="Confirme a nova senha"
-          name="passwordConfirm"
-          rules={[{ required: true, message: 'Por favor, digite a senha!' }]}
-        >
-          <Input.Password />
-        </Form.Item>
-        <Space>
+      {sent ? (
+        <div style={{ maxWidth: 360, textAlign: 'center' }}>
+          <Title level={3} {...primaryText}>
+            📧 Verifique seu e-mail
+          </Title>
+          <Paragraph>
+            Se esse e-mail estiver cadastrado, enviamos um link pra
+            redefinir sua senha. O link é válido por 30 minutos.
+          </Paragraph>
           <Button
             {...buttonProps}
             type="primary"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate('/login')}
           >
-            Voltar
+            Voltar para o login
           </Button>
-
-          <Button
-            type="primary"
-            icon={<CheckOutlined />}
-            {...buttonProps}
-            htmlType="submit"
+        </div>
+      ) : (
+        <Form
+          autoComplete="off"
+          layout="vertical"
+          onFinish={onFinish}
+          form={form}
+        >
+          <Title level={2} {...primaryText}>
+            Esqueci a senha
+          </Title>
+          <Paragraph>
+            Digite seu e-mail cadastrado e enviaremos um link pra você
+            criar uma nova senha.
+          </Paragraph>
+          <Form.Item
+            label="E-mail"
+            name="mail"
+            rules={[{ required: true }, { type: 'email' }]}
           >
-            Salvar
-          </Button>
-        </Space>
-      </Form>
+            <Input />
+          </Form.Item>
+          <Space>
+            <Button
+              {...buttonProps}
+              type="primary"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate('/login')}
+            >
+              Voltar
+            </Button>
+
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              {...buttonProps}
+              htmlType="submit"
+              loading={loading}
+            >
+              Enviar link
+            </Button>
+          </Space>
+        </Form>
+      )}
     </div>
   )
 }

@@ -1,7 +1,9 @@
 package br.com.horys.metro.controllers
 
 import br.com.horys.metro.controllers.requests.CreateUserRequest
+import br.com.horys.metro.controllers.requests.ForgotPasswordRequest
 import br.com.horys.metro.controllers.requests.ListUserRequest
+import br.com.horys.metro.controllers.requests.ResetPasswordWithTokenRequest
 import br.com.horys.metro.controllers.requests.UpdateUserRequest
 import br.com.horys.metro.controllers.requests.UserRequest
 import br.com.horys.metro.controllers.requests.UserResetRequest
@@ -30,6 +32,16 @@ class UserController(
     @PutMapping("/{email:.+}/reset")
     fun reset(@PathVariable email: String, @RequestBody request: UserResetRequest) {
         service.reset(java.net.URLDecoder.decode(email, "UTF-8"), request.password)
+    }
+
+    @PostMapping("/forgot-password")
+    fun forgotPassword(@Valid @RequestBody request: ForgotPasswordRequest) {
+        service.forgotPassword(request.email)
+    }
+
+    @PostMapping("/reset-password")
+    fun resetPassword(@Valid @RequestBody request: ResetPasswordWithTokenRequest) {
+        service.resetPasswordWithToken(request.token, request.password)
     }
 
     @PostMapping("/admin")
