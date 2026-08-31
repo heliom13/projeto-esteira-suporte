@@ -71,7 +71,7 @@ const RegularizacaoHome: React.FC = () => {
     return (
         <div>
             <Title level={3} {...primaryText}>
-                Regularização
+                📋 Regularização
             </Title>
 
             <Space style={{marginBottom: 16}}>
@@ -87,7 +87,7 @@ const RegularizacaoHome: React.FC = () => {
                     icon={<PlusOutlined/>}
                     onClick={() => setQuickModalOpen(true)}
                 >
-                    Novo cliente rápido
+                    ➕ Novo cliente rápido
                 </Button>
             </Space>
 
@@ -106,7 +106,7 @@ const RegularizacaoHome: React.FC = () => {
                                 icon={<FileProtectOutlined/>}
                                 onClick={() => startRegularization(client)}
                             >
-                                Criar processo de regularização
+                                📋 Criar processo de regularização
                             </Button>
                         ),
                     },

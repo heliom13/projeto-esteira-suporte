@@ -128,7 +128,7 @@ export default function MainLayout({children}: any) {
                 <div style={{textAlign: 'left', paddingTop: '20px'}}>
                     <Link to="/">
                         <Title level={4} style={{color: '#fff'}}>
-                            Suporte Imobiliário
+                            🏢 Suporte Imobiliário
                         </Title>
                     </Link>
                 </div>
@@ -147,7 +147,7 @@ export default function MainLayout({children}: any) {
                         onClick={handleSwitchWorkspace}
                         style={{backgroundColor: '#4096ff', border: '1px solid rgba(255,255,255,0.5)', marginRight: 8}}
                     >
-                        Trocar de área
+                        🔄 Trocar de área
                     </Button>
                     <Dropdown overlay={menu} placement="bottomRight">
                         <Badge count={unreadCount} style={{backgroundColor: '#ff4d4f'}} offset={[10, 0]}>

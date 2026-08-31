@@ -45,7 +45,7 @@ export default function RegularizacaoLayout() {
                 <div style={{textAlign: 'left', paddingTop: '20px'}}>
                     <Link to="/regularizacao">
                         <Title level={4} style={{color: '#fff'}}>
-                            Regularização
+                            📋 Regularização
                         </Title>
                     </Link>
                 </div>
@@ -57,7 +57,7 @@ export default function RegularizacaoLayout() {
                         onClick={handleSwitchWorkspace}
                         style={{backgroundColor: '#52c41a', border: '1px solid rgba(255,255,255,0.5)', marginRight: 8}}
                     >
-                        Trocar de área
+                        🔄 Trocar de área
                     </Button>
                     <Button
                         icon={<LogoutOutlined/>}
@@ -65,7 +65,7 @@ export default function RegularizacaoLayout() {
                         onClick={handleLogout}
                         style={{backgroundColor: '#52c41a', border: '1px solid rgba(255,255,255,0.5)'}}
                     >
-                        Sair
+                        🚪 Sair
                     </Button>
                 </div>
             </Header>
