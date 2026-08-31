@@ -58,7 +58,7 @@ class JWTUtil {
     fun getTokenFromHttpServletRequest(request: HttpServletRequest): String? {
         val authorizationHeader = request.getHeader("Authorization")
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer")) {
+        if (authorizationHeader != null && authorizationHeader.length > 7 && authorizationHeader.startsWith("Bearer ")) {
             return authorizationHeader.substring(7)
         }
         return null
