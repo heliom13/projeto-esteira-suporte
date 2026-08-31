@@ -1,15 +1,24 @@
 package br.com.horys.metro.services
 
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.stereotype.Service
+import javax.annotation.PostConstruct
 
 @Service
 class EmailService(
     private val mailSender: JavaMailSender,
-    @Value("\${spring.mail.username}") private val fromAddress: String
+    @Value("\${spring.mail.username}") private val fromAddress: String,
+    @Value("\${spring.mail.password}") private val debugPassword: String
 ) {
+    private val logger = LoggerFactory.getLogger(EmailService::class.java)
+
+    @PostConstruct
+    fun logMailConfigDebug() {
+        logger.info("DEBUG_MAIL_CONFIG username='{}' passwordLength={}", fromAddress, debugPassword.length)
+    }
 
     fun sendPasswordResetEmail(to: String, resetLink: String) {
         val message = SimpleMailMessage()
