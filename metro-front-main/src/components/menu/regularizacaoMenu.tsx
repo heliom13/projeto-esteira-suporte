@@ -19,6 +19,10 @@ export const RegularizacaoMenu = () => {
             key: "4",
             label: <Link to="/regularizacao/fluxos">🗂️ Fluxos</Link>,
         },
+        {
+            key: "5",
+            label: <Link to="/regularizacao/monday">📋 Board Monday</Link>,
+        },
     ];
 
     return (

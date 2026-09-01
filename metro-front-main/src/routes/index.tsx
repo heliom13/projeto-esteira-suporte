@@ -85,6 +85,7 @@ export default function AppRoutes() {
                                     <Route path="finalizar-processo/:id" element={<EndProcess/>}/>
                                     <Route path="nota/:id" element={<ProcessInvoice/>}/>
                                 </Route>
+                                <Route path="monday" element={<MondayBoard/>}/>
                             </Route>
                         </Route>
                     </Route>
