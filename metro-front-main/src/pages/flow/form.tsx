@@ -1,8 +1,8 @@
-import {Button, Checkbox, Col, Form, Input, Row, Select, Spin, Table, Typography,} from 'antd'
+import {Button, Checkbox, Col, Form, Input, Modal, Row, Select, Spin, Table, Typography,} from 'antd'
 import {useCallback, useEffect, useState} from 'react'
 import {buttonProps} from '../../components/button'
 import {rowProps} from '../../utils/FormUtils'
-import {CheckOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons'
+import {CheckOutlined, DeleteOutlined, PlusCircleOutlined, PlusOutlined} from '@ant-design/icons'
 import {StepService} from '../../services/step'
 import onNotification from '../../components/notification/notification'
 import {largeMarginTop, primaryText,} from '../../styles/stylesProps'
@@ -17,10 +17,49 @@ import {CSS} from '@dnd-kit/utilities';
 import type {ColumnsType} from 'antd/es/table';
 import {required} from "../../utils/ValidatorFields";
 import {useWorkspace} from "../../contexts/WorkspaceContext";
+import styled from "styled-components";
 
 const FormItem = Form.Item
 const {Option} = Select
 const {Title} = Typography
+
+const AddStepTrigger = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 6px 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px dashed #4762EA;
+  color: #4762EA;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    background-color: #f0f5ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(71, 98, 234, 0.25);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  .anticon {
+    font-size: 16px;
+    animation: addStepPulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes addStepPulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.15);
+    }
+  }
+`
 
 type StepOrderProps = {
     id: number
@@ -50,6 +89,9 @@ const FlowForm = () => {
     const [flowTypes, setFlowTypes] = useState<StepProps[]>([])
     const [flow, setFlow] = useState<FlowProps[]>([])
     const [form] = useForm()
+    const [newStepForm] = useForm()
+    const [newStepModalOpen, setNewStepModalOpen] = useState(false)
+    const [creatingStep, setCreatingStep] = useState(false)
     const navigate = useNavigate()
     const {workspace} = useWorkspace()
     const bancosPath = workspace === "regularizacao" ? "/regularizacao/fluxos" : "/bancos"
@@ -88,6 +130,35 @@ const FlowForm = () => {
         ])
         form.setFieldsValue({steps: undefined})
     }, [form])
+
+    const handleCreateStep = useCallback(async () => {
+        try {
+            const data = await newStepForm.validateFields()
+            setCreatingStep(true)
+            StepService.createStep({...data, requiredDocument: false}, [])
+                .then((response) => {
+                    const created = response.data
+                    setSteps((prev) => [...prev, {id: created.id, description: created.description}])
+                    form.setFieldsValue({steps: {value: created.id, label: created.description}})
+                    onNotification('success', {
+                        message: 'Sucesso',
+                        description: 'Passo criado com sucesso',
+                    })
+                    newStepForm.resetFields()
+                    setNewStepModalOpen(false)
+                    setCreatingStep(false)
+                })
+                .catch(() => {
+                    onNotification('error', {
+                        message: 'Erro',
+                        description: 'Erro ao criar passo, tente novamente em alguns instantes',
+                    })
+                    setCreatingStep(false)
+                })
+        } catch (error) {
+            // validation error, keep modal open
+        }
+    }, [newStepForm, form])
 
     useEffect(() => {
         let newFlow = stepsOrder.map((item, index) => ({
@@ -364,6 +435,18 @@ const FlowForm = () => {
                                 }
                                 allowClear
                                 virtual={false}
+                                dropdownRender={(menu) => (
+                                    <>
+                                        {menu}
+                                        <AddStepTrigger
+                                            onClick={() => setNewStepModalOpen(true)}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                        >
+                                            <PlusCircleOutlined/>
+                                            Não achou o passo? Adicionar novo passo
+                                        </AddStepTrigger>
+                                    </>
+                                )}
                             >
                                 {optionsSteps}
                             </Select>
@@ -412,6 +495,29 @@ const FlowForm = () => {
             >
                 Salvar
             </Button>
+
+            <Modal
+                title="✨ Novo Passo"
+                visible={newStepModalOpen}
+                onCancel={() => {
+                    setNewStepModalOpen(false)
+                    newStepForm.resetFields()
+                }}
+                onOk={() => handleCreateStep()}
+                okText="Criar passo"
+                cancelText="Cancelar"
+                confirmLoading={creatingStep}
+                destroyOnClose
+            >
+                <Form layout="vertical" form={newStepForm}>
+                    <FormItem colon={false} label="Descrição" name="description" rules={required}>
+                        <Input placeholder="Descrição do passo"/>
+                    </FormItem>
+                    <FormItem colon={false} label="Prazo em Dias" name="deadline" rules={required}>
+                        <Input placeholder="Prazo" type="number" min={1}/>
+                    </FormItem>
+                </Form>
+            </Modal>
         </Spin>
     )
 }
