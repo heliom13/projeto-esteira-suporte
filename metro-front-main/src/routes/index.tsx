@@ -41,6 +41,7 @@ import RequireWorkspace from "./RequireWorkspace";
 import WorkspaceSelect from "../pages/workspace-select";
 import RegularizacaoLayout from "../layouts/regularizacao";
 import RegularizacaoHome from "../pages/regularizacao";
+import RegularizacaoBoard from "../pages/regularizacao/board";
 
 export default function AppRoutes() {
     return (
@@ -85,7 +86,7 @@ export default function AppRoutes() {
                                     <Route path="finalizar-processo/:id" element={<EndProcess/>}/>
                                     <Route path="nota/:id" element={<ProcessInvoice/>}/>
                                 </Route>
-                                <Route path="monday" element={<MondayBoard/>}/>
+                                <Route path="monday" element={<RegularizacaoBoard/>}/>
                             </Route>
                         </Route>
                     </Route>
