@@ -46,8 +46,15 @@ class EmailService(
             "html" to """
                 <p>Olá,</p>
                 <p>Recebemos uma solicitação para redefinir a senha da sua conta no sistema Suporte Imobiliário.</p>
-                <p><a href="$resetLink">Clique aqui para criar uma nova senha</a> (válido por 30 minutos).</p>
-                <p>Se o link acima não funcionar, copie e cole este endereço no navegador:<br/>$resetLink</p>
+                <p>
+                  <a href="$resetLink" style="color:#4762EA; text-decoration:underline; font-weight:bold;" target="_blank" rel="noopener noreferrer">
+                    Clique aqui para criar uma nova senha
+                  </a>
+                  (válido por 30 minutos).
+                </p>
+                <p>Se o botão acima não funcionar, copie e cole este endereço no navegador:<br/>
+                  <a href="$resetLink" style="color:#4762EA; text-decoration:underline;">$resetLink</a>
+                </p>
                 <p>Se você não solicitou essa redefinição, ignore este e-mail — sua senha permanece a mesma.</p>
             """.trimIndent()
         )

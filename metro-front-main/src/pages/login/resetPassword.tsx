@@ -1,6 +1,6 @@
 import onNotification from '../../components/notification/notification'
 import { AuthService } from '../../services/auth'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Button, Form, Input, Space, Typography } from 'antd'
 import { primaryText } from '../../styles/stylesProps'
 import { buttonProps } from '../../components/button'
@@ -9,9 +9,12 @@ import { useForm } from 'antd/lib/form/Form'
 import { useState } from 'react'
 const { Title } = Typography
 
-const ResetPassword = () => {
+type ResetPasswordProps = {
+  token: string
+}
+
+const ResetPassword = ({ token }: ResetPasswordProps) => {
   const navigate = useNavigate()
-  const { token } = useParams()
   const [form] = useForm()
   const [loading, setLoading] = useState(false)
 
@@ -23,8 +26,6 @@ const ResetPassword = () => {
       })
       return
     }
-
-    if (!token) return
 
     setLoading(true)
     AuthService.resetPasswordWithToken(token, values.password)

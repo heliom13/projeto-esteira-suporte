@@ -66,7 +66,7 @@ class UserService(
 
         val token = jwtUtil.generatePasswordResetToken(user.email)
         val encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8.toString())
-        val resetLink = "$frontUrl/redefinir-senha/$encodedToken"
+        val resetLink = "$frontUrl/redefinir-senha?token=$encodedToken"
 
         emailService.sendPasswordResetEmail(user.email, resetLink)
     }
