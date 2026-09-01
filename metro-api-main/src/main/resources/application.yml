@@ -24,6 +24,11 @@ spring:
     init:
       mode: always
 
+management:
+  endpoint:
+    health:
+      show-details: always
+
 message:
   token: ${TOKEN_MESSAGE:token}
 

@@ -1,10 +1,13 @@
 package br.com.horys.metro.services
 
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpEntity
 import org.springframework.http.MediaType
+import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 
 @Service
@@ -12,7 +15,14 @@ class EmailService(
     @Value("\${resend.api-key}") private val apiKey: String,
     @Value("\${resend.from-address}") private val fromAddress: String
 ) {
-    private val restTemplate = RestTemplate()
+    private val logger = LoggerFactory.getLogger(EmailService::class.java)
+
+    private val restTemplate = RestTemplate(
+        SimpleClientHttpRequestFactory().apply {
+            setConnectTimeout(8000)
+            setReadTimeout(8000)
+        }
+    )
 
     fun sendPasswordResetEmail(to: String, resetLink: String) {
         val headers = HttpHeaders()
@@ -35,10 +45,15 @@ class EmailService(
             """.trimIndent()
         )
 
-        restTemplate.postForEntity(
-            "https://api.resend.com/emails",
-            HttpEntity(body, headers),
-            String::class.java
-        )
+        try {
+            restTemplate.postForEntity(
+                "https://api.resend.com/emails",
+                HttpEntity(body, headers),
+                String::class.java
+            )
+        } catch (e: RestClientException) {
+            logger.error("RESEND_SEND_FAILED: {}", e.message, e)
+            throw e
+        }
     }
 }
