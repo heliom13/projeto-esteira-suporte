@@ -23,40 +23,55 @@ const FormItem = Form.Item
 const {Option} = Select
 const {Title} = Typography
 
-const AddStepTrigger = styled.div`
+const AddStepTrigger = styled.div<{$accent: string; $accentDark: string}>`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  margin: 4px 6px 2px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px dashed #4762EA;
-  color: #4762EA;
-  font-weight: 500;
+  margin: 6px 6px 4px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, ${(p) => p.$accent}, ${(p) => p.$accentDark});
+  background-size: 200% 200%;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 3px 10px ${(p) => p.$accent}55;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-position 0.4s ease;
+  animation: addStepGradient 3s ease infinite;
 
   &:hover {
-    background-color: #f0f5ff;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(71, 98, 234, 0.25);
+    transform: translateY(-2px) scale(1.015);
+    box-shadow: 0 6px 16px ${(p) => p.$accent}80;
+    background-position: 100% 50%;
   }
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
   }
 
   .anticon {
-    font-size: 16px;
-    animation: addStepPulse 1.8s ease-in-out infinite;
+    font-size: 17px;
+    animation: addStepPulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes addStepGradient {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 
   @keyframes addStepPulse {
     0%, 100% {
-      transform: scale(1);
+      transform: scale(1) rotate(0deg);
     }
     50% {
-      transform: scale(1.15);
+      transform: scale(1.2) rotate(90deg);
     }
   }
 `
@@ -95,6 +110,8 @@ const FlowForm = () => {
     const navigate = useNavigate()
     const {workspace} = useWorkspace()
     const bancosPath = workspace === "regularizacao" ? "/regularizacao/fluxos" : "/bancos"
+    const addStepAccent = workspace === "regularizacao" ? "#52c41a" : "#4762EA"
+    const addStepAccentDark = workspace === "regularizacao" ? "#237804" : "#2541b2"
 
     const optionsSteps = steps
         .filter((step, index, all) => all.findIndex((s) => s.id === step.id) === index)
@@ -439,6 +456,8 @@ const FlowForm = () => {
                                     <>
                                         {menu}
                                         <AddStepTrigger
+                                            $accent={addStepAccent}
+                                            $accentDark={addStepAccentDark}
                                             onClick={() => setNewStepModalOpen(true)}
                                             onMouseDown={(e) => e.preventDefault()}
                                         >
