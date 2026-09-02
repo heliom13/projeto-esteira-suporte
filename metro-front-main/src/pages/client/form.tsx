@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {Alert, Button, Col, DatePicker, Divider, Form, Input, Row, Select, Spin, Typography,} from "antd";
+import {Alert, Button, Col, DatePicker, Divider, Form, Input, Row, Select, Spin, Tabs, Typography,} from "antd";
 import {buttonProps} from "../../components/button";
 import {rowProps} from "../../utils/FormUtils";
 import {required, validateMessages} from "../../utils/ValidatorFields";
@@ -13,6 +13,7 @@ import {useWorkspace} from "../../contexts/WorkspaceContext";
 import {useForm} from "antd/lib/form/Form";
 import moment from "moment";
 import {CopyOutlined, CheckOutlined} from "@ant-design/icons";
+import ClientHistory from "./history";
 
 const {Option} = Select;
 const FormItem = Form.Item;
@@ -145,12 +146,8 @@ const ClientForm = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.id]);
 
-    return (
-        <Spin spinning={loading} tip="Carregando...">
-            <Title level={3} {...primaryText}>
-                {params.id ? " Atualizar Cliente" : "Cadastro de Cliente"}
-            </Title>
-
+    const dadosPane = (
+        <>
             {docLink && (
                 <Alert
                     style={{ marginBottom: 24 }}
@@ -350,6 +347,27 @@ const ClientForm = () => {
                     </FormItem>
                 </Row>
             </Form>
+        </>
+    );
+
+    return (
+        <Spin spinning={loading} tip="Carregando...">
+            <Title level={3} {...primaryText}>
+                {params.id ? " Atualizar Cliente" : "Cadastro de Cliente"}
+            </Title>
+
+            {params.id ? (
+                <Tabs defaultActiveKey="dados">
+                    <Tabs.TabPane tab="📋 Dados" key="dados">
+                        {dadosPane}
+                    </Tabs.TabPane>
+                    <Tabs.TabPane tab="🕐 Histórico" key="historico">
+                        <ClientHistory clientId={params.id}/>
+                    </Tabs.TabPane>
+                </Tabs>
+            ) : (
+                dadosPane
+            )}
         </Spin>
     );
 };

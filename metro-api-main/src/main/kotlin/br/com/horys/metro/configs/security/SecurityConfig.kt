@@ -2,6 +2,7 @@ package br.com.horys.metro.configs.security
 
 import br.com.horys.metro.configs.security.filters.JWTAuthenticationFilter
 import br.com.horys.metro.configs.security.filters.JWTAuthorizationFilter
+import br.com.horys.metro.repositories.LoginLogRepository
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.security.SecurityRequirement
@@ -21,7 +22,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 @EnableWebSecurity
 class SecurityConfig(
     private var userDetailsService: UserDetailsService,
-    private var jwtUtil: JWTUtil
+    private var jwtUtil: JWTUtil,
+    private var loginLogRepository: LoginLogRepository
 ) : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
@@ -47,7 +49,8 @@ class SecurityConfig(
             .addFilter(
                 JWTAuthenticationFilter(
                     authenticationManager(),
-                    jwtUtil = jwtUtil
+                    jwtUtil = jwtUtil,
+                    loginLogRepository = loginLogRepository
                 )
             )
             .addFilter(

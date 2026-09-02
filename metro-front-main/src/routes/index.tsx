@@ -35,6 +35,7 @@ import Error403 from "../pages/403/Error403";
 import Users from "../pages/users";
 import UsersCreate from "../pages/users/create";
 import UsersEdit from "../pages/users/edit";
+import LoginLogs from "../pages/users/loginLogs";
 import MondayBoard from "../pages/monday";
 import CriarFluxo from "../pages/criar-fluxo";
 import RequireWorkspace from "./RequireWorkspace";
@@ -145,6 +146,7 @@ export default function AppRoutes() {
                             <Route path="" element={<Users/>}/>
                             <Route path="cadastrar" element={<UsersCreate/>}/>
                             <Route path="atualizar" element={<UsersEdit/>}/>
+                            <Route path="logs" element={<LoginLogs/>}/>
                         </Route>
                         <Route path="monday" element={<MondayBoard/>}/>
                         <Route path="criar-fluxo" element={<RoleBasedRoute requiredRoles={["ADMIN", "ANALYST"]}/>}>

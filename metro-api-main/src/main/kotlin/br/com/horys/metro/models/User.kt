@@ -4,6 +4,7 @@ import br.com.horys.metro.models.User.Role.ADMIN
 import br.com.horys.metro.models.User.Role.ANALYST
 import br.com.horys.metro.models.User.Role.PROCESSOR
 import br.com.horys.metro.models.User.Role.SECRETARY
+import com.fasterxml.jackson.annotation.JsonIgnore
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
@@ -21,6 +22,7 @@ data class User(
     val name: String = "",
     val username: String,
     val email: String = "",
+    @JsonIgnore
     val password: String = "",
     @Enumerated(EnumType.STRING)
     val role: Role = SECRETARY

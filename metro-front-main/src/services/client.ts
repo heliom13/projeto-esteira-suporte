@@ -10,6 +10,10 @@ export class ClientService {
     return api.get(`/clients/${id}`);
   }
 
+  static async getClientHistory(id: any) {
+    return api.get(`/clients/${id}/history`);
+  }
+
   static async getClientByName(client: any) {
     let name = client.name.toUpperCase()
     return api.get(`/clients?name=${name}`);

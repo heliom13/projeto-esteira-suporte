@@ -24,6 +24,8 @@ class UserDetailsImpl(private val user: User) : UserDetails {
 
     override fun isAccountNonLocked() = true
 
+    fun getUser(): User = user
+
     fun getId() = user.id
     fun getDisplayName(): String {
         return user.name

@@ -3,9 +3,13 @@ package br.com.horys.metro.services
 import br.com.horys.metro.controllers.client.CreateClientRequest
 import br.com.horys.metro.controllers.client.QuickClientRequest
 import br.com.horys.metro.controllers.client.UpdateClientRequest
+import br.com.horys.metro.controllers.response.ClientHistoryResponse
 import br.com.horys.metro.exceptions.ClientNotFoundException
 import br.com.horys.metro.models.Client
+import br.com.horys.metro.models.Notification
 import br.com.horys.metro.repositories.ClientRepository
+import br.com.horys.metro.repositories.NotificationRepository
+import br.com.horys.metro.repositories.ProcessRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -13,15 +17,18 @@ import java.time.LocalDateTime
 @Service
 class ClientService(
     private val clientRepository: ClientRepository,
-    private val searchClientService: SearchClientService
+    private val searchClientService: SearchClientService,
+    private val userService: UserService,
+    private val processRepository: ProcessRepository,
+    private val notificationRepository: NotificationRepository
 ) {
 
     fun save(request: CreateClientRequest): Client {
-        return clientRepository.save(request.toModel())
+        return clientRepository.save(request.toModel().copy(createdBy = userService.getLoggedInUser()))
     }
 
     fun saveQuick(request: QuickClientRequest): Client {
-        return clientRepository.save(request.toModel())
+        return clientRepository.save(request.toModel().copy(createdBy = userService.getLoggedInUser()))
     }
 
     fun update(id: Long, request: UpdateClientRequest): Client {
@@ -57,5 +64,34 @@ class ClientService(
 
     fun findById(clientId: Long): Client {
         return clientRepository.findById(clientId).orElseThrow { throw ClientNotFoundException() }
+    }
+
+    fun getHistory(clientId: Long): List<ClientHistoryResponse> {
+        val client = findById(clientId)
+        val destinies = listOf(Notification.Destiny.HISTORY, Notification.Destiny.NOTIFICATION_AND_HISTORY)
+
+        val entries = mutableListOf(
+            ClientHistoryResponse(
+                type = "CLIENT_CREATED",
+                description = "Cliente cadastrado",
+                userName = client.createdBy?.name,
+                createdAt = client.createdAt
+            )
+        )
+
+        processRepository.findByClient_Id(clientId).forEach { process ->
+            notificationRepository.findByProcessIdOrderByCreatedAtDesc(process.id!!, destinies).forEach {
+                entries.add(
+                    ClientHistoryResponse(
+                        type = it.type.name,
+                        description = it.description,
+                        userName = it.userOrigin.name,
+                        createdAt = it.createdAt
+                    )
+                )
+            }
+        }
+
+        return entries.sortedByDescending { it.createdAt }
     }
 }

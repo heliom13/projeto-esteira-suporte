@@ -13,6 +13,7 @@ interface ProcessRepository : JpaRepository<Process, Long>, JpaSpecificationExec
     ): Process?
 
     fun findByExternalId(externalId: String): Process?
+    fun findByClient_Id(clientId: Long): List<Process>
     fun findByClient_IdAndStatus(
         clientId: Long,
         status: Status

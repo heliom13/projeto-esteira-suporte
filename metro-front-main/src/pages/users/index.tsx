@@ -166,6 +166,14 @@ const Users = () => {
                         >
                             Cadastrar
                         </Button>
+                        <Button
+                            type="ghost"
+                            onClick={() => {
+                                navigate('/usuarios/logs')
+                            }}
+                        >
+                            🕐 Log de Acessos
+                        </Button>
                     </Space>
                 </Row>
                 <br/>
