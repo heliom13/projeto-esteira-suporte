@@ -18,4 +18,6 @@ interface NotificationRepository : JpaRepository<Notification, Long> {
         @Param("processId") processId: Long,
         @Param("destinies") destinies: List<Notification.Destiny>
     ): List<Notification>
+
+    fun findTop300ByDestinyInOrderByCreatedAtDesc(destinies: List<Notification.Destiny>): List<Notification>
 }

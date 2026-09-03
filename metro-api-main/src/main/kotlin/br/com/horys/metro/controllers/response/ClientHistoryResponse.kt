@@ -6,5 +6,8 @@ class ClientHistoryResponse(
     val type: String,
     val description: String,
     val userName: String?,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val clientId: Long? = null,
+    val clientName: String? = null,
+    val flowType: String? = null
 )

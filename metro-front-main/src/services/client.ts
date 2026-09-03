@@ -14,6 +14,10 @@ export class ClientService {
     return api.get(`/clients/${id}/history`);
   }
 
+  static async getGlobalHistory() {
+    return api.get(`/clients/history/all`);
+  }
+
   static async getClientByName(client: any) {
     let name = client.name.toUpperCase()
     return api.get(`/clients?name=${name}`);

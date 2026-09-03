@@ -43,6 +43,7 @@ import WorkspaceSelect from "../pages/workspace-select";
 import RegularizacaoLayout from "../layouts/regularizacao";
 import RegularizacaoHome from "../pages/regularizacao";
 import RegularizacaoBoard from "../pages/regularizacao/board";
+import GlobalHistory from "../pages/history";
 
 export default function AppRoutes() {
     return (
@@ -88,6 +89,7 @@ export default function AppRoutes() {
                                     <Route path="nota/:id" element={<ProcessInvoice/>}/>
                                 </Route>
                                 <Route path="monday" element={<RegularizacaoBoard/>}/>
+                                <Route path="historico" element={<GlobalHistory/>}/>
                             </Route>
                         </Route>
                     </Route>
@@ -149,6 +151,7 @@ export default function AppRoutes() {
                             <Route path="logs" element={<LoginLogs/>}/>
                         </Route>
                         <Route path="monday" element={<MondayBoard/>}/>
+                        <Route path="historico" element={<GlobalHistory/>}/>
                         <Route path="criar-fluxo" element={<RoleBasedRoute requiredRoles={["ADMIN", "ANALYST"]}/>}>
                             <Route path=":tipo" element={<CriarFluxo/>}/>
                         </Route>

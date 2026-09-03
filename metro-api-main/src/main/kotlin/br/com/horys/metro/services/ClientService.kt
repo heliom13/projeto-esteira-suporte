@@ -75,7 +75,9 @@ class ClientService(
                 type = "CLIENT_CREATED",
                 description = "Cliente cadastrado",
                 userName = client.createdBy?.name,
-                createdAt = client.createdAt
+                createdAt = client.createdAt,
+                clientId = client.id,
+                clientName = client.name
             )
         )
 
@@ -86,12 +88,49 @@ class ClientService(
                         type = it.type.name,
                         description = it.description,
                         userName = it.userOrigin.name,
-                        createdAt = it.createdAt
+                        createdAt = it.createdAt,
+                        clientId = client.id,
+                        clientName = client.name,
+                        flowType = it.process.flow.type.description
                     )
                 )
             }
         }
 
         return entries.sortedByDescending { it.createdAt }
+    }
+
+    fun getGlobalHistory(): List<ClientHistoryResponse> {
+        val destinies = listOf(Notification.Destiny.HISTORY, Notification.Destiny.NOTIFICATION_AND_HISTORY)
+        val entries = mutableListOf<ClientHistoryResponse>()
+
+        clientRepository.findAll().forEach { client ->
+            entries.add(
+                ClientHistoryResponse(
+                    type = "CLIENT_CREATED",
+                    description = "Cliente cadastrado",
+                    userName = client.createdBy?.name,
+                    createdAt = client.createdAt,
+                    clientId = client.id,
+                    clientName = client.name
+                )
+            )
+        }
+
+        notificationRepository.findTop300ByDestinyInOrderByCreatedAtDesc(destinies).forEach {
+            entries.add(
+                ClientHistoryResponse(
+                    type = it.type.name,
+                    description = it.description,
+                    userName = it.userOrigin.name,
+                    createdAt = it.createdAt,
+                    clientId = it.process.client?.id,
+                    clientName = it.process.client?.name,
+                    flowType = it.process.flow.type.description
+                )
+            )
+        }
+
+        return entries.sortedByDescending { it.createdAt }.take(300)
     }
 }

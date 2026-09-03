@@ -47,6 +47,9 @@ class ClientController(
     @GetMapping("/{id}/history")
     fun getHistory(@PathVariable id: Long) = clientService.getHistory(id)
 
+    @GetMapping("/history/all")
+    fun getGlobalHistory() = clientService.getGlobalHistory()
+
     @GetMapping()
     fun getAll(@RequestParam(required = false) name: String?) = searchClientService.findAll(name)
 }

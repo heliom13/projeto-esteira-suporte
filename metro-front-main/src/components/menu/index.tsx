@@ -89,6 +89,11 @@ export const SideMenu = () => {
             roles: ["ADMIN", "ANALYST", "PROCESSOR", "SECRETARY"]
         },
         {
+            key: "12",
+            label: <Link to={"historico"}>🕐 Histórico</Link>,
+            roles: ["ADMIN", "ANALYST", "PROCESSOR", "SECRETARY"]
+        },
+        {
             key: "10",
             label: (
                 <span
