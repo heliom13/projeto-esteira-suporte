@@ -48,15 +48,9 @@ class DataInitializer(
             )
             log.info(">>> Usuário Helion criado com ID: ${user.id}")
         } else {
-            // Garante sempre role ADMIN e senha correta para o admin principal
-            val helion = helionOpt.get()
-            userRepository.save(
-                helion.copy(
-                    password = bCryptPasswordEncoder.encode("admin123"),
-                    role = User.Role.ADMIN
-                )
-            )
-            log.info(">>> Usuário Helion sincronizado (senha e role garantidos).")
+            // Usuário já existe: não sobrescrever senha/role a cada boot,
+            // isso desfazia trocas de senha feitas pelo usuário a cada reinício do backend.
+            log.info(">>> Usuário Helion já existe, mantendo senha e role atuais.")
         }
 
         val hasRegularizacao = flowTypeRepository.findAll()
