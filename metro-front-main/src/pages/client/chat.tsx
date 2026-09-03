@@ -127,11 +127,9 @@ const ClientChat: React.FC<{clientId: string | number}> = ({clientId}) => {
                             <Row key={note.id} $own={own}>
                                 {!own && <Avatar size="small">{initials(note.userName)}</Avatar>}
                                 <div style={{display: "flex", flexDirection: "column", alignItems: own ? "flex-end" : "flex-start"}}>
-                                    {!own && (
-                                        <Text style={{fontSize: 12, color: "#888", marginBottom: 2}}>
-                                            {note.userName}
-                                        </Text>
-                                    )}
+                                    <Text style={{fontSize: 12, color: "#888", marginBottom: 2}}>
+                                        {own ? `${note.userName} (você)` : note.userName}
+                                    </Text>
                                     <Bubble $own={own}>
                                         <span style={{whiteSpace: "pre-wrap"}}>{note.content}</span>
                                     </Bubble>

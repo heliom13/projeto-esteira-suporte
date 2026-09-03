@@ -5,11 +5,13 @@ import {buttonLeft, buttonRadius} from "../../components/button";
 import {
     DeleteOutlined,
     DoubleRightOutlined,
+    MessageOutlined,
     PaperClipOutlined,
     SearchOutlined,
     SendOutlined,
     TeamOutlined,
 } from "@ant-design/icons";
+import ClientChat from "../client/chat";
 import {validateMessages} from "../../utils/ValidatorFields";
 import {rowProps} from "../../utils/FormUtils";
 import {marginTop, primaryText} from "../../styles/stylesProps";
@@ -63,6 +65,7 @@ const Processes = () => {
     const [form] = useForm();
     const [selectedUser, setSelectedUser] = useState<{ id: number | null }>({id: null});
     const [processId, setProcessId] = useState(null);
+    const [chatClient, setChatClient] = useState<{ id: number; name: string } | null>(null);
 
     moment.locale("pt-br");
 
@@ -289,6 +292,12 @@ const Processes = () => {
             title: "Opções",
             render: (r: ProcessProps) => (
                 <Space size="middle">
+                    <Tooltip title="Chat interno do cliente">
+                        <MessageOutlined
+                            style={{color: "#4169E1"}}
+                            onClick={() => setChatClient({id: r.client.id, name: r.client.name})}
+                        />
+                    </Tooltip>
                     {r.status === "SOLD" && !r.existInvoice && (
                         <Tooltip title="Finalizar Processo">
                             <SendOutlined
@@ -379,6 +388,16 @@ const Processes = () => {
                     rowSelection={{type: 'radio', onSelect: handleUserSelect}}
                     columns={[{title: 'Nome', dataIndex: 'name'}]}
                     dataSource={users}/>
+            </Modal>
+            <Modal
+                title={`💬 Chat Interno — ${chatClient?.name ?? ""}`}
+                visible={!!chatClient}
+                onCancel={() => setChatClient(null)}
+                footer={null}
+                width={520}
+                destroyOnClose
+            >
+                {chatClient && <ClientChat clientId={chatClient.id}/>}
             </Modal>
         </Spin>
     );
