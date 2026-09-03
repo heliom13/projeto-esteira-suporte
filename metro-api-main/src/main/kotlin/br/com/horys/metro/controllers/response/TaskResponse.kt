@@ -13,5 +13,6 @@ class TaskResponse(
     val status: String,
     val dueDate: LocalDate?,
     val seen: Boolean,
+    val transferredByName: String?,
     val createdAt: LocalDateTime
 )

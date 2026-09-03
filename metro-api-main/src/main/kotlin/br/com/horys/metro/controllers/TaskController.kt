@@ -1,6 +1,7 @@
 package br.com.horys.metro.controllers
 
 import br.com.horys.metro.controllers.requests.CreateTaskRequest
+import br.com.horys.metro.controllers.requests.TransferTaskRequest
 import br.com.horys.metro.services.TaskService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -30,6 +31,10 @@ class TaskController(
 
     @PutMapping("/{id}/complete")
     fun complete(@PathVariable id: Long) = taskService.complete(id)
+
+    @PutMapping("/{id}/transfer")
+    fun transfer(@PathVariable id: Long, @Valid @RequestBody request: TransferTaskRequest) =
+        taskService.transfer(id, request)
 
     @PutMapping("/seen-all")
     fun markAllSeen() = taskService.markAllMineSeen()

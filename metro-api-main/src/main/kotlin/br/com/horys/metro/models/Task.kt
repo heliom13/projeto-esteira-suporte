@@ -29,6 +29,9 @@ data class Task(
     val status: Status,
     val dueDate: LocalDate?,
     val seen: Boolean = false,
+    @ManyToOne
+    @JoinColumn(name = "transferred_by_id")
+    val transferredBy: User? = null,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 ) {

@@ -1,6 +1,7 @@
 package br.com.horys.metro.services
 
 import br.com.horys.metro.controllers.requests.CreateTaskRequest
+import br.com.horys.metro.controllers.requests.TransferTaskRequest
 import br.com.horys.metro.controllers.response.TaskResponse
 import br.com.horys.metro.exceptions.BusinessException
 import br.com.horys.metro.models.Task
@@ -76,6 +77,34 @@ class TaskService(
             .forEach { taskRepository.save(it.copy(seen = true)) }
     }
 
+    fun transfer(id: Long, request: TransferTaskRequest) {
+        val currentUser = userService.getLoggedInUser()
+        val task = taskRepository.findById(id).orElseThrow { BusinessException("Tarefa não encontrada") }
+
+        if (task.assignedTo.id != currentUser.id) {
+            throw BusinessException("Você não pode transferir uma tarefa que não é sua")
+        }
+        if (task.status == Task.Status.DONE) {
+            throw BusinessException("Não é possível transferir uma tarefa já concluída")
+        }
+
+        val newAssignee = userRepository.findByUsername(request.assignedToUsername)
+            .orElseThrow { BusinessException("Usuário mencionado não encontrado") }
+
+        if (newAssignee.id == currentUser.id) {
+            throw BusinessException("Escolha outro usuário para transferir a tarefa")
+        }
+
+        taskRepository.save(
+            task.copy(
+                assignedTo = newAssignee,
+                transferredBy = currentUser,
+                seen = false,
+                updatedAt = LocalDateTime.now()
+            )
+        )
+    }
+
     private fun toResponse(task: Task) = TaskResponse(
         id = task.id!!,
         title = task.title,
@@ -86,6 +115,7 @@ class TaskService(
         status = task.status.name,
         dueDate = task.dueDate,
         seen = task.seen,
+        transferredByName = task.transferredBy?.name,
         createdAt = task.createdAt
     )
 }

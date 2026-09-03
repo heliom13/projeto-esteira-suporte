@@ -21,6 +21,10 @@ export class TaskService {
     return api.put(`/tasks/${id}/complete`);
   }
 
+  static async transfer(id: any, assignedToUsername: string) {
+    return api.put(`/tasks/${id}/transfer`, {assignedToUsername});
+  }
+
   static async markAllSeen() {
     return api.put(`/tasks/seen-all`);
   }

@@ -14,7 +14,7 @@ import {
     Tag,
     Typography,
 } from "antd";
-import {CheckOutlined, PlusOutlined} from "@ant-design/icons";
+import {CheckOutlined, PlusOutlined, SwapOutlined} from "@ant-design/icons";
 import moment from "moment";
 import "moment/locale/pt-br";
 import {useForm} from "antd/lib/form/Form";
@@ -38,6 +38,7 @@ type TaskProps = {
     status: string;
     dueDate: string | null;
     seen: boolean;
+    transferredByName: string | null;
     createdAt: string;
 };
 
@@ -57,12 +58,15 @@ const Tasks = () => {
     const {hasAnyRole} = useAuth();
     const isAdmin = hasAnyRole(["ADMIN"]);
     const [form] = useForm();
+    const [transferForm] = useForm();
     const [loading, setLoading] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [creating, setCreating] = useState(false);
     const [users, setUsers] = useState<UserProps[]>([]);
     const [mine, setMine] = useState<TaskProps[]>([]);
     const [assignedByMe, setAssignedByMe] = useState<TaskProps[]>([]);
+    const [transferringTask, setTransferringTask] = useState<TaskProps | null>(null);
+    const [transferring, setTransferring] = useState(false);
 
     const fetchMine = useCallback(() => {
         setLoading(true);
@@ -80,12 +84,16 @@ const Tasks = () => {
         fetchMine();
         fetchAssignedByMe();
         TaskService.markAllSeen();
+        api.get("/users").then((response) => setUsers(response.data));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const openModal = () => {
-        api.get("/users").then((response) => setUsers(response.data));
         setModalOpen(true);
+    };
+
+    const openTransferModal = (task: TaskProps) => {
+        setTransferringTask(task);
     };
 
     const handleComplete = (id: number) => {
@@ -98,6 +106,34 @@ const Tasks = () => {
             .catch(() => {
                 onNotification("error", {message: "Erro", description: "Erro ao concluir tarefa"});
             });
+    };
+
+    const handleTransfer = (data: any) => {
+        if (!transferringTask) return;
+        const assignedToUsername = extractMentionedUsername(data.assignedTo || "");
+        if (!assignedToUsername) {
+            onNotification("error", {
+                message: "Erro",
+                description: "Mencione um usuário com @ para transferir",
+            });
+            return;
+        }
+
+        setTransferring(true);
+        TaskService.transfer(transferringTask.id, assignedToUsername)
+            .then(() => {
+                onNotification("success", {message: "Sucesso", description: "Tarefa transferida com sucesso"});
+                setTransferringTask(null);
+                transferForm.resetFields();
+                fetchMine();
+            })
+            .catch((error) => {
+                onNotification("error", {
+                    message: "Erro",
+                    description: error?.response?.data?.message || "Erro ao transferir tarefa",
+                });
+            })
+            .finally(() => setTransferring(false));
     };
 
     const handleCreate = (data: any) => {
@@ -176,6 +212,13 @@ const Tasks = () => {
                                                   >
                                                       Concluir
                                                   </Button>,
+                                                  <Button
+                                                      key="transfer"
+                                                      icon={<SwapOutlined/>}
+                                                      onClick={() => openTransferModal(task)}
+                                                  >
+                                                      Transferir
+                                                  </Button>,
                                               ]
                                             : []
                                     }
@@ -194,6 +237,8 @@ const Tasks = () => {
                                                     {moment(task.createdAt).format("DD/MM/YYYY [às] HH:mm")}
                                                     {task.dueDate &&
                                                         ` — Prazo: ${moment(task.dueDate).format("DD/MM/YYYY")}`}
+                                                    {task.transferredByName &&
+                                                        ` — Repassada por ${task.transferredByName}`}
                                                 </Text>
                                             </div>
                                         }
@@ -278,6 +323,42 @@ const Tasks = () => {
                     </FormItem>
                     <FormItem colon={false} label="Prazo (opcional)" name="dueDate">
                         <Input type="date"/>
+                    </FormItem>
+                </Form>
+            </Modal>
+
+            <Modal
+                title="🔁 Transferir tarefa"
+                visible={!!transferringTask}
+                onCancel={() => {
+                    setTransferringTask(null);
+                    transferForm.resetFields();
+                }}
+                onOk={() => transferForm.submit()}
+                okText="Transferir"
+                cancelText="Cancelar"
+                confirmLoading={transferring}
+                destroyOnClose
+            >
+                <Text type="secondary" style={{display: "block", marginBottom: 12}}>
+                    Não consegue resolver "{transferringTask?.title}" agora? Repasse para outro usuário.
+                </Text>
+                <Form layout="vertical" form={transferForm} onFinish={handleTransfer}>
+                    <FormItem
+                        colon={false}
+                        label="Transferir para"
+                        name="assignedTo"
+                        rules={[{required: true, message: "Mencione um usuário com @"}]}
+                    >
+                        <Mentions placeholder="Digite @ para escolher o novo responsável">
+                            {users
+                                .filter((user) => user.username !== transferringTask?.assignedToUsername)
+                                .map((user) => (
+                                    <Option key={String(user.id)} value={user.username}>
+                                        {user.name} (@{user.username})
+                                    </Option>
+                                ))}
+                        </Mentions>
                     </FormItem>
                 </Form>
             </Modal>
