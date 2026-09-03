@@ -14,6 +14,7 @@ import {useForm} from "antd/lib/form/Form";
 import moment from "moment";
 import {CopyOutlined, CheckOutlined} from "@ant-design/icons";
 import ClientHistory from "./history";
+import ClientChat from "./chat";
 
 const {Option} = Select;
 const FormItem = Form.Item;
@@ -363,6 +364,9 @@ const ClientForm = () => {
                     </Tabs.TabPane>
                     <Tabs.TabPane tab="🕐 Histórico" key="historico">
                         <ClientHistory clientId={params.id}/>
+                    </Tabs.TabPane>
+                    <Tabs.TabPane tab="💬 Chat Interno" key="chat">
+                        <ClientChat clientId={params.id}/>
                     </Tabs.TabPane>
                 </Tabs>
             ) : (

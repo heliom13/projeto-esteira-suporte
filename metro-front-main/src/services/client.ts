@@ -18,6 +18,14 @@ export class ClientService {
     return api.get(`/clients/history/all`);
   }
 
+  static async getNotes(clientId: any) {
+    return api.get(`/clients/${clientId}/notes`);
+  }
+
+  static async addNote(clientId: any, content: string) {
+    return api.post(`/clients/${clientId}/notes`, {content});
+  }
+
   static async getClientByName(client: any) {
     let name = client.name.toUpperCase()
     return api.get(`/clients?name=${name}`);
