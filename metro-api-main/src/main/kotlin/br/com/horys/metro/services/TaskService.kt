@@ -81,7 +81,9 @@ class TaskService(
         val currentUser = userService.getLoggedInUser()
         val task = taskRepository.findById(id).orElseThrow { BusinessException("Tarefa não encontrada") }
 
-        if (task.assignedTo.id != currentUser.id) {
+        val isOwner = task.assignedTo.id == currentUser.id
+        val isAdmin = currentUser.role == User.Role.ADMIN
+        if (!isOwner && !isAdmin) {
             throw BusinessException("Você não pode transferir uma tarefa que não é sua")
         }
         if (task.status == Task.Status.DONE) {
@@ -91,7 +93,7 @@ class TaskService(
         val newAssignee = userRepository.findByUsername(request.assignedToUsername)
             .orElseThrow { BusinessException("Usuário mencionado não encontrado") }
 
-        if (newAssignee.id == currentUser.id) {
+        if (newAssignee.id == task.assignedTo.id) {
             throw BusinessException("Escolha outro usuário para transferir a tarefa")
         }
 

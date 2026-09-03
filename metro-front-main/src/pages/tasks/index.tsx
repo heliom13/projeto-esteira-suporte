@@ -126,6 +126,7 @@ const Tasks = () => {
                 setTransferringTask(null);
                 transferForm.resetFields();
                 fetchMine();
+                fetchAssignedByMe();
             })
             .catch((error) => {
                 onNotification("error", {
@@ -258,7 +259,21 @@ const Tasks = () => {
                                 itemLayout="horizontal"
                                 dataSource={assignedByMe}
                                 renderItem={(task) => (
-                                    <List.Item>
+                                    <List.Item
+                                        actions={
+                                            task.status === "PENDING"
+                                                ? [
+                                                      <Button
+                                                          key="transfer"
+                                                          icon={<SwapOutlined/>}
+                                                          onClick={() => openTransferModal(task)}
+                                                      >
+                                                          Transferir
+                                                      </Button>,
+                                                  ]
+                                                : []
+                                        }
+                                    >
                                         <List.Item.Meta
                                             title={
                                                 <span>
@@ -273,6 +288,8 @@ const Tasks = () => {
                                                         {moment(task.createdAt).format("DD/MM/YYYY [às] HH:mm")}
                                                         {task.dueDate &&
                                                             ` — Prazo: ${moment(task.dueDate).format("DD/MM/YYYY")}`}
+                                                        {task.transferredByName &&
+                                                            ` — Repassada por ${task.transferredByName}`}
                                                     </Text>
                                                 </div>
                                             }
