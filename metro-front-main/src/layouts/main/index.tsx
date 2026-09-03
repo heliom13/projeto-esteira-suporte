@@ -8,6 +8,7 @@ import {BellOutlined, SwapOutlined} from '@ant-design/icons';
 import api from "../../services/api";
 import {useAuth} from '../../contexts/AuthContext';
 import {useWorkspace} from '../../contexts/WorkspaceContext';
+import {TaskBell} from '../../components/taskBell';
 
 const {Title} = Typography;
 const {Sider, Content} = Layout;
@@ -152,9 +153,10 @@ export default function MainLayout({children}: any) {
                     <Dropdown overlay={menu} placement="bottomRight">
                         <Badge count={unreadCount} style={{backgroundColor: '#ff4d4f'}} offset={[10, 0]}>
                             <Button icon={<BellOutlined/>} type="primary"
-                                    style={{backgroundColor: '#4096ff', height: '100%', border: 'none'}}/>
+                                    style={{backgroundColor: '#4096ff', height: '100%', border: 'none', marginRight: 8}}/>
                         </Badge>
                     </Dropdown>
+                    <TaskBell color="#4096ff"/>
                 </div>
             </Header>
             <Layout style={{height: 'calc(100vh - 64px)'}}>

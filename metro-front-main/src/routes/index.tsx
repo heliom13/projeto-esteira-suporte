@@ -44,6 +44,7 @@ import RegularizacaoLayout from "../layouts/regularizacao";
 import RegularizacaoHome from "../pages/regularizacao";
 import RegularizacaoBoard from "../pages/regularizacao/board";
 import GlobalHistory from "../pages/history";
+import Tasks from "../pages/tasks";
 
 export default function AppRoutes() {
     return (
@@ -90,6 +91,7 @@ export default function AppRoutes() {
                                 </Route>
                                 <Route path="monday" element={<RegularizacaoBoard/>}/>
                                 <Route path="historico" element={<GlobalHistory/>}/>
+                                <Route path="tarefas" element={<Tasks/>}/>
                             </Route>
                         </Route>
                     </Route>
@@ -152,6 +154,7 @@ export default function AppRoutes() {
                         </Route>
                         <Route path="monday" element={<MondayBoard/>}/>
                         <Route path="historico" element={<GlobalHistory/>}/>
+                        <Route path="tarefas" element={<Tasks/>}/>
                         <Route path="criar-fluxo" element={<RoleBasedRoute requiredRoles={["ADMIN", "ANALYST"]}/>}>
                             <Route path=":tipo" element={<CriarFluxo/>}/>
                         </Route>

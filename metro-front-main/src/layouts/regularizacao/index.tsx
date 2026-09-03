@@ -7,6 +7,7 @@ import {LogoutOutlined, SwapOutlined} from '@ant-design/icons';
 import {useAuth} from '../../contexts/AuthContext';
 import {useWorkspace} from '../../contexts/WorkspaceContext';
 import {RegularizacaoMenu} from '../../components/menu/regularizacaoMenu';
+import {TaskBell} from '../../components/taskBell';
 
 const {Title} = Typography;
 const {Sider, Content} = Layout;
@@ -59,6 +60,9 @@ export default function RegularizacaoLayout() {
                     >
                         🔄 Trocar de área
                     </Button>
+                    <span style={{marginRight: 8}}>
+                        <TaskBell color="#52c41a"/>
+                    </span>
                     <Button
                         icon={<LogoutOutlined/>}
                         type="primary"
