@@ -11,7 +11,7 @@ import { rowProps } from "../../utils/FormUtils";
 const { Title } = Typography;
 const FormItem = Form.Item;
 
-const DelayForm = (form: any, onFinish: any) => {
+const DelayForm: React.FC<{form: any; onFinish: any}> = ({form, onFinish}) => {
   const [hasDelay, setHasDelay] = useState(false);
   return (
     <Form
