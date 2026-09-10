@@ -112,7 +112,7 @@ export const SideMenu = () => {
         </span>
             ),
             icon: <LogoutOutlined/>,
-            roles: ["ADMIN", "SECRETARY"]
+            roles: ["ADMIN", "SECRETARY", "ANALYST", "PROCESSOR"]
         },
     ];
 

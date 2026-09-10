@@ -46,6 +46,10 @@ class RegularizationController(
             payment = request.payment
         )
         repository.save(entity)
+
+        if (request.flowId != null) {
+            proposalService.turnProcess(proposal.id!!, request.flowId)
+        }
     }
 
     @PutMapping("/{id}")

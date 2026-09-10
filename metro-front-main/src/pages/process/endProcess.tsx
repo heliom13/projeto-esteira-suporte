@@ -38,7 +38,9 @@ const EndProcess = () => {
 
         ProcessService.getProcessById(id).then((response) => {
             setLoading(false)
-            fetchProperty(response.data.property.id)
+            if (response.data.property?.id) {
+                fetchProperty(response.data.property.id)
+            }
             setProcess(response.data)
         })
     }

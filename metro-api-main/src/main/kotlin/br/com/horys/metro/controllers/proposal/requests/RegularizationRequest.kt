@@ -9,5 +9,6 @@ data class RegularizationRequest(
     val registration: String,
     val sellerId: Long,
     val service: String,
-    val payment: String
+    val payment: String,
+    val flowId: Long? = null
 )
