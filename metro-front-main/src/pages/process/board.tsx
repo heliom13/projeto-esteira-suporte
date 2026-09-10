@@ -49,6 +49,9 @@ function getDeadlineColor(createdAt: any, deadline: number, status: string): str
     return '#00c875';
 }
 
+const isRegularizacaoFlow = (flowType: string) =>
+    (flowType || "").toLowerCase().includes("regulariz");
+
 const Board: React.FC = () => {
     const [loading, setLoading]       = useState(false);
     const [processes, setProcesses]   = useState<ProcessProps[]>([]);
@@ -82,7 +85,11 @@ const Board: React.FC = () => {
         }
     };
 
-    const groups = processes.reduce<Record<string, ProcessProps[]>>((acc, p) => {
+    const financiamentoProcesses = processes.filter(
+        p => !isRegularizacaoFlow(p.stepCurrent?.flow || "")
+    );
+
+    const groups = financiamentoProcesses.reduce<Record<string, ProcessProps[]>>((acc, p) => {
         const flow = p.stepCurrent?.flow || 'Sem Fluxo';
         if (!acc[flow]) acc[flow] = [];
         acc[flow].push(p);
