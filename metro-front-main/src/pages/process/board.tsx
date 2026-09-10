@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Select, Spin, Typography } from 'antd';
+import { Select, Spin, Typography, Tabs, Row, Col, Card, Table, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ProcessService } from '../../services/process';
 import { AuthService } from '../../services/auth';
@@ -9,6 +9,7 @@ import 'moment/locale/pt-br';
 moment.locale('pt-br');
 
 const { Title } = Typography;
+const { TabPane } = Tabs;
 
 type User = { id: number; name: string; username: string };
 
@@ -96,13 +97,106 @@ const Board: React.FC = () => {
         return acc;
     }, {});
 
+    const stats = {
+        total: financiamentoProcesses.length,
+        ativos: financiamentoProcesses.filter(p => p.status === 'ACTIVE').length,
+        concluidos: financiamentoProcesses.filter(p => p.status === 'SOLD').length,
+        cancelados: financiamentoProcesses.filter(p => p.status === 'CANCELLED').length,
+        atrasados: financiamentoProcesses.filter(p => {
+            const days = moment().diff(moment(p.createdAt), 'days');
+            return p.status === 'ACTIVE' && days > (p.stepCurrent?.deadline ?? 0);
+        }).length,
+    };
+
+    const resumoTableData = financiamentoProcesses.map(p => ({
+        key: p.id,
+        id: p.id,
+        cliente: p.client?.name,
+        imovel: p.property?.description,
+        fluxo: p.stepCurrent?.flow,
+        etapa: p.stepCurrent?.step?.description || p.stepCurrent?.description,
+        responsavel: p.nameUser,
+        status: p.status,
+        dias: moment().diff(moment(p.createdAt), 'days'),
+        prazo: p.stepCurrent?.deadline,
+    }));
+
     return (
         <Spin spinning={loading} tip="Carregando...">
             <Title level={3} style={{ color: '#1f3c6b', marginBottom: 24 }}>
                 Esteira de Processos
             </Title>
+            <Tabs defaultActiveKey="1">
+                <TabPane tab="📊 Resumo" key="1">
+                    <Row gutter={16} style={{ marginBottom: 24 }}>
+                        <Col xs={12} sm={8} md={6}>
+                            <Card style={{ textAlign: 'center', borderTop: '3px solid #00c875' }}>
+                                <div style={{ fontSize: 28, fontWeight: 700, color: '#00c875' }}>{stats.total}</div>
+                                <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Total de Processos</div>
+                            </Card>
+                        </Col>
+                        <Col xs={12} sm={8} md={6}>
+                            <Card style={{ textAlign: 'center', borderTop: '3px solid #faad14' }}>
+                                <div style={{ fontSize: 28, fontWeight: 700, color: '#faad14' }}>{stats.ativos}</div>
+                                <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Em Andamento</div>
+                            </Card>
+                        </Col>
+                        <Col xs={12} sm={8} md={6}>
+                            <Card style={{ textAlign: 'center', borderTop: '3px solid #0073ea' }}>
+                                <div style={{ fontSize: 28, fontWeight: 700, color: '#0073ea' }}>{stats.concluidos}</div>
+                                <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Concluídos</div>
+                            </Card>
+                        </Col>
+                        <Col xs={12} sm={8} md={6}>
+                            <Card style={{ textAlign: 'center', borderTop: '3px solid #e44258' }}>
+                                <div style={{ fontSize: 28, fontWeight: 700, color: '#e44258' }}>{stats.atrasados}</div>
+                                <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Atrasados</div>
+                            </Card>
+                        </Col>
+                    </Row>
 
-            {Object.entries(groups).map(([flow, items], gi) => {
+                    <Card>
+                        <Title level={4}>Todos os Processos</Title>
+                        <Table
+                            size="small"
+                            dataSource={resumoTableData}
+                            pagination={{ pageSize: 20 }}
+                            columns={[
+                                { title: 'ID', dataIndex: 'id', width: 60 },
+                                { title: 'Cliente', dataIndex: 'cliente' },
+                                { title: 'Imóvel', dataIndex: 'imovel' },
+                                { title: 'Fluxo', dataIndex: 'fluxo', width: 100 },
+                                { title: 'Etapa', dataIndex: 'etapa', width: 120 },
+                                { title: 'Responsável', dataIndex: 'responsavel', width: 120 },
+                                {
+                                    title: 'Dias',
+                                    dataIndex: 'dias',
+                                    width: 60,
+                                    render: (dias: number) => <strong>{dias}d</strong>
+                                },
+                                {
+                                    title: 'Prazo',
+                                    dataIndex: 'prazo',
+                                    width: 60,
+                                    render: (prazo: number) => `${prazo}d`
+                                },
+                                {
+                                    title: 'Status',
+                                    dataIndex: 'status',
+                                    width: 80,
+                                    render: (status: string) => {
+                                        const statusInfo = STATUS_MAP[status] ?? { bg: '#c4c4c4', label: status };
+                                        return <Tag color={statusInfo.bg}>{statusInfo.label}</Tag>;
+                                    }
+                                },
+                            ]}
+                        />
+                    </Card>
+                </TabPane>
+
+                <TabPane tab="📋 Detalhado" key="2">
+
+                    {Object.entries(groups).map(([flow, items], gi) => {
                 const color = GROUP_COLORS[gi % GROUP_COLORS.length];
                 return (
                     <div key={flow} style={{ marginBottom: 36 }}>
@@ -233,25 +327,27 @@ const Board: React.FC = () => {
                 );
             })}
 
-            {Object.keys(groups).length === 0 && !loading && (
-                <div style={{ textAlign: 'center', padding: 80, color: '#aaa', fontSize: 15 }}>
-                    Nenhum processo ativo encontrado.
-                </div>
-            )}
+                    {Object.keys(groups).length === 0 && !loading && (
+                        <div style={{ textAlign: 'center', padding: 80, color: '#aaa', fontSize: 15 }}>
+                            Nenhum processo ativo encontrado.
+                        </div>
+                    )}
 
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
-                {[
-                    { color: '#00c875', label: 'No prazo' },
-                    { color: '#fdab3d', label: 'Atenção (>80% do prazo)' },
-                    { color: '#e44258', label: 'Atrasado' },
-                    { color: '#0073ea', label: 'Concluído' },
-                ].map(({ color, label }) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#676879' }}>
-                        <span style={{ width: 10, height: 10, borderRadius: 2, background: color, display: 'inline-block' }} />
-                        {label}
+                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
+                        {[
+                            { color: '#00c875', label: 'No prazo' },
+                            { color: '#fdab3d', label: 'Atenção (>80% do prazo)' },
+                            { color: '#e44258', label: 'Atrasado' },
+                            { color: '#0073ea', label: 'Concluído' },
+                        ].map(({ color, label }) => (
+                            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#676879' }}>
+                                <span style={{ width: 10, height: 10, borderRadius: 2, background: color, display: 'inline-block' }} />
+                                {label}
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
+                </TabPane>
+            </Tabs>
         </Spin>
     );
 };
