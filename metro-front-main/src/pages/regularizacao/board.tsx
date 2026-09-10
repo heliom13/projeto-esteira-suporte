@@ -56,6 +56,7 @@ const RegularizacaoBoard: React.FC = () => {
     moment.locale("pt-br");
     const [loading, setLoading] = useState(false);
     const [processData, setProcessData] = useState<ProcessProps[]>([]);
+    const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
     useEffect(() => {
         setLoading(true);
@@ -80,7 +81,19 @@ const RegularizacaoBoard: React.FC = () => {
         return {total, ativos, concluidos, atrasados};
     }, [regularizacaoProcesses]);
 
-    const resumoTableData = regularizacaoProcesses.map(p => ({
+    const getFilteredProcesses = () => {
+        if (!statusFilter) return regularizacaoProcesses;
+        if (statusFilter === 'total') return regularizacaoProcesses;
+        if (statusFilter === 'ativos') return regularizacaoProcesses.filter(p => p.status === 'ACTIVE');
+        if (statusFilter === 'concluidos') return regularizacaoProcesses.filter(p => p.status === 'SOLD');
+        if (statusFilter === 'atrasados') return regularizacaoProcesses.filter(p => {
+            const deadline = p.stepCurrent?.deadline;
+            return p.status === 'ACTIVE' && deadline != null && moment().diff(moment(p.createdAt), 'days') > deadline;
+        });
+        return regularizacaoProcesses;
+    };
+
+    const resumoTableData = getFilteredProcesses().map(p => ({
         key: p.id,
         id: p.id,
         cliente: p.client?.name,
@@ -101,25 +114,65 @@ const RegularizacaoBoard: React.FC = () => {
                 <TabPane tab="📊 Resumo" key="1">
                     <Row gutter={12} style={{marginBottom: 20}}>
                         <Col xs={12} sm={8} md={6}>
-                            <Card style={{textAlign: "center", borderTop: "3px solid #4762EA"}}>
+                            <Card
+                                style={{
+                                    textAlign: "center",
+                                    borderTop: "3px solid #4762EA",
+                                    cursor: "pointer",
+                                    background: statusFilter === "total" ? "#f0fdf4" : "#fff",
+                                    border: statusFilter === "total" ? "2px solid #4762EA" : "1px solid #f0f0f0",
+                                    transition: "all 0.3s"
+                                }}
+                                onClick={() => setStatusFilter(statusFilter === "total" ? null : "total")}
+                            >
                                 <div style={{fontSize: 28, fontWeight: 700, color: "#4762EA"}}>{stats.total}</div>
                                 <div style={{fontSize: 12, color: "#888", marginTop: 4}}>Total de Processos</div>
                             </Card>
                         </Col>
                         <Col xs={12} sm={8} md={6}>
-                            <Card style={{textAlign: "center", borderTop: "3px solid #fa8c16"}}>
+                            <Card
+                                style={{
+                                    textAlign: "center",
+                                    borderTop: "3px solid #fa8c16",
+                                    cursor: "pointer",
+                                    background: statusFilter === "ativos" ? "#fffbf0" : "#fff",
+                                    border: statusFilter === "ativos" ? "2px solid #fa8c16" : "1px solid #f0f0f0",
+                                    transition: "all 0.3s"
+                                }}
+                                onClick={() => setStatusFilter(statusFilter === "ativos" ? null : "ativos")}
+                            >
                                 <div style={{fontSize: 28, fontWeight: 700, color: "#fa8c16"}}>{stats.ativos}</div>
                                 <div style={{fontSize: 12, color: "#888", marginTop: 4}}>Em Andamento</div>
                             </Card>
                         </Col>
                         <Col xs={12} sm={8} md={6}>
-                            <Card style={{textAlign: "center", borderTop: "3px solid #52c41a"}}>
+                            <Card
+                                style={{
+                                    textAlign: "center",
+                                    borderTop: "3px solid #52c41a",
+                                    cursor: "pointer",
+                                    background: statusFilter === "concluidos" ? "#f6ffed" : "#fff",
+                                    border: statusFilter === "concluidos" ? "2px solid #52c41a" : "1px solid #f0f0f0",
+                                    transition: "all 0.3s"
+                                }}
+                                onClick={() => setStatusFilter(statusFilter === "concluidos" ? null : "concluidos")}
+                            >
                                 <div style={{fontSize: 28, fontWeight: 700, color: "#52c41a"}}>{stats.concluidos}</div>
                                 <div style={{fontSize: 12, color: "#888", marginTop: 4}}>Concluídos</div>
                             </Card>
                         </Col>
                         <Col xs={12} sm={8} md={6}>
-                            <Card style={{textAlign: "center", borderTop: "3px solid #ff4d4f"}}>
+                            <Card
+                                style={{
+                                    textAlign: "center",
+                                    borderTop: "3px solid #ff4d4f",
+                                    cursor: "pointer",
+                                    background: statusFilter === "atrasados" ? "#fef2f2" : "#fff",
+                                    border: statusFilter === "atrasados" ? "2px solid #ff4d4f" : "1px solid #f0f0f0",
+                                    transition: "all 0.3s"
+                                }}
+                                onClick={() => setStatusFilter(statusFilter === "atrasados" ? null : "atrasados")}
+                            >
                                 <div style={{fontSize: 28, fontWeight: 700, color: "#ff4d4f"}}>{stats.atrasados}</div>
                                 <div style={{fontSize: 12, color: "#888", marginTop: 4}}>Atrasados</div>
                             </Card>

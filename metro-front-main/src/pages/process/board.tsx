@@ -59,6 +59,7 @@ const Board: React.FC = () => {
     const [users, setUsers]           = useState<User[]>([]);
     const [editingId, setEditingId]   = useState<number | null>(null);
     const [saving, setSaving]         = useState<number | null>(null);
+    const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -108,7 +109,19 @@ const Board: React.FC = () => {
         }).length,
     };
 
-    const resumoTableData = financiamentoProcesses.map(p => ({
+    const getFilteredProcesses = () => {
+        if (!statusFilter) return financiamentoProcesses;
+        if (statusFilter === 'total') return financiamentoProcesses;
+        if (statusFilter === 'ativos') return financiamentoProcesses.filter(p => p.status === 'ACTIVE');
+        if (statusFilter === 'concluidos') return financiamentoProcesses.filter(p => p.status === 'SOLD');
+        if (statusFilter === 'atrasados') return financiamentoProcesses.filter(p => {
+            const days = moment().diff(moment(p.createdAt), 'days');
+            return p.status === 'ACTIVE' && days > (p.stepCurrent?.deadline ?? 0);
+        });
+        return financiamentoProcesses;
+    };
+
+    const resumoTableData = getFilteredProcesses().map(p => ({
         key: p.id,
         id: p.id,
         cliente: p.client?.name,
@@ -130,25 +143,65 @@ const Board: React.FC = () => {
                 <TabPane tab="📊 Resumo" key="1">
                     <Row gutter={16} style={{ marginBottom: 24 }}>
                         <Col xs={12} sm={8} md={6}>
-                            <Card style={{ textAlign: 'center', borderTop: '3px solid #00c875' }}>
+                            <Card
+                                style={{
+                                    textAlign: 'center',
+                                    borderTop: '3px solid #00c875',
+                                    cursor: 'pointer',
+                                    background: statusFilter === 'total' ? '#f0fdf4' : '#fff',
+                                    border: statusFilter === 'total' ? '2px solid #00c875' : '1px solid #f0f0f0',
+                                    transition: 'all 0.3s'
+                                }}
+                                onClick={() => setStatusFilter(statusFilter === 'total' ? null : 'total')}
+                            >
                                 <div style={{ fontSize: 28, fontWeight: 700, color: '#00c875' }}>{stats.total}</div>
                                 <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Total de Processos</div>
                             </Card>
                         </Col>
                         <Col xs={12} sm={8} md={6}>
-                            <Card style={{ textAlign: 'center', borderTop: '3px solid #faad14' }}>
+                            <Card
+                                style={{
+                                    textAlign: 'center',
+                                    borderTop: '3px solid #faad14',
+                                    cursor: 'pointer',
+                                    background: statusFilter === 'ativos' ? '#fffbf0' : '#fff',
+                                    border: statusFilter === 'ativos' ? '2px solid #faad14' : '1px solid #f0f0f0',
+                                    transition: 'all 0.3s'
+                                }}
+                                onClick={() => setStatusFilter(statusFilter === 'ativos' ? null : 'ativos')}
+                            >
                                 <div style={{ fontSize: 28, fontWeight: 700, color: '#faad14' }}>{stats.ativos}</div>
                                 <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Em Andamento</div>
                             </Card>
                         </Col>
                         <Col xs={12} sm={8} md={6}>
-                            <Card style={{ textAlign: 'center', borderTop: '3px solid #0073ea' }}>
+                            <Card
+                                style={{
+                                    textAlign: 'center',
+                                    borderTop: '3px solid #0073ea',
+                                    cursor: 'pointer',
+                                    background: statusFilter === 'concluidos' ? '#f0f5ff' : '#fff',
+                                    border: statusFilter === 'concluidos' ? '2px solid #0073ea' : '1px solid #f0f0f0',
+                                    transition: 'all 0.3s'
+                                }}
+                                onClick={() => setStatusFilter(statusFilter === 'concluidos' ? null : 'concluidos')}
+                            >
                                 <div style={{ fontSize: 28, fontWeight: 700, color: '#0073ea' }}>{stats.concluidos}</div>
                                 <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Concluídos</div>
                             </Card>
                         </Col>
                         <Col xs={12} sm={8} md={6}>
-                            <Card style={{ textAlign: 'center', borderTop: '3px solid #e44258' }}>
+                            <Card
+                                style={{
+                                    textAlign: 'center',
+                                    borderTop: '3px solid #e44258',
+                                    cursor: 'pointer',
+                                    background: statusFilter === 'atrasados' ? '#fef2f2' : '#fff',
+                                    border: statusFilter === 'atrasados' ? '2px solid #e44258' : '1px solid #f0f0f0',
+                                    transition: 'all 0.3s'
+                                }}
+                                onClick={() => setStatusFilter(statusFilter === 'atrasados' ? null : 'atrasados')}
+                            >
                                 <div style={{ fontSize: 28, fontWeight: 700, color: '#e44258' }}>{stats.atrasados}</div>
                                 <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Atrasados</div>
                             </Card>
