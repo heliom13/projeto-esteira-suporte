@@ -1,31 +1,22 @@
 package br.com.horys.metro.services.message
 
-import br.com.horys.metro.configs.MessageConfig
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class MessageService(
-    private val whatsAppClient: WhatsAppClient,
-    private val messageConfig: MessageConfig
+    private val whatsappQueueService: WhatsappQueueService
 ) {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
+
+    // Mesma assinatura de antes: os chamadores (ProcessMessageService etc.) não mudam.
+    // Agora, em vez de enviar pela Twilio, a mensagem é colocada na fila para a extensão enviar.
     fun sendMessage(messageRequest: MessageRequest) {
-        GlobalScope.launch {
-            try {
-                log.info(">>> [WHATSAPP] Enviando para ${messageRequest.phone} ...")
-                withContext(Dispatchers.IO) {
-                    whatsAppClient.sendMessage(messageRequest)
-                }
-                log.info(">>> [WHATSAPP] Enviado com sucesso para ${messageRequest.phone}")
-            } catch (e: Exception) {
-                log.error(">>> [WHATSAPP] ERRO ao enviar para ${messageRequest.phone}: ${e.message}", e.cause)
-            }
+        try {
+            whatsappQueueService.enfileirar(messageRequest.phone, messageRequest.message)
+        } catch (e: Exception) {
+            log.error("Erro ao enfileirar mensagem WhatsApp: ${e.message}", e)
         }
     }
 }
