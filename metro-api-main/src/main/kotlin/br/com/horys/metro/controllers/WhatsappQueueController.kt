@@ -27,8 +27,8 @@ class WhatsappQueueController(
     @GetMapping("/pendentes")
     fun pendentes(
         @RequestHeader(value = "X-Queue-Token", required = false) auth: String?
-    ): ResponseEntity<Any> {
-        if (!autorizado(auth)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+    ): ResponseEntity<*> {
+        if (!autorizado(auth)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build<Any>()
         val itens = queueService.pendentes().map {
             mapOf(
                 "id" to it.id,
@@ -43,12 +43,12 @@ class WhatsappQueueController(
     fun enviada(
         @PathVariable id: Long,
         @RequestHeader(value = "X-Queue-Token", required = false) auth: String?
-    ): ResponseEntity<Any> {
-        if (!autorizado(auth)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+    ): ResponseEntity<*> {
+        if (!autorizado(auth)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build<Any>()
         return if (queueService.marcarEnviada(id)) {
             ResponseEntity.ok(mapOf("ok" to true))
         } else {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+            ResponseEntity.status(HttpStatus.NOT_FOUND).build<Any>()
         }
     }
 }
