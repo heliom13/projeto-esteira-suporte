@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Col, Row, Spin, Table, Tag, Typography, Tabs, Card} from "antd";
+import {useNavigate} from "react-router-dom";
 import moment from "moment";
 import "moment/locale/pt-br";
 import {ProcessService} from "../../services/process";
@@ -7,6 +8,25 @@ import {primaryText} from "../../styles/stylesProps";
 
 const {Title} = Typography;
 const {TabPane} = Tabs;
+
+const GROUP_COLORS = [
+    '#0073ea', '#9c4ee4', '#ff7575', '#00c875',
+    '#fdab3d', '#e2445c', '#579bfc', '#037f4c',
+];
+
+const STATUS_MAP: Record<string, { bg: string; label: string }> = {
+    ACTIVE:    { bg: '#fa8c16', label: 'Em Andamento' },
+    SOLD:      { bg: '#52c41a', label: 'Concluído' },
+    CANCELLED: { bg: '#ff4d4f', label: 'Cancelado' },
+};
+
+function getDeadlineColor(createdAt: any, deadline: number, status: string): string {
+    if (status === 'SOLD') return '#0073ea';
+    const days = moment().diff(moment(createdAt), 'days');
+    if (days > deadline)           return '#e44258';
+    if (days > deadline * 0.8)     return '#fdab3d';
+    return '#00c875';
+}
 
 type ProcessProps = {
     id: number;
@@ -54,6 +74,7 @@ const StatCard: React.FC<{label: string; value: number; color: string}> = ({labe
 
 const RegularizacaoBoard: React.FC = () => {
     moment.locale("pt-br");
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [processData, setProcessData] = useState<ProcessProps[]>([]);
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -92,6 +113,16 @@ const RegularizacaoBoard: React.FC = () => {
         });
         return regularizacaoProcesses;
     };
+
+    const kanbanColumns = useMemo(
+        () => regularizacaoProcesses.reduce<Record<string, ProcessProps[]>>((acc, p) => {
+            const etapa = p.stepCurrent?.step?.description || 'Sem Etapa';
+            if (!acc[etapa]) acc[etapa] = [];
+            acc[etapa].push(p);
+            return acc;
+        }, {}),
+        [regularizacaoProcesses]
+    );
 
     const resumoTableData = getFilteredProcesses().map(p => ({
         key: p.id,
@@ -225,6 +256,111 @@ const RegularizacaoBoard: React.FC = () => {
                             {title: "Status", render: (r: ProcessProps) => statusTag(r.status)},
                         ]}
                     />
+                </TabPane>
+
+                <TabPane tab="🗂️ Kanban" key="3">
+                    <div style={{display: "flex", gap: 16, overflowX: "auto", paddingBottom: 12, alignItems: "flex-start"}}>
+                        {Object.entries(kanbanColumns).map(([etapa, items], ci) => {
+                            const color = GROUP_COLORS[ci % GROUP_COLORS.length];
+                            return (
+                                <div
+                                    key={etapa}
+                                    style={{
+                                        flex: "0 0 280px",
+                                        width: 280,
+                                        background: "#f5f6f8",
+                                        borderRadius: 8,
+                                        border: "1px solid #e6e9ef",
+                                    }}
+                                >
+                                    <div style={{
+                                        background: color,
+                                        color: "#fff",
+                                        padding: "10px 14px",
+                                        borderRadius: "8px 8px 0 0",
+                                        fontWeight: 700,
+                                        fontSize: 13,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 8,
+                                    }}>
+                                        <span style={{
+                                            background: "rgba(255,255,255,0.25)",
+                                            borderRadius: 12,
+                                            padding: "1px 9px",
+                                            fontSize: 12,
+                                        }}>
+                                            {items.length}
+                                        </span>
+                                        <span style={{overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>{etapa}</span>
+                                    </div>
+
+                                    <div style={{padding: 10, display: "flex", flexDirection: "column", gap: 10}}>
+                                        {items.map(p => {
+                                            const deadline   = p.stepCurrent?.deadline ?? 0;
+                                            const daysOpen   = moment().diff(moment(p.createdAt), "days");
+                                            const dlColor    = getDeadlineColor(p.createdAt, deadline, p.status);
+                                            const statusInfo = STATUS_MAP[p.status] ?? {bg: "#c4c4c4", label: p.status};
+
+                                            return (
+                                                <div
+                                                    key={p.id}
+                                                    onClick={() => navigate(`/processos/mudar-etapa/${p.id}`)}
+                                                    style={{
+                                                        background: "#fff",
+                                                        borderRadius: 6,
+                                                        border: "1px solid #e6e9ef",
+                                                        borderLeft: `4px solid ${color}`,
+                                                        padding: "10px 12px",
+                                                        cursor: "pointer",
+                                                        boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                                                        transition: "box-shadow 0.15s, transform 0.15s",
+                                                    }}
+                                                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 10px rgba(0,0,0,0.12)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "none"; }}
+                                                >
+                                                    <div style={{fontWeight: 600, color: "#323338", fontSize: 14, marginBottom: 6}}>
+                                                        {p.client?.name || "—"}
+                                                    </div>
+                                                    <div style={{fontSize: 12, color: "#676879", marginBottom: 8}}>
+                                                        📋 {p.stepCurrent?.flow || "—"}
+                                                    </div>
+                                                    <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6}}>
+                                                        <span style={{background: dlColor, color: "#fff", borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 600}}>
+                                                            {daysOpen}d / {deadline}d
+                                                        </span>
+                                                        <span style={{background: statusInfo.bg, color: "#fff", borderRadius: 12, padding: "2px 10px", fontSize: 11, fontWeight: 600}}>
+                                                            {statusInfo.label}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {Object.keys(kanbanColumns).length === 0 && !loading && (
+                        <div style={{textAlign: "center", padding: 80, color: "#aaa", fontSize: 15}}>
+                            Nenhum processo de regularização encontrado.
+                        </div>
+                    )}
+
+                    <div style={{display: "flex", gap: 16, flexWrap: "wrap", marginTop: 16}}>
+                        {[
+                            {color: "#00c875", label: "No prazo"},
+                            {color: "#fdab3d", label: "Atenção (>80% do prazo)"},
+                            {color: "#e44258", label: "Atrasado"},
+                            {color: "#0073ea", label: "Concluído"},
+                        ].map(({color, label}) => (
+                            <div key={label} style={{display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#676879"}}>
+                                <span style={{width: 10, height: 10, borderRadius: 2, background: color, display: "inline-block"}}/>
+                                {label}
+                            </div>
+                        ))}
+                    </div>
                 </TabPane>
             </Tabs>
         </Spin>
