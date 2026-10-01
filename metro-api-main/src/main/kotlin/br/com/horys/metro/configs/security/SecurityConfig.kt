@@ -23,7 +23,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 class SecurityConfig(
     private var userDetailsService: UserDetailsService,
     private var jwtUtil: JWTUtil,
-    private var loginLogRepository: LoginLogRepository
+    private var loginLogRepository: LoginLogRepository,
+    private var loginAttemptService: LoginAttemptService
 ) : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
@@ -50,7 +51,8 @@ class SecurityConfig(
                 JWTAuthenticationFilter(
                     authenticationManager(),
                     jwtUtil = jwtUtil,
-                    loginLogRepository = loginLogRepository
+                    loginLogRepository = loginLogRepository,
+                    loginAttemptService = loginAttemptService
                 )
             )
             .addFilter(

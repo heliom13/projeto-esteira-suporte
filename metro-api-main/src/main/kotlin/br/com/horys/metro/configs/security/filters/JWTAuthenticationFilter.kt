@@ -3,12 +3,14 @@ package br.com.horys.metro.configs.security.filters
 import br.com.horys.metro.configs.security.AuthenticationRequest
 import br.com.horys.metro.configs.security.AuthenticationResponse
 import br.com.horys.metro.configs.security.JWTUtil
+import br.com.horys.metro.configs.security.LoginAttemptService
 import br.com.horys.metro.configs.security.UserDetailsImpl
 import br.com.horys.metro.models.LoginLog
 import br.com.horys.metro.repositories.LoginLogRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.LockedException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -21,7 +23,8 @@ import javax.servlet.http.HttpServletResponse
 class JWTAuthenticationFilter(
     authenticationManager: AuthenticationManager,
     private var jwtUtil: JWTUtil,
-    private val loginLogRepository: LoginLogRepository
+    private val loginLogRepository: LoginLogRepository,
+    private val loginAttemptService: LoginAttemptService
 ) :
     UsernamePasswordAuthenticationFilter() {
 
@@ -32,11 +35,21 @@ class JWTAuthenticationFilter(
     }
 
     override fun attemptAuthentication(request: HttpServletRequest, response: HttpServletResponse?): Authentication? {
+        var email: String? = null
         try {
-            val (username, password) = ObjectMapper().readValue(request.inputStream, AuthenticationRequest::class.java)
-            val token = UsernamePasswordAuthenticationToken(username, password)
-            return authenticationManager.authenticate(token)
+            val creds = ObjectMapper().readValue(request.inputStream, AuthenticationRequest::class.java)
+            email = creds.email
+            if (loginAttemptService.estaBloqueado(email)) {
+                throw LockedException("Muitas tentativas de login. Tente novamente em alguns minutos.")
+            }
+            val token = UsernamePasswordAuthenticationToken(creds.email, creds.password)
+            val auth = authenticationManager.authenticate(token)
+            loginAttemptService.registrarSucesso(email)
+            return auth
+        } catch (e: LockedException) {
+            throw e
         } catch (e: Exception) {
+            loginAttemptService.registrarFalha(email)
             throw UsernameNotFoundException("")
         }
     }
