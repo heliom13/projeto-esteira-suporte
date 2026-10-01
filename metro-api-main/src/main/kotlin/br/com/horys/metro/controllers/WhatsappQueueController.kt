@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 
 /**
  * Endpoints consumidos pela extensão do Chrome que envia pelo WhatsApp Web.
- * Fica sob /v1/webhook/** (já liberado na SecurityConfig) e é protegido por um token
+ * Fica sob a rota /v1/webhook (já liberada na SecurityConfig) e é protegido por um token
  * simples no header X-Queue-Token (defina a variável de ambiente WHATSAPP_QUEUE_TOKEN).
  */
 @RestController

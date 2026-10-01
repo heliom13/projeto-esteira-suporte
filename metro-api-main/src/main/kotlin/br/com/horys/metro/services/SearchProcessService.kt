@@ -98,9 +98,10 @@ class SearchProcessService(
     }
 
     fun getProcessById(id: Long): ProcessResponse {
-        val currentUser = userService.getLoggedInUser()
+        userService.getLoggedInUser() // garante que há usuário autenticado
         val process = processRepository.findById(id).orElseThrow { ProcessNotFoundException() }
-        val isUserProcessOwner = process.user.id == currentUser.id
+        // Avanço de etapa liberado para todos os usuários (antes era só o responsável)
+        val isUserProcessOwner = true
         val destinies = listOf(HISTORY, Notification.Destiny.NOTIFICATION_AND_HISTORY)
         val notifications = notificationRepository.findByProcessIdOrderByCreatedAtDesc(process.id!!, destinies)
         val comments = commentRepository.findByProcessIdOrderByCreatedAtDesc(process.id)
