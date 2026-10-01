@@ -1,0 +1,12 @@
+# Segredos — NUNCA comitar
+.env
+
+# Artefatos de build
+metro-api-main/build/
+metro-api-main/.gradle/
+metro-front-main/node_modules/
+metro-front-main/build/
+
+# Dumps de banco
+*.dump
+*.sql.gz

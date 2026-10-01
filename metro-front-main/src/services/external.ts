@@ -1,8 +1,9 @@
 import axios from 'axios'
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://projeto-esteira-suporte.onrender.com"
+
 const apiExterno = axios.create({
-    baseURL: "https://projeto-esteira-suporte.onrender.com/v1",
-    // baseURL: "http://localhost:8080/v1",
+    baseURL: `${API_BASE}/v1`,
 })
 
 export class ExternalClass {
