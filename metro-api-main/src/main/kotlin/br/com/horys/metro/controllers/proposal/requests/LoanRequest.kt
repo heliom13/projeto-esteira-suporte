@@ -6,6 +6,7 @@ import java.math.BigDecimal
 
 data class LoanRequest(
     val clientId: Long,
+    val sellerClientId: Long? = null,
     val bank: ProposalBank,
     val price: BigDecimal,
     val term: Int,

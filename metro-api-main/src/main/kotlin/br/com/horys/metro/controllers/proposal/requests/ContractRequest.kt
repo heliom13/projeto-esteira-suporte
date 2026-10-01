@@ -7,6 +7,7 @@ import java.math.BigDecimal
 
 data class ContractRequest(
     val clientId: Long,
+    val sellerClientId: Long? = null,
     val bank: ProposalBank,
     val price: BigDecimal,
     val asset: ProposalAsset,

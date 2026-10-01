@@ -26,7 +26,8 @@ class ConsignmentController(
     fun create(@RequestBody request: ConsignmentRequest): Consignment {
         val proposal = proposalService.createProposal(
             clientId = request.clientId,
-            proposalType = Proposal.Type.CONSIGNMENT
+            proposalType = Proposal.Type.CONSIGNMENT,
+            sellerClientId = request.sellerClientId
         )
         val entity = Consignment(
             proposal = proposal,

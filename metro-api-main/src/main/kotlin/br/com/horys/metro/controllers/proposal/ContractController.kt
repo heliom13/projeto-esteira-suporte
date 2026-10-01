@@ -30,7 +30,8 @@ class ContractController(
     fun create(@RequestBody request: ContractRequest) {
         val proposal = proposalService.createProposal(
             clientId = request.clientId,
-            proposalType = Proposal.Type.CONTRACT
+            proposalType = Proposal.Type.CONTRACT,
+            sellerClientId = request.sellerClientId
         )
 
         val property = propertyService.findById(request.propertyId)

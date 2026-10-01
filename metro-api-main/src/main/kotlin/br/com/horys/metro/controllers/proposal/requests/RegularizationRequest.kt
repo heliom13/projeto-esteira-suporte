@@ -4,6 +4,7 @@ import java.math.BigDecimal
 
 data class RegularizationRequest(
     val clientId: Long,
+    val sellerClientId: Long? = null,
     val propertyId: Long,
     val price: BigDecimal,
     val registration: String,

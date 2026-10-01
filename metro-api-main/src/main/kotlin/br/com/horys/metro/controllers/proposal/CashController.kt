@@ -30,7 +30,8 @@ class CashController(
     fun create(@RequestBody request: CashRequest) {
         val proposal = proposalService.createProposal(
             clientId = request.clientId,
-            proposalType = Proposal.Type.CASH
+            proposalType = Proposal.Type.CASH,
+            sellerClientId = request.sellerClientId
         )
 
         val property = propertyService.findById(request.propertyId)

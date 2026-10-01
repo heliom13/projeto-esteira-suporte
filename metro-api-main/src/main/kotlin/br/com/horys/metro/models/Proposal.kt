@@ -20,6 +20,9 @@ data class Proposal(
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
     val client: Client,
+    @ManyToOne
+    @JoinColumn(name = "seller_client_id", nullable = true)
+    val sellerClient: Client? = null,
     @Enumerated(EnumType.STRING)
     val type: Type,
     @Enumerated(EnumType.STRING)

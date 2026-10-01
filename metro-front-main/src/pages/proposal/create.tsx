@@ -86,6 +86,10 @@ const CreateProposal: React.FC = () => {
 
             form.setFieldsValue({
                 clientId: {value: proposalData.proposal.client.id, label: proposalData.proposal.client.name},
+                sellerClient: proposalData.proposal.sellerClient ? {
+                    value: proposalData.proposal.sellerClient.id,
+                    label: proposalData.proposal.sellerClient.name
+                } : undefined,
                 type: proposalData.proposal.type,
                 bank: proposalData.bank,
                 price: proposalData.price,
@@ -118,6 +122,7 @@ const CreateProposal: React.FC = () => {
     const onFinish = (values: any) => {
         const request = {
             clientId: values.clientId.value,
+            sellerClientId: values.sellerClient?.value,
             type: values.type,
             bank: values.bank,
             price: values.price,
@@ -296,6 +301,25 @@ const CreateProposal: React.FC = () => {
                             </Form.Item>
                         </Col>
                     )}
+                </Row>
+
+                <Row gutter={16}>
+                    <Col span={8}>
+                        <Form.Item label="Vendedor" name="sellerClient">
+                            <Select
+                                placeholder="Escolha"
+                                showSearch
+                                labelInValue
+                                allowClear
+                                filterOption={(input, option: any) =>
+                                    option.children.toLowerCase().indexOf(input.toLowerCase()) >=
+                                    0
+                                }
+                            >
+                                {optionClients}
+                            </Select>
+                        </Form.Item>
+                    </Col>
                 </Row>
 
                 <Row gutter={16}>

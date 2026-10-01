@@ -4,6 +4,7 @@ import br.com.horys.metro.models.ProposalAsset
 
 data class CashRequest(
     val clientId: Long,
+    val sellerClientId: Long? = null,
     val propertyId: Long,
     val sellerId: Long,
     val zone: String,

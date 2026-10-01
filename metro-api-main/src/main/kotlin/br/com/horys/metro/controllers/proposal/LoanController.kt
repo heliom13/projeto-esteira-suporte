@@ -26,7 +26,8 @@ class LoanController(
     fun create(@RequestBody request: LoanRequest) {
         val proposal = proposalService.createProposal(
             clientId = request.clientId,
-            proposalType = Proposal.Type.LOAN
+            proposalType = Proposal.Type.LOAN,
+            sellerClientId = request.sellerClientId
         )
         val entity = Loan(
             proposal = proposal,

@@ -24,13 +24,15 @@ class ProposalService(
     private val regularizationRepository: RegularizationRepository
 ) {
 
-    fun createProposal(clientId: Long, proposalType: Proposal.Type): Proposal {
+    fun createProposal(clientId: Long, proposalType: Proposal.Type, sellerClientId: Long? = null): Proposal {
         val client = clientService.findById(clientId)
+        val sellerClient = sellerClientId?.let { clientService.findById(it) }
         val user = userService.getLoggedInUser();
 
         return proposalRepository.save(
             Proposal(
                 client = client,
+                sellerClient = sellerClient,
                 user = user,
                 type = proposalType,
                 status = Proposal.Status.PENDING

@@ -30,7 +30,8 @@ class RegularizationController(
     fun create(@RequestBody request: RegularizationRequest) {
         val proposal = proposalService.createProposal(
             clientId = request.clientId,
-            proposalType = Proposal.Type.REGULARIZATION
+            proposalType = Proposal.Type.REGULARIZATION,
+            sellerClientId = request.sellerClientId
         )
 
         val property = propertyService.findById(request.propertyId)

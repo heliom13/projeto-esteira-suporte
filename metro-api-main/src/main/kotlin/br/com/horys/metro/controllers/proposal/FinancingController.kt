@@ -30,7 +30,8 @@ class FinancingController(
     fun create(@RequestBody request: FinancingRequest) {
         val proposal = proposalService.createProposal(
             clientId = request.clientId,
-            proposalType = Proposal.Type.FINANCING
+            proposalType = Proposal.Type.FINANCING,
+            sellerClientId = request.sellerClientId
         )
 
         val property = propertyService.findById(request.propertyId)

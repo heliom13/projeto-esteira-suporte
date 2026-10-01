@@ -21,7 +21,8 @@ class ConsortiumController(
     fun create(@RequestBody request: ConsortiumRequest): Consortium {
         val proposal = proposalService.createProposal(
             clientId = request.clientId,
-            proposalType = Proposal.Type.CONSORTIUM
+            proposalType = Proposal.Type.CONSORTIUM,
+            sellerClientId = request.sellerClientId
         )
         val consortium = Consortium(
             proposal = proposal,
