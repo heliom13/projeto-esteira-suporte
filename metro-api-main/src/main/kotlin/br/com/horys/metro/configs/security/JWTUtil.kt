@@ -10,9 +10,12 @@ import javax.servlet.http.HttpServletRequest
 @Component
 class JWTUtil {
 
-    private val secret = "pGy7dvj15VGiIffMhXFZRt2VII7bbrTO"
+    // Segredo lido de variável de ambiente (JWT_SECRET). O valor abaixo é apenas
+    // uma reserva para não quebrar; DEFINA um JWT_SECRET forte no Render (rotaciona o segredo).
+    private val secret = System.getenv("JWT_SECRET") ?: "pGy7dvj15VGiIffMhXFZRt2VII7bbrTO"
 
-    private val expiration: Long = 600000000
+    // Validade do token: usa JWT_EXPIRATION_MS se definido (padrão ~2h = 7200000 ms)
+    private val expiration: Long = System.getenv("JWT_EXPIRATION_MS")?.toLongOrNull() ?: 600000000
 
     fun generateToken(userDetailsImpl: UserDetailsImpl): String {
         val username = userDetailsImpl.username
