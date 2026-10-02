@@ -9,16 +9,22 @@ import br.com.horys.metro.repositories.FlowStepRepository
 import br.com.horys.metro.services.message.MessageRequest
 import br.com.horys.metro.services.message.MessageService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class ProcessMessageService(
     private val messageService: MessageService,
-    private val flowStepRepository: FlowStepRepository
+    private val flowStepRepository: FlowStepRepository,
+    @Value("\${app.front-url:https://metro-front-tuna.onrender.com}") private val frontUrl: String
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
+
+    // Base dos links de acompanhamento: segue o endereco configurado (app.front-url / APP_FRONT_URL),
+    // em vez de ficar fixo no codigo. Assim, se o dominio mudar, basta ajustar a variavel de ambiente.
+    private val linkFront: String get() = "${frontUrl.trimEnd('/')}/external"
+
     companion object {
-        const val linkFront = "https://sistema.suporteimobiliario.com/external"
         const val messageLink = " \nVocê pode acompanhar todo o seu processo por este link a seguir 👉 "
     }
 
@@ -229,7 +235,7 @@ class ProcessMessageService(
                 MessageRequest(
                     message = "Olá ${it.name}, tudo bem? 😊\nO imóvel *$nameProperty* do processo com o comprador *$nameComprador* e vendedor *$nameVendedor* teve uma pendência: *$etapa* 😐$observationSuffix\nMas não se preocupe, iremos resolver tudo. 😀🤝🍀"
                         .plus(messageLink)
-                        .plus("$linkFront/cliente-vendedor/${it.externalId}"),
+                        .plus("$linkFront/vendedor/${it.externalId}"),
                     phone = it.phone.cleanPhoneNumber()
                 )
             )
@@ -240,7 +246,7 @@ class ProcessMessageService(
                 MessageRequest(
                     message = "Olá ${it.name}, tudo bem? 😊\nO imóvel *$nameProperty* do processo com o comprador *$nameComprador* e vendedor *$nameVendedor* teve uma pendência: *$etapa* 😐$observationSuffix\nMas não se preocupe, iremos resolver tudo. 😀🤝🍀"
                         .plus(messageLink)
-                        .plus("$linkFront/cliente-vendedor/${it.externalId}"),
+                        .plus("$linkFront/vendedor/${it.externalId}"),
                     phone = it.phone.cleanPhoneNumber()
                 )
             )
@@ -262,7 +268,7 @@ class ProcessMessageService(
                 MessageRequest(
                     message = "Olá ${it.name}, tudo bem? 😊\nO imóvel *$nameProperty* do processo com o comprador *$nameComprador* e vendedor *$nameVendedor* está na etapa: *$etapa* 🏠$observationSuffix"
                         .plus(messageLink)
-                        .plus("$linkFront/cliente-vendedor/${it.externalId}"),
+                        .plus("$linkFront/vendedor/${it.externalId}"),
                     phone = it.phone.cleanPhoneNumber()
                 )
             )
@@ -273,7 +279,7 @@ class ProcessMessageService(
                 MessageRequest(
                     message = "Olá ${it.name}, tudo bem? 😊\nO imóvel *$nameProperty* do processo com o comprador *$nameComprador* e vendedor *$nameVendedor* está na etapa: *$etapa* 🏠$observationSuffix"
                         .plus(messageLink)
-                        .plus("$linkFront/cliente-vendedor/${it.externalId}"),
+                        .plus("$linkFront/vendedor/${it.externalId}"),
                     phone = it.phone.cleanPhoneNumber()
                 )
             )
