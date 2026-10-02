@@ -32,7 +32,8 @@ class ProcessExternalResponse(
         val stepCurrent: String,
         val stepStatus: String,
         val stepUnforeseenDescription: String?,
-        val stepCompleted: String
+        val stepCompleted: String,
+        val observation: String?
     ) {
         companion object {
             fun fromModel(model: ProcessStep) =
@@ -48,7 +49,8 @@ class ProcessExternalResponse(
                     stepCurrent = model.getDescriptionStep(),
                     stepStatus = model.step.status.toString(),
                     stepCompleted = model.status.toString(),
-                    stepUnforeseenDescription = model.reasonUnforeseen
+                    stepUnforeseenDescription = model.reasonUnforeseen,
+                    observation = model.observation
                 )
         }
     }

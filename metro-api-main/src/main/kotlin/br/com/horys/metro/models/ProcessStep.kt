@@ -24,7 +24,8 @@ data class ProcessStep(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     @Enumerated(EnumType.STRING)
-    val status: Status
+    val status: Status,
+    val observation: String? = null
 ) {
 
     enum class Status {

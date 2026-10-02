@@ -172,19 +172,20 @@ class ProcessService(
         val processStep = processStepRepository.findTopByProcessAndOrderStepGreaterThan(sale, sale.orderCurrent)
 
         processStep?.let {
+            // Persiste a observacao digitada ao avancar, para sincronizar com o rastreio do cliente
+            val stepWithObs = processStepRepository.save(processStep.copy(observation = request.observation))
 
             return processRepository.save(
                 sale.copy(
-                    stepCurrent = processStep.step,
-                    processStepCurrent = processStep,
-                    orderCurrent = processStep.orderStep,
+                    stepCurrent = stepWithObs.step,
+                    processStepCurrent = stepWithObs,
+                    orderCurrent = stepWithObs.orderStep,
                     updatedAt = LocalDateTime.now()
                 )
             )
                 .also {
-                    processStepRepository.save(processStep)
-                    processMessageService.sendNextStepSale(processStep, request.observation)
-                    isFinish(it, processStep)
+                    processMessageService.sendNextStepSale(stepWithObs, request.observation)
+                    isFinish(it, stepWithObs)
                 }
         }
 

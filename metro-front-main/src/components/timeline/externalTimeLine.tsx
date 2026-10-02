@@ -53,6 +53,14 @@ export const ExternalTimelineComponent = ({steps, process}) => {
                             <Strong>
                                 Dias Completos: <Label> {step.daysCompleted} dia(s)</Label>
                             </Strong>
+                            {step.observation && (
+                                <>
+                                    <br/>
+                                    <Strong>
+                                        📝 Observação: <Label>{step.observation}</Label>
+                                    </Strong>
+                                </>
+                            )}
                         </Text>
                     )}
                 </Timeline.Item>
