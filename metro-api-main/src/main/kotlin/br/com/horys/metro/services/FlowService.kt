@@ -232,6 +232,7 @@ class FlowService(
 
         val updatedFlow = repository.save(flow.copy(
             description = request.description,
+            sendMessage = request.sendMessage,
             updatedAt = LocalDateTime.now()
         ))
 
