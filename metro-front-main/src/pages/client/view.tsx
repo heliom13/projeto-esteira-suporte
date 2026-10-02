@@ -74,7 +74,17 @@ const Client = (id: any) => {
                 <Text>{client?.phoneSecondary} </Text>
                 <Divider/>
                 <Text strong> Link para Drive: </Text>
-                <Text>{client?.linkDrive} </Text>
+                {client?.linkDrive ? (
+                    <a
+                        href={client.linkDrive}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        📁 Abrir pasta do cliente no Drive
+                    </a>
+                ) : (
+                    <Text type="secondary"> Não cadastrado </Text>
+                )}
             </div>
         </Spin>
     );
