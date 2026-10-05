@@ -1,7 +1,6 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {ExternalClass} from '../../services/external'
-import {ProcessProps} from '../externalProcess'
-import ExternalProcessSteps from '../externalProcess/externalProcess'
+import {ExternalTimelineComponent} from '../../components/timeline/externalTimeLine'
 import {
     Button,
     Container,
@@ -17,80 +16,94 @@ import {
 } from '../externalProcess/externalStyles'
 
 const ExternalProperty = ({loading, property}) => {
-    const [processData, setProcessData] = useState<ProcessProps>()
-    const [showMore, setShowMore] = useState(false)
-
     // Processo principal do imovel (o primeiro da lista)
     const main = Array.isArray(property) ? property[0] : property
 
-    const fetchProcesses = async (processExternalId) => {
-        try {
-            await ExternalClass.externalProcess(processExternalId).then((response) => {
-                setProcessData(response.data)
-                setShowMore(true)
+    const [steps, setSteps] = useState<any[]>([])
+    const [carregandoEtapas, setCarregandoEtapas] = useState(false)
+    const [erro, setErro] = useState<string | null>(null)
+    const [showMore, setShowMore] = useState(false)
+
+    // Carrega as etapas junto com a pagina (nao depende do clique)
+    useEffect(() => {
+        if (!main?.processId) return
+        setCarregandoEtapas(true)
+        setErro(null)
+        ExternalClass.externalProcess(main.processId)
+            .then((response) => {
+                setSteps(Array.isArray(response.data) ? response.data : [])
             })
-        } catch (error) {
-        }
-    }
+            .catch(() => {
+                setErro('Não foi possível carregar as etapas agora. Tente novamente mais tarde.')
+            })
+            .finally(() => setCarregandoEtapas(false))
+    }, [main?.processId])
 
     if (loading) return <Spinner/>
     if (!main) return <WarningText> Nenhum processo encontrado 😔 </WarningText>
 
     return (
         <>
-            {!showMore ? (
-                <Container>
-                    <TextOutside>
-                        Imóvel <strong>{main?.name}</strong>
-                    </TextOutside>
-                    <Line/>
-                    <TextWrap>
-                        <Label> Previsão: </Label>
-                        <DaysText> {main?.totalDays} dias</DaysText>
-                    </TextWrap>
-                    <TextWrap>
-                        <Label> Dias completos: </Label>
-                        {main?.daysCompleted > main?.totalDays ? (
-                            <WarningText> {main?.daysCompleted} dias </WarningText>
-                        ) : (
-                            <DaysText> {main?.daysCompleted} dias</DaysText>
-                        )}
-                    </TextWrap>
-                    <TextWrap>
-                        <Label> Vendedor Principal: </Label>
-                        <Text> {main?.sellerMain}</Text>
-                    </TextWrap>
-                    {main?.sellerSecondary && (
-                        <TextWrap>
-                            <Label> Vendedor Secundário: </Label>
-                            <Text> {main?.sellerSecondary}</Text>
-                        </TextWrap>
+            <Container>
+                <TextOutside>
+                    Imóvel <strong>{main?.name}</strong>
+                </TextOutside>
+                <Line/>
+                <TextWrap>
+                    <Label> Previsão: </Label>
+                    <DaysText> {main?.totalDays} dias</DaysText>
+                </TextWrap>
+                <TextWrap>
+                    <Label> Dias completos: </Label>
+                    {main?.daysCompleted > main?.totalDays ? (
+                        <WarningText> {main?.daysCompleted} dias </WarningText>
+                    ) : (
+                        <DaysText> {main?.daysCompleted} dias</DaysText>
                     )}
+                </TextWrap>
+                <TextWrap>
+                    <Label> Vendedor Principal: </Label>
+                    <Text> {main?.sellerMain}</Text>
+                </TextWrap>
+                {main?.sellerSecondary && (
                     <TextWrap>
-                        <Label> Status Atual: </Label>
-                        {main?.stepStatus === 'UNFORESEEN' ? (
-                            <WarningText>{main?.stepCurrent}</WarningText>
-                        ) : (
-                            <Text>
-                                {main?.stepCurrent === '' ? 'Sem status no momento' : main?.stepCurrent}
-                            </Text>
-                        )}
+                        <Label> Vendedor Secundário: </Label>
+                        <Text> {main?.sellerSecondary}</Text>
                     </TextWrap>
-                    <TextWrap>
-                        <Label> Status do Processo: </Label>
-                        <SuccessText>
-                            {main?.status === 'FINISHED' ? 'FINALIZADO' : 'ATIVO'}
-                        </SuccessText>
-                    </TextWrap>
-                    <Button onClick={() => fetchProcesses(main.processId)}>
-                        Visão Geral
-                    </Button>
-                </Container>
-            ) : (
-                <>
-                    <ExternalProcessSteps loading={loading} processData={processData}/>
-                    <Button onClick={() => setShowMore(false)}> Voltar </Button>
-                </>
+                )}
+                <TextWrap>
+                    <Label> Status Atual: </Label>
+                    {main?.stepStatus === 'UNFORESEEN' ? (
+                        <WarningText>{main?.stepCurrent}</WarningText>
+                    ) : (
+                        <Text>
+                            {main?.stepCurrent === '' ? 'Sem status no momento' : main?.stepCurrent}
+                        </Text>
+                    )}
+                </TextWrap>
+                <TextWrap>
+                    <Label> Status do Processo: </Label>
+                    <SuccessText>
+                        {main?.status === 'FINISHED' ? 'FINALIZADO' : 'ATIVO'}
+                    </SuccessText>
+                </TextWrap>
+
+                <Button onClick={() => setShowMore(!showMore)}>
+                    {showMore ? 'Ocultar etapas' : 'Visão Geral'}
+                </Button>
+            </Container>
+
+            {showMore && (
+                <div style={{marginTop: 16}}>
+                    {carregandoEtapas && <Spinner/>}
+                    {erro && <WarningText>{erro}</WarningText>}
+                    {!carregandoEtapas && !erro && steps.length === 0 && (
+                        <WarningText> Nenhuma etapa encontrada para este processo. </WarningText>
+                    )}
+                    {!carregandoEtapas && !erro && steps.length > 0 && (
+                        <ExternalTimelineComponent steps={steps}/>
+                    )}
+                </div>
             )}
         </>
     )
