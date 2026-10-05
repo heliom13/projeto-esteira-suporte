@@ -42,70 +42,76 @@ const ExternalProperty = ({loading, property}) => {
     if (loading) return <Spinner/>
     if (!main) return <WarningText> Nenhum processo encontrado 😔 </WarningText>
 
-    return (
-        <>
-            <Container>
-                <TextOutside>
-                    Imóvel <strong>{main?.name}</strong>
-                </TextOutside>
-                <Line/>
-                <TextWrap>
-                    <Label> Previsão: </Label>
-                    <DaysText> {main?.totalDays} dias</DaysText>
-                </TextWrap>
-                <TextWrap>
-                    <Label> Dias completos: </Label>
-                    {main?.daysCompleted > main?.totalDays ? (
-                        <WarningText> {main?.daysCompleted} dias </WarningText>
-                    ) : (
-                        <DaysText> {main?.daysCompleted} dias</DaysText>
-                    )}
-                </TextWrap>
-                <TextWrap>
-                    <Label> Vendedor Principal: </Label>
-                    <Text> {main?.sellerMain}</Text>
-                </TextWrap>
-                {main?.sellerSecondary && (
-                    <TextWrap>
-                        <Label> Vendedor Secundário: </Label>
-                        <Text> {main?.sellerSecondary}</Text>
-                    </TextWrap>
+    // Tela de rastreamento (substitui o card)
+    if (showMore) {
+        return (
+            <>
+                <Button onClick={() => setShowMore(false)}> ← Voltar </Button>
+                {carregandoEtapas && (
+                    <>
+                        <Spinner/>
+                        <Text> Carregando etapas... </Text>
+                    </>
                 )}
-                <TextWrap>
-                    <Label> Status Atual: </Label>
-                    {main?.stepStatus === 'UNFORESEEN' ? (
-                        <WarningText>{main?.stepCurrent}</WarningText>
-                    ) : (
-                        <Text>
-                            {main?.stepCurrent === '' ? 'Sem status no momento' : main?.stepCurrent}
-                        </Text>
-                    )}
-                </TextWrap>
-                <TextWrap>
-                    <Label> Status do Processo: </Label>
-                    <SuccessText>
-                        {main?.status === 'FINISHED' ? 'FINALIZADO' : 'ATIVO'}
-                    </SuccessText>
-                </TextWrap>
+                {!carregandoEtapas && erro && <WarningText>{erro}</WarningText>}
+                {!carregandoEtapas && !erro && steps.length === 0 && (
+                    <WarningText> Nenhuma etapa encontrada para este processo. </WarningText>
+                )}
+                {!carregandoEtapas && !erro && steps.length > 0 && (
+                    <ExternalTimelineComponent steps={steps}/>
+                )}
+            </>
+        )
+    }
 
-                <Button onClick={() => setShowMore(!showMore)}>
-                    {showMore ? 'Ocultar etapas' : 'Visão Geral'}
-                </Button>
-            </Container>
-
-            {showMore && (
-                <div style={{marginTop: 16}}>
-                    {carregandoEtapas && <Spinner/>}
-                    {erro && <WarningText>{erro}</WarningText>}
-                    {!carregandoEtapas && !erro && steps.length === 0 && (
-                        <WarningText> Nenhuma etapa encontrada para este processo. </WarningText>
-                    )}
-                    {!carregandoEtapas && !erro && steps.length > 0 && (
-                        <ExternalTimelineComponent steps={steps}/>
-                    )}
-                </div>
+    // Tela inicial: informacoes + um unico botao
+    return (
+        <Container>
+            <TextOutside>
+                Imóvel <strong>{main?.name}</strong>
+            </TextOutside>
+            <Line/>
+            <TextWrap>
+                <Label> Previsão: </Label>
+                <DaysText> {main?.totalDays} dias</DaysText>
+            </TextWrap>
+            <TextWrap>
+                <Label> Dias completos: </Label>
+                {main?.daysCompleted > main?.totalDays ? (
+                    <WarningText> {main?.daysCompleted} dias </WarningText>
+                ) : (
+                    <DaysText> {main?.daysCompleted} dias</DaysText>
+                )}
+            </TextWrap>
+            <TextWrap>
+                <Label> Vendedor Principal: </Label>
+                <Text> {main?.sellerMain}</Text>
+            </TextWrap>
+            {main?.sellerSecondary && (
+                <TextWrap>
+                    <Label> Vendedor Secundário: </Label>
+                    <Text> {main?.sellerSecondary}</Text>
+                </TextWrap>
             )}
-        </>
+            <TextWrap>
+                <Label> Status Atual: </Label>
+                {main?.stepStatus === 'UNFORESEEN' ? (
+                    <WarningText>{main?.stepCurrent}</WarningText>
+                ) : (
+                    <Text>
+                        {main?.stepCurrent === '' ? 'Sem status no momento' : main?.stepCurrent}
+                    </Text>
+                )}
+            </TextWrap>
+            <TextWrap>
+                <Label> Status do Processo: </Label>
+                <SuccessText>
+                    {main?.status === 'FINISHED' ? 'FINALIZADO' : 'ATIVO'}
+                </SuccessText>
+            </TextWrap>
+
+            <Button onClick={() => setShowMore(true)}> Visão Geral </Button>
+        </Container>
     )
 }
 
