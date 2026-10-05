@@ -15,7 +15,7 @@ const ExternalProcessSteps = ({loading, processData}) => {
             {loading ? (
                 <Spinner/>
             ) : (
-                <ExternalTimelineComponent process={process} steps={process}/>
+                <ExternalTimelineComponent steps={process}/>
             )}
         </>
     )
