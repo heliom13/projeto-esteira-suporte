@@ -43,7 +43,7 @@ const ExternalProperty = ({loading, property}) => {
                 propertyData?.map(
                     (item) =>
                         !showMore && (
-                            <div key={item.saleId}>
+                            <div key={item.processId}>
                                 <Container>
                                     <TextOutside>
                                         Imóvel <strong>{item?.name}</strong>
@@ -89,7 +89,7 @@ const ExternalProperty = ({loading, property}) => {
                                             {item?.status === 'FINISHED' ? 'FINALIZADO' : 'ATIVO'}
                                         </SuccessText>
                                     </TextWrap>
-                                    <Button onClick={() => fetchProcesses(item.saleId)}>
+                                    <Button onClick={() => fetchProcesses(item.processId)}>
                                         Visão Geral
                                     </Button>
                                 </Container>
