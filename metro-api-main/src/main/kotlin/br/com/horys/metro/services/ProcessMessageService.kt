@@ -30,12 +30,13 @@ class ProcessMessageService(
 
     fun sendNewProcess(process: Process) {
         val nameProperty = process.property?.description ?: "imóvel"
+        val tipoProcesso = process.flow.type.description.lowercase()
         val pathProperty = getPathProperty(process)
         val pathClient = getPathClient(process)
 
         if (process.client != null) {
             val messageClient =
-                "Olá ${process.client.name}, tudo bem? 😊\nPassando pra avisar que iniciamos o seu processo de financiamento do imóvel *$nameProperty*. Você receberá as novidades por aqui! 🏠🍀"
+                "Olá ${process.client.name}, tudo bem? 😊\nPassando pra avisar que iniciamos o seu processo de $tipoProcesso do imóvel *$nameProperty*. Você receberá as novidades por aqui! 🏠🍀"
                     .plus(messageLink).plus(pathClient)
             sendForClient(process.client, messageClient)
         }
@@ -128,6 +129,7 @@ class ProcessMessageService(
         log.info(">>> [MSG] sendMessage=true, prosseguindo com envio...")
 
         val nameProperty = processStep.process.property?.description ?: "imóvel"
+        val tipoProcesso = processStep.process.flow.type.description.lowercase()
         val etapa = processStep.getDescriptionStep()
         val flowObs = getStepObservation(processStep)
         val notes = listOfNotNull(
@@ -138,7 +140,7 @@ class ProcessMessageService(
 
         if (processStep.process.client != null) {
             val messageClient =
-                "Olá ${processStep.process.client.name}, tudo bem? 😊\nPassando pra avisar que o seu processo de financiamento do imóvel *$nameProperty* está na etapa: *$etapa* 🏠$observationSuffix"
+                "Olá ${processStep.process.client.name}, tudo bem? 😊\nPassando pra avisar que o seu processo de $tipoProcesso do imóvel *$nameProperty* está na etapa: *$etapa* 🏠$observationSuffix"
                     .plus(messageLink)
                     .plus(getPathClient(processStep.process))
             sendForClient(processStep.process.client, messageClient)
