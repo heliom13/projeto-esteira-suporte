@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react'
-import {CheckOutlined, ClockCircleFilled, ExclamationOutlined} from '@ant-design/icons'
+import {CheckCircleFilled, ClockCircleOutlined, IssuesCloseOutlined} from '@ant-design/icons'
 import styled, {keyframes} from 'styled-components'
 
 type Step = {
@@ -69,11 +69,11 @@ export const ExternalTimelineComponent = ({steps}: { steps: Step[] }) => {
                             <Rail>
                                 <Dot $state={state}>
                                     {isUnforeseen ? (
-                                        <ExclamationOutlined/>
+                                        <IssuesCloseOutlined/>
                                     ) : isCompleted ? (
-                                        <CheckOutlined/>
+                                        <CheckCircleFilled/>
                                     ) : isCurrent ? (
-                                        <ClockCircleFilled/>
+                                        <ClockCircleOutlined/>
                                     ) : (
                                         <DotInner/>
                                     )}
@@ -120,8 +120,8 @@ export const ExternalTimelineComponent = ({steps}: { steps: Step[] }) => {
 
 /* ---------- animações ---------- */
 const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(12px); }
+  to   { transform: translateY(0); }
 `
 const pulse = keyframes`
   0%   { box-shadow: 0 0 0 0 rgba(71,98,234,0.45); }
@@ -183,8 +183,7 @@ const List = styled.div`
 const Item = styled.div`
   display: flex;
   gap: 14px;
-  opacity: 0;
-  animation: ${fadeInUp} 0.5s ease forwards;
+  animation: ${fadeInUp} 0.45s ease both;
 `
 const Rail = styled.div`
   display: flex;
