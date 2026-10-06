@@ -61,7 +61,7 @@ const IconFlag = () => (
 
 // Numero de WhatsApp que recebe os chamados dos clientes (55 + DDD + numero).
 // Pode ser trocado pela variavel de ambiente REACT_APP_WHATSAPP_SUPORTE.
-const WHATSAPP_SUPORTE = process.env.REACT_APP_WHATSAPP_SUPORTE || '5598991911800'
+const WHATSAPP_SUPORTE = process.env.REACT_APP_WHATSAPP_SUPORTE || '5598985594554'
 
 const IconWhats = () => (
     <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
