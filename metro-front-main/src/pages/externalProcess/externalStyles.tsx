@@ -15,11 +15,16 @@ export const Line = styled.hr`
 
 export const Title = styled.h1`
   font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
-  color: #4762ea;
+  font-weight: 700;
+  color: #ffffff;
   text-align: center;
   white-space: nowrap;
-  margin-top: 20px;
+  letter-spacing: 0.3px;
+  font-size: 20px;
+  margin: 0;
+  @media screen and (max-width: 420px) {
+    font-size: 17px;
+  }
 `
 
 export const TextOutside = styled.p`
@@ -107,7 +112,22 @@ export const DaysText = styled.p`
 export const WrapImage = styled.div`
   display: flex;
   justify-content: center;
-  gap: 10px;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  margin: 0 0 24px 0;
+  background: linear-gradient(120deg, #4762ea 0%, #7b5cf0 55%, #22a6f2 100%);
+  box-shadow: 0 4px 16px rgba(71, 98, 234, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  /* a logo ganha um fundo branco para ler bem sobre o gradiente */
+  img {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  }
 `

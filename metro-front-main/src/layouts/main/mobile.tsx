@@ -16,11 +16,6 @@ export default MobileLayout;
 
 const Container = styled.div`
   width: 100%;
-  max-width: 90%;
-  margin-right: auto;
-  margin-left: auto;
-  padding: 30px;
-  @media screen and (max-width: 480px) {
-    padding: 50px;
-  }
+  margin: 0;
+  padding: 0 0 40px;
 `;

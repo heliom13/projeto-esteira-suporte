@@ -103,7 +103,7 @@ export const ExternalTimelineComponent = ({steps, titulo, info, codigo, papel}: 
     }
 
     return (
-        <div style={{maxWidth: 580, margin: '0 auto', padding: '6px 6px 36px'}}>
+        <div style={{maxWidth: 580, margin: '0 auto', padding: '6px 14px 36px'}}>
             <style>{CSS}</style>
 
             {/* ---------- Cabecalho ---------- */}
