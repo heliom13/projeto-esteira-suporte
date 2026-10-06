@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react'
+import ErrorBoundary from '../../components/errorBoundary/ErrorBoundary'
 import {useParams} from 'react-router-dom'
 import {ExternalClass} from '../../services/external'
 import {Spinner, Title, WarningTitle, WrapImage} from './externalStyles'
@@ -65,7 +66,7 @@ const ExternalProcess = () => {
             {loading ? (
                 <Spinner/>
             ) : (
-                <ExternalProcessClient loading={loading} client={client}/>
+                <ErrorBoundary><ExternalProcessClient loading={loading} client={client}/></ErrorBoundary>
             )}
             {errorMessage && <WarningTitle> Processo não encontrado 😔</WarningTitle>}
         </div>

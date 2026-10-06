@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react'
+import ErrorBoundary from '../../components/errorBoundary/ErrorBoundary'
 import {useParams} from 'react-router-dom'
 import {ExternalClass} from '../../services/external'
 import {Spinner, Title, WarningTitle, WrapImage} from '../externalProcess/externalStyles'
@@ -61,7 +62,7 @@ const ExternalSaleSeller = () => {
             {loading ? (
                 <Spinner/>
             ) : (
-                <ExternalSeller loading={loading} sellers={seller}/>
+                <ErrorBoundary><ExternalSeller loading={loading} sellers={seller}/></ErrorBoundary>
             )}
             {errorMessage && <WarningTitle> Processo não encontrado 😔 </WarningTitle>}
         </div>
