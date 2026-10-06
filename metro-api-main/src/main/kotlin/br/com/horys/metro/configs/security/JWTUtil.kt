@@ -3,16 +3,37 @@ package br.com.horys.metro.configs.security
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.security.SecureRandom
+import java.util.Base64
 import java.util.Date
 import javax.servlet.http.HttpServletRequest
 
 @Component
 class JWTUtil {
 
-    // Segredo lido de variável de ambiente (JWT_SECRET). O valor abaixo é apenas
-    // uma reserva para não quebrar; DEFINA um JWT_SECRET forte no Render (rotaciona o segredo).
-    private val secret = System.getenv("JWT_SECRET") ?: "pGy7dvj15VGiIffMhXFZRt2VII7bbrTO"
+    private val log = LoggerFactory.getLogger(this::class.java)
+
+    /**
+     * Segredo de assinatura dos tokens, lido de JWT_SECRET.
+     *
+     * Nao existe mais segredo fixo no codigo: o antigo ficou exposto no
+     * historico do repositorio e permitia forjar tokens de administrador.
+     * Sem a variavel definida, um segredo aleatorio e gerado a cada
+     * inicializacao — o sistema continua funcionando, mas as sessoes caem a
+     * cada reinicio. DEFINA JWT_SECRET no Render para ter sessoes estaveis.
+     */
+    private val secret: String = System.getenv("JWT_SECRET")?.takeIf { it.isNotBlank() }
+        ?: run {
+            val aleatorio = ByteArray(48).also { SecureRandom().nextBytes(it) }
+            log.warn(
+                ">>> [SEGURANCA] JWT_SECRET nao definido. Usando um segredo aleatorio " +
+                    "gerado agora: as sessoes serao encerradas a cada reinicio. " +
+                    "Defina JWT_SECRET nas variaveis de ambiente."
+            )
+            Base64.getEncoder().encodeToString(aleatorio)
+        }
 
     // Validade do token: usa JWT_EXPIRATION_MS se definido (padrão ~2h = 7200000 ms)
     private val expiration: Long = System.getenv("JWT_EXPIRATION_MS")?.toLongOrNull() ?: 600000000
