@@ -53,7 +53,7 @@ const ExternalProperty = ({loading, property}) => {
             titulo={main?.name ? `Imóvel ${main.name}` : 'Acompanhe o processo'}
             info={info}
             codigo={main?.code}
-            papel="proprietário do imóvel"
+            papel="vendedor do imóvel"
         />
     )
 }
