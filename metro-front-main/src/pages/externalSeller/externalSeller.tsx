@@ -42,6 +42,7 @@ const ExternalSeller = ({loading, sellers}) => {
     if (erro) return <WarningText>{erro}</WarningText>
 
     const info = [
+        main?.code ? {label: 'Código', value: main.code} : null,
         main?.client ? {label: 'Cliente', value: main.client} : null,
         main?.property ? {label: 'Imóvel', value: main.property} : null,
         {label: 'Processo', value: main?.status === 'FINISHED' ? 'Finalizado' : 'Ativo'},
@@ -52,6 +53,8 @@ const ExternalSeller = ({loading, sellers}) => {
             steps={steps}
             titulo={main?.property ? `Imóvel ${main.property}` : 'Acompanhe o processo'}
             info={info}
+            codigo={main?.code}
+            papel="corretor responsável"
         />
     )
 }

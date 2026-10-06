@@ -74,6 +74,7 @@ class ProcessService(
         val process = processRepository.save(
             Process(
                 id = null,
+                code = gerarCodigoProcesso(),
                 client = client,
                 flow = flow,
                 stepCurrent = steps.first().step,
@@ -136,6 +137,18 @@ class ProcessService(
 
 
         return process
+    }
+
+    /**
+     * Gera o codigo do processo no formato ano-sequencia (ex: 2026-0001).
+     * A sequencia reinicia a cada ano: busca o maior codigo ja usado no ano
+     * corrente e soma 1.
+     */
+    private fun gerarCodigoProcesso(): String {
+        val prefixo = "${LocalDateTime.now().year}-"
+        val ultimo = processRepository.findMaxCodeByPrefix(prefixo)
+        val sequencia = (ultimo?.substringAfter("-")?.trim()?.toIntOrNull() ?: 0) + 1
+        return prefixo + sequencia.toString().padStart(4, '0')
     }
 
     private fun getValidFlow(request: ProcessRequest): Pair<Flow, List<FlowStep>> {

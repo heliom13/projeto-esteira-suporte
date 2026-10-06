@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 
 class ProcessSellerExternalResponse(
     val id: String,
+    val code: String?,
     val saleId: String,
     val stepCurrentId: Long,
     val stepCurrent: String,
@@ -18,6 +19,7 @@ class ProcessSellerExternalResponse(
         fun fromModel(model: Process, externalId: String) =
             ProcessSellerExternalResponse(
                 id = externalId,
+                code = model.code,
                 stepCurrentId = model.stepCurrent.id!!,
                 stepCurrent = model.processStepCurrent?.getDescriptionStep() ?: "",
                 stepStatus = model.stepCurrent.status.toString(),

@@ -248,6 +248,11 @@ const Processes = () => {
 
     const columns = [
         {
+            title: "Código",
+            render: (r: any) => <strong>{r.code || "—"}</strong>,
+            sorter: (a: any, b: any) => (a.code || "").localeCompare(b.code || ""),
+        },
+        {
             title: "ID do Processo",
             render: (r: ProcessProps) => <p>{r.id}</p>,
             sorter: (a: any, b: any) => a.id.localeCompare(b.id),

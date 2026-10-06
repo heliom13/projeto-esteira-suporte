@@ -41,6 +41,7 @@ const ExternalProcessClient = ({loading, client}) => {
     if (erro) return <WarningText>{erro}</WarningText>
 
     const info = [
+        main?.code ? {label: 'Código', value: main.code} : null,
         main?.totalDays ? {label: 'Previsão', value: `${main.totalDays} dias`} : null,
         main?.daysCompleted != null ? {label: 'Em andamento há', value: `${main.daysCompleted} dias`} : null,
         main?.sellerMain ? {label: 'Responsável', value: main.sellerMain} : null,
@@ -51,6 +52,8 @@ const ExternalProcessClient = ({loading, client}) => {
             steps={steps}
             titulo={main?.name ? `Olá, ${main.name}` : 'Acompanhe seu processo'}
             info={info}
+            codigo={main?.code}
+            papel="cliente comprador"
         />
     )
 }

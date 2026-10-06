@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 
 data class ProcessResponse(
     val id: Long,
+    val code: String?,
     val client: ProcessClientResponse?,
     val stepCurrent: StepCurrentResponse,
     val status: String,
@@ -53,6 +54,7 @@ data class ProcessResponse(
         ): ProcessResponse {
             return ProcessResponse(
                 id = process.id!!,
+                code = process.code,
                 client = process.client?.let {
                     ProcessClientResponse(
                         id = it.id!!,

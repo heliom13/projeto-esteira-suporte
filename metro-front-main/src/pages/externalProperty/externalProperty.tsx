@@ -41,6 +41,7 @@ const ExternalProperty = ({loading, property}) => {
     if (erro) return <WarningText>{erro}</WarningText>
 
     const info = [
+        main?.code ? {label: 'Código', value: main.code} : null,
         main?.totalDays ? {label: 'Previsão', value: `${main.totalDays} dias`} : null,
         main?.daysCompleted != null ? {label: 'Em andamento há', value: `${main.daysCompleted} dias`} : null,
         main?.sellerMain ? {label: 'Responsável', value: main.sellerMain} : null,
@@ -51,6 +52,8 @@ const ExternalProperty = ({loading, property}) => {
             steps={steps}
             titulo={main?.name ? `Imóvel ${main.name}` : 'Acompanhe o processo'}
             info={info}
+            codigo={main?.code}
+            papel="proprietário do imóvel"
         />
     )
 }

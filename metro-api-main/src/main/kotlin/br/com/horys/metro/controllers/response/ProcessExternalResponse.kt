@@ -8,6 +8,7 @@ import java.time.temporal.ChronoUnit
 
 class ProcessExternalResponse(
     val id: String,
+    val code: String?,
     val stepCurrentId: Long,
     val stepCurrent: String,
     val stepStatus: String,
@@ -59,6 +60,7 @@ class ProcessExternalResponse(
         fun fromModel(model: Process) =
             ProcessExternalResponse(
                 id = model.id.toString(),
+                code = model.code,
                 stepCurrentId = model.processStepCurrent!!.step.id!!,
                 stepCurrent = model.processStepCurrent.getDescriptionStep(),
                 stepStatus = model.stepCurrent.status.toString(),

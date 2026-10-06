@@ -41,7 +41,9 @@ data class Process(
     val user: User,
     @ManyToOne
     @JoinColumn(name = "proposal_id")
-    val proposal: Proposal
+    val proposal: Proposal,
+    /** Codigo do processo no formato ano-sequencia (ex: 2026-0001). */
+    val code: String? = null
 ) {
 
 

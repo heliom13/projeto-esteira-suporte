@@ -59,7 +59,25 @@ const IconFlag = () => (
     </svg>
 )
 
-export const ExternalTimelineComponent = ({steps, titulo, info}: any) => {
+// Numero de WhatsApp que recebe os chamados dos clientes (55 + DDD + numero).
+// Pode ser trocado pela variavel de ambiente REACT_APP_WHATSAPP_SUPORTE.
+const WHATSAPP_SUPORTE = process.env.REACT_APP_WHATSAPP_SUPORTE || '5598991911800'
+
+const IconWhats = () => (
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+        <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5c.1-.2.1-.3 0-.5l-.7-1.6c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1s.9 2.5 1 2.6a9.3 9.3 0 0 0 3.7 3.2c1.6.6 1.9.5 2.3.5.4 0 1.3-.5 1.5-1.1.2-.5.2-1 .1-1.1z"/>
+    </svg>
+)
+
+function montarLinkChamado(codigo: string | undefined, papel: string | undefined, etapa: string) {
+    const quem = papel || 'cliente'
+    const id = codigo ? ` de ID ${codigo}` : ''
+    const texto =
+        `Olá! Sou o ${quem}${id} e tenho uma dúvida sobre a etapa atual do meu processo: "${etapa}".`
+    return `https://wa.me/${WHATSAPP_SUPORTE}?text=${encodeURIComponent(texto)}`
+}
+
+export const ExternalTimelineComponent = ({steps, titulo, info, codigo, papel}: any) => {
     const list = Array.isArray(steps) ? steps.filter(Boolean) : []
     const chips = Array.isArray(info) ? info.filter(Boolean) : []
 
@@ -294,6 +312,23 @@ export const ExternalTimelineComponent = ({steps, titulo, info}: any) => {
                                 }}>
                                     📝 {s.observation}
                                 </div>
+                            ) : null}
+
+                            {atual && WHATSAPP_SUPORTE ? (
+                                <a
+                                    href={montarLinkChamado(codigo, papel, nome)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        gap: 8, marginTop: 12, padding: '10px 12px', borderRadius: 10,
+                                        background: '#25D366', color: '#fff', fontWeight: 800,
+                                        fontSize: 13, textDecoration: 'none',
+                                        boxShadow: '0 4px 12px rgba(37,211,102,.35)',
+                                    }}
+                                >
+                                    <IconWhats/> Tenho uma dúvida nesta etapa
+                                </a>
                             ) : null}
                         </div>
                     </div>
