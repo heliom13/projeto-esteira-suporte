@@ -38,3 +38,11 @@ app:
 resend:
   api-key: ${RESEND_API_KEY:}
   from-address: ${RESEND_FROM_ADDRESS:Suporte Imobiliário <onboarding@resend.dev>}
+
+# Documentacao da API (Swagger) desligada por padrao: em producao ela expunha
+# publicamente o mapa completo das rotas. Para usar localmente: SWAGGER_ENABLED=true
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}

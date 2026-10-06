@@ -12,6 +12,7 @@ import br.com.horys.metro.models.User
 import br.com.horys.metro.services.UserService
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -28,7 +29,7 @@ import javax.validation.Valid
 class UserController(
     private val service: UserService
 ) {
-    //    @Secured("ROLE_$USER_ROLE_ADMIN")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{email:.+}/reset")
     fun reset(@PathVariable email: String, @RequestBody request: UserResetRequest) {
         service.reset(java.net.URLDecoder.decode(email, "UTF-8"), request.password)
@@ -44,6 +45,7 @@ class UserController(
         service.resetPasswordWithToken(request.token, request.password)
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin")
     @ResponseStatus(HttpStatus.CREATED)
     fun createUserAdmin(
@@ -54,6 +56,7 @@ class UserController(
     @GetMapping
     fun listUsers(query: ListUserRequest, page: Pageable): List<UserResponse> = service.findAll(query, page)
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/basic")
     fun basic(@RequestBody request: UserRequest): UserResponse {
         val user = service.create(request)
@@ -66,11 +69,13 @@ class UserController(
         )
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     fun update(@Valid @RequestBody updateUserRequest: UpdateUserRequest, @PathVariable id: Long): User {
         return service.update(id, updateUserRequest)
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun delete(@PathVariable id: Long) {
