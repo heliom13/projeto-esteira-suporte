@@ -1,19 +1,7 @@
 import {useEffect, useState} from 'react'
 import {ExternalClass} from '../../services/external'
 import {ExternalTimelineComponent} from '../../components/timeline/externalTimeLine'
-import {
-    Button,
-    Container,
-    DaysText,
-    Label,
-    Line,
-    Spinner,
-    SuccessText,
-    Text,
-    TextOutside,
-    TextWrap,
-    WarningText,
-} from '../externalProcess/externalStyles'
+import {Spinner, Text, WarningText} from '../externalProcess/externalStyles'
 
 const ExternalProperty = ({loading, property}) => {
     // Processo principal do imovel (o primeiro da lista)
@@ -22,9 +10,8 @@ const ExternalProperty = ({loading, property}) => {
     const [steps, setSteps] = useState<any[]>([])
     const [carregandoEtapas, setCarregandoEtapas] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
-    const [showMore, setShowMore] = useState(false)
 
-    // Carrega as etapas junto com a pagina (nao depende do clique)
+    // Carrega as etapas assim que a pagina abre: ja cai direto no rastreio
     useEffect(() => {
         if (!main?.processId) return
         setCarregandoEtapas(true)
@@ -42,76 +29,29 @@ const ExternalProperty = ({loading, property}) => {
     if (loading) return <Spinner/>
     if (!main) return <WarningText> Nenhum processo encontrado 😔 </WarningText>
 
-    // Tela de rastreamento (substitui o card)
-    if (showMore) {
+    if (carregandoEtapas) {
         return (
             <>
-                <Button onClick={() => setShowMore(false)}> ← Voltar </Button>
-                {carregandoEtapas && (
-                    <>
-                        <Spinner/>
-                        <Text> Carregando etapas... </Text>
-                    </>
-                )}
-                {!carregandoEtapas && erro && <WarningText>{erro}</WarningText>}
-                {!carregandoEtapas && !erro && steps.length === 0 && (
-                    <WarningText> Nenhuma etapa encontrada para este processo. </WarningText>
-                )}
-                {!carregandoEtapas && !erro && steps.length > 0 && (
-                    <ExternalTimelineComponent steps={steps}/>
-                )}
+                <Spinner/>
+                <Text> Carregando o processo... </Text>
             </>
         )
     }
 
-    // Tela inicial: informacoes + um unico botao
-    return (
-        <Container>
-            <TextOutside>
-                Imóvel <strong>{main?.name}</strong>
-            </TextOutside>
-            <Line/>
-            <TextWrap>
-                <Label> Previsão: </Label>
-                <DaysText> {main?.totalDays} dias</DaysText>
-            </TextWrap>
-            <TextWrap>
-                <Label> Dias completos: </Label>
-                {main?.daysCompleted > main?.totalDays ? (
-                    <WarningText> {main?.daysCompleted} dias </WarningText>
-                ) : (
-                    <DaysText> {main?.daysCompleted} dias</DaysText>
-                )}
-            </TextWrap>
-            <TextWrap>
-                <Label> Vendedor Principal: </Label>
-                <Text> {main?.sellerMain}</Text>
-            </TextWrap>
-            {main?.sellerSecondary && (
-                <TextWrap>
-                    <Label> Vendedor Secundário: </Label>
-                    <Text> {main?.sellerSecondary}</Text>
-                </TextWrap>
-            )}
-            <TextWrap>
-                <Label> Status Atual: </Label>
-                {main?.stepStatus === 'UNFORESEEN' ? (
-                    <WarningText>{main?.stepCurrent}</WarningText>
-                ) : (
-                    <Text>
-                        {main?.stepCurrent === '' ? 'Sem status no momento' : main?.stepCurrent}
-                    </Text>
-                )}
-            </TextWrap>
-            <TextWrap>
-                <Label> Status do Processo: </Label>
-                <SuccessText>
-                    {main?.status === 'FINISHED' ? 'FINALIZADO' : 'ATIVO'}
-                </SuccessText>
-            </TextWrap>
+    if (erro) return <WarningText>{erro}</WarningText>
 
-            <Button onClick={() => setShowMore(true)}> Visão Geral </Button>
-        </Container>
+    const info = [
+        main?.totalDays ? {label: 'Previsão', value: `${main.totalDays} dias`} : null,
+        main?.daysCompleted != null ? {label: 'Em andamento há', value: `${main.daysCompleted} dias`} : null,
+        main?.sellerMain ? {label: 'Responsável', value: main.sellerMain} : null,
+    ].filter(Boolean)
+
+    return (
+        <ExternalTimelineComponent
+            steps={steps}
+            titulo={main?.name ? `Imóvel ${main.name}` : 'Acompanhe o processo'}
+            info={info}
+        />
     )
 }
 

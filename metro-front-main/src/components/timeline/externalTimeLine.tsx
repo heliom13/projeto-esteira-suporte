@@ -59,8 +59,9 @@ const IconFlag = () => (
     </svg>
 )
 
-export const ExternalTimelineComponent = ({steps}: any) => {
+export const ExternalTimelineComponent = ({steps, titulo, info}: any) => {
     const list = Array.isArray(steps) ? steps.filter(Boolean) : []
+    const chips = Array.isArray(info) ? info.filter(Boolean) : []
 
     const total = list.length
     const concluidas = list.filter((s: any) => s && s.stepCompleted === 'COMPLETED').length
@@ -115,13 +116,15 @@ export const ExternalTimelineComponent = ({steps}: any) => {
                         <IconFlag/>
                     </div>
                     <div style={{fontSize: 18, fontWeight: 800, letterSpacing: .2}}>
-                        {tudoConcluido ? 'Processo concluído! 🎉' : 'Acompanhe seu processo'}
+                        {titulo
+                            ? titulo
+                            : tudoConcluido ? 'Processo concluído! 🎉' : 'Acompanhe seu processo'}
                     </div>
                 </div>
 
                 <div style={{fontSize: 13, opacity: .93, marginTop: 6, position: 'relative'}}>
                     {tudoConcluido
-                        ? `Todas as ${total} etapas foram concluídas`
+                        ? `🎉 Todas as ${total} etapas foram concluídas`
                         : `Etapa ${Math.min(concluidas + 1, total)} de ${total} · ${concluidas} já concluída(s)`}
                 </div>
 
@@ -143,6 +146,29 @@ export const ExternalTimelineComponent = ({steps}: any) => {
                 <div style={{textAlign: 'right', fontSize: 13, fontWeight: 800, marginTop: 6}}>
                     {barra}%
                 </div>
+
+                {chips.length > 0 && (
+                    <div style={{
+                        display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12, position: 'relative',
+                    }}>
+                        {chips.map((c: any, idx: number) => (
+                            <div
+                                key={idx}
+                                style={{
+                                    background: 'rgba(255,255,255,.18)',
+                                    border: '1px solid rgba(255,255,255,.28)',
+                                    borderRadius: 20,
+                                    padding: '4px 11px',
+                                    fontSize: 11.5,
+                                    lineHeight: 1.35,
+                                }}
+                            >
+                                <span style={{opacity: .85}}>{c.label}: </span>
+                                <strong>{c.value}</strong>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* ---------- Etapas ---------- */}
