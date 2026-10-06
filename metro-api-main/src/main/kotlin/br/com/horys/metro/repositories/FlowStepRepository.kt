@@ -9,4 +9,13 @@ interface FlowStepRepository : JpaRepository<FlowStep, Long> {
     @Query("select fs from FlowStep fs join fetch fs.flow f join fetch fs.step s where f.id= :id and fs.status= 'ACTIVE' order by fs.orderStep")
     fun findByFlowOrderedSteps(id: Long): List<FlowStep>
     fun findTopByFlowAndOrderStepGreaterThan(flow: Flow, orderCurrent: Double): FlowStep?
+
+    /**
+     * Busca a etapa do fluxo INDEPENDENTE do status (ativa ou inativa).
+     * Necessario para processos antigos: quando o fluxo e editado, as etapas
+     * antigas viram INATIVAS, mas o processo que ja estava em andamento deve
+     * continuar enxergando a observacao original com que ele comecou.
+     */
+    @Query("select fs from FlowStep fs where fs.flow.id = :flowId and fs.step.id = :stepId order by fs.id desc")
+    fun findByFlowAndStepAnyStatus(flowId: Long, stepId: Long): List<FlowStep>
 }

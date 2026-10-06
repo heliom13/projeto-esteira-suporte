@@ -108,8 +108,12 @@ class ProcessMessageService(
     }
 
     private fun getStepObservation(processStep: ProcessStep): String? {
-        return flowStepRepository.findByFlowOrderedSteps(processStep.process.flow.id!!)
-            .find { it.step.id == processStep.step.id }?.observation
+        // Busca sem filtrar por status: se o fluxo foi editado depois que este
+        // processo comecou, a etapa original ficou INATIVA — e o processo deve
+        // continuar com a observacao com que ele comecou, nao com a nova.
+        return flowStepRepository
+            .findByFlowAndStepAnyStatus(processStep.process.flow.id!!, processStep.step.id!!)
+            .firstOrNull()?.observation
     }
 
     private fun getPathClient(process: Process): String {
