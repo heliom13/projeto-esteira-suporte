@@ -4,6 +4,7 @@ import { Menu } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { AnimatedMenu } from './AnimatedMenu';
+import ProcessSearch from '../processSearch/ProcessSearch';
 
 type MenuItem = {
     key: string;
@@ -139,12 +140,15 @@ export const SideMenu = () => {
     };
 
     return (
-        <AnimatedMenu
-            theme={"light"}
-            style={{height: "fit-content"}}
-            mode="inline"
-        >
-            {menuItems.map(renderItem)}
-        </AnimatedMenu>
+        <>
+            {hasAnyRole(["ADMIN", "ANALYST", "PROCESSOR"]) ? <ProcessSearch/> : null}
+            <AnimatedMenu
+                theme={"light"}
+                style={{height: "fit-content"}}
+                mode="inline"
+            >
+                {menuItems.map(renderItem)}
+            </AnimatedMenu>
+        </>
     );
 };

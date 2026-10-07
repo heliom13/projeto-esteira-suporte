@@ -13,6 +13,7 @@ import StepForm from "../pages/steps/form";
 import Steps from "../pages/steps";
 import Flow from "../pages/flow/view";
 import ChangeStep from "../pages/process/changeStep";
+import ProcessDossier from "../pages/process/dossier";
 import Documents from "../pages/documents";
 import DocumentsForm from "../pages/documents/form";
 import Seller from "../pages/seller";
@@ -84,6 +85,7 @@ export default function AppRoutes() {
                                     <Route path="" element={<Processes/>}/>
                                     <Route path="cadastrar" element={<PropertySellForm/>}/>
                                     <Route path="mudar-etapa/:id" element={<ChangeStep/>}/>
+                            <Route path="dossie/:id" element={<ProcessDossier/>}/>
                                     <Route path="finalizar-processo/:id" element={<EndProcess/>}/>
                                     <Route path="nota/:id" element={<ProcessInvoice/>}/>
                                 </Route>
@@ -129,6 +131,7 @@ export default function AppRoutes() {
                             <Route path="" element={<Processes/>}/>
                             <Route path="cadastrar" element={<PropertySellForm/>}/>
                             <Route path="mudar-etapa/:id" element={<ChangeStep/>}/>
+                            <Route path="dossie/:id" element={<ProcessDossier/>}/>
                             <Route path="finalizar-processo/:id" element={<EndProcess/>}/>
                             <Route path="nota/:id" element={<ProcessInvoice/>}/>
                         </Route>
