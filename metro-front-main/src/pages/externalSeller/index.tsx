@@ -2,10 +2,10 @@ import {useEffect, useState} from 'react'
 import ErrorBoundary from '../../components/errorBoundary/ErrorBoundary'
 import {useParams} from 'react-router-dom'
 import {ExternalClass} from '../../services/external'
-import {Spinner, Title, WarningTitle, WrapImage} from '../externalProcess/externalStyles'
+import {Spinner, WarningTitle, WrapImage} from '../externalProcess/externalStyles'
+import SuporteLogo from '../../components/brand/SuporteLogo'
 import ExternalSeller from './externalSeller'
 
-const Logo = require('../../assets/images/logo.png')
 
 type SellerProps = {
     id: number
@@ -50,14 +50,7 @@ const ExternalSaleSeller = () => {
     return (
         <div>
             <WrapImage>
-                <img
-                    src={Logo}
-                    alt="Logo"
-                    style={{
-                        width: '50px',
-                    }}
-                />
-                <Title>Suporte Imobiliário</Title>
+                <SuporteLogo/>
             </WrapImage>{' '}
             {loading ? (
                 <Spinner/>

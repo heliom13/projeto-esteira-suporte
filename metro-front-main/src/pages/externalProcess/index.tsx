@@ -2,10 +2,10 @@ import {useEffect, useState} from 'react'
 import ErrorBoundary from '../../components/errorBoundary/ErrorBoundary'
 import {useParams} from 'react-router-dom'
 import {ExternalClass} from '../../services/external'
-import {Spinner, Title, WarningTitle, WrapImage} from './externalStyles'
+import {Spinner, WarningTitle, WrapImage} from './externalStyles'
+import SuporteLogo from '../../components/brand/SuporteLogo'
 import ExternalProcessClient from './client'
 
-const Logo = require('../../assets/images/logo.png')
 
 type ClientProps = {
     id: number
@@ -54,14 +54,7 @@ const ExternalProcess = () => {
     return (
         <div>
             <WrapImage>
-                <img
-                    src={Logo}
-                    alt="Logo"
-                    style={{
-                        width: '50px',
-                    }}
-                />
-                <Title>Suporte Imobiliário</Title>
+                <SuporteLogo/>
             </WrapImage>
             {loading ? (
                 <Spinner/>
