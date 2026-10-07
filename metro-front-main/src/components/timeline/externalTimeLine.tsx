@@ -27,6 +27,15 @@ const CSS = `
 .rtk-shine { animation: rtkShine 2.6s ease-in-out infinite; }
 .rtk-card  { transition: transform .18s ease, box-shadow .18s ease; }
 .rtk-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,.10); }
+@keyframes rtkPopIn { from { opacity:0; transform: translateY(12px) scale(.96);} to { opacity:1; transform:none; } }
+@keyframes rtkRing {
+  0%   { box-shadow: 0 0 0 0 rgba(71,98,234,.5), 0 8px 22px rgba(71,98,234,.45); }
+  70%  { box-shadow: 0 0 0 16px rgba(71,98,234,0), 0 8px 22px rgba(71,98,234,.45); }
+  100% { box-shadow: 0 0 0 0 rgba(71,98,234,0), 0 8px 22px rgba(71,98,234,.45); }
+}
+.rtk-fab { animation: rtkRing 2.4s infinite; transition: transform .15s ease; }
+.rtk-fab:hover { transform: scale(1.07); }
+.rtk-popup { animation: rtkPopIn .22s cubic-bezier(.22,1,.36,1) backwards; }
 `
 
 const IconCheck = () => (
@@ -69,11 +78,11 @@ const IconWhats = () => (
     </svg>
 )
 
-function montarLinkChamado(codigo: string | undefined, papel: string | undefined, etapa: string) {
+function montarLinkChamado(codigo: string | undefined, papel: string | undefined, etapa?: string | null) {
     const quem = papel || 'cliente'
     const id = codigo ? ` de ID ${codigo}` : ''
-    const texto =
-        `Olá! Sou o ${quem}${id} e tenho uma dúvida sobre a etapa atual do meu processo: "${etapa}".`
+    const sobre = etapa ? `a etapa atual do meu processo: "${etapa}"` : 'o meu processo'
+    const texto = `Olá! Sou o ${quem}${id} e tenho uma dúvida sobre ${sobre}.`
     return `https://wa.me/${WHATSAPP_SUPORTE}?text=${encodeURIComponent(texto)}`
 }
 
@@ -88,6 +97,9 @@ export const ExternalTimelineComponent = ({steps, titulo, info, codigo, papel}: 
     const tudoConcluido = total > 0 && atualIdx === -1
 
     // barra de progresso anima de 0 ate o valor
+    const [ajudaAberta, setAjudaAberta] = useState(false)
+    const etapaAtual: string | null = atualIdx >= 0 ? ((list[atualIdx] && list[atualIdx].step) || null) : null
+
     const [barra, setBarra] = useState(0)
     useEffect(() => {
         const t = setTimeout(() => setBarra(pct), 120)
@@ -103,7 +115,7 @@ export const ExternalTimelineComponent = ({steps, titulo, info, codigo, papel}: 
     }
 
     return (
-        <div style={{maxWidth: 580, margin: '0 auto', padding: '6px 14px 36px'}}>
+        <div style={{maxWidth: 580, margin: '0 auto', padding: '6px 14px 110px'}}>
             <style>{CSS}</style>
 
             {/* ---------- Cabecalho ---------- */}
@@ -313,27 +325,106 @@ export const ExternalTimelineComponent = ({steps, titulo, info, codigo, papel}: 
                                     📝 {s.observation}
                                 </div>
                             ) : null}
-
-                            {atual && WHATSAPP_SUPORTE ? (
-                                <a
-                                    href={montarLinkChamado(codigo, papel, nome)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        gap: 8, marginTop: 12, padding: '10px 12px', borderRadius: 10,
-                                        background: '#25D366', color: '#fff', fontWeight: 800,
-                                        fontSize: 13, textDecoration: 'none',
-                                        boxShadow: '0 4px 12px rgba(37,211,102,.35)',
-                                    }}
-                                >
-                                    <IconWhats/> Tenho uma dúvida nesta etapa
-                                </a>
-                            ) : null}
                         </div>
                     </div>
                 )
             })}
+
+            {/* ---------- Ajuda: botao flutuante + popup ---------- */}
+            {WHATSAPP_SUPORTE ? (
+                <>
+                    {ajudaAberta && (
+                        <div
+                            className="rtk-popup"
+                            role="dialog"
+                            aria-label="Ajuda"
+                            style={{
+                                position: 'fixed', right: 16, bottom: 92, zIndex: 1000,
+                                width: 'min(330px, calc(100vw - 32px))',
+                                background: '#ffffff', borderRadius: 16, overflow: 'hidden',
+                                border: '1px solid #e6e9ef',
+                                boxShadow: '0 18px 44px rgba(20,30,80,.28)',
+                            }}
+                        >
+                            <div style={{
+                                background: 'linear-gradient(120deg,#4762EA,#7B5CF0)', color: '#fff',
+                                padding: '14px 16px', display: 'flex', alignItems: 'center',
+                                justifyContent: 'space-between',
+                            }}>
+                                <div style={{fontWeight: 800, fontSize: 15}}>Precisa de ajuda?</div>
+                                <button
+                                    onClick={() => setAjudaAberta(false)}
+                                    aria-label="Fechar"
+                                    style={{
+                                        background: 'transparent', border: 'none', color: '#fff',
+                                        fontSize: 22, lineHeight: 1, cursor: 'pointer', padding: 0,
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+
+                            <div style={{padding: '14px 16px 16px'}}>
+                                <div style={{fontSize: 13, color: '#474a51', lineHeight: 1.45}}>
+                                    Tem alguma dúvida sobre o seu processo? Fale com a equipe da
+                                    Suporte Imobiliário pelo WhatsApp.
+                                </div>
+
+                                {etapaAtual ? (
+                                    <div style={{
+                                        marginTop: 12, padding: '9px 11px', borderRadius: 10,
+                                        background: '#eef1fe', border: '1px solid #c9d4fb',
+                                        fontSize: 12.5, color: '#2b2f36',
+                                    }}>
+                                        <div style={{color: '#4762EA', fontWeight: 800, fontSize: 10.5, marginBottom: 2}}>
+                                            📍 ETAPA ATUAL
+                                        </div>
+                                        {etapaAtual}
+                                    </div>
+                                ) : null}
+
+                                {codigo ? (
+                                    <div style={{marginTop: 8, fontSize: 11.5, color: '#8a8f98'}}>
+                                        Código do processo: <strong style={{color: '#474a51'}}>{codigo}</strong>
+                                    </div>
+                                ) : null}
+
+                                <a
+                                    href={montarLinkChamado(codigo, papel, etapaAtual)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => setAjudaAberta(false)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        gap: 8, marginTop: 14, padding: '11px 12px', borderRadius: 10,
+                                        background: '#25D366', color: '#fff', fontWeight: 800,
+                                        fontSize: 13.5, textDecoration: 'none',
+                                        boxShadow: '0 4px 12px rgba(37,211,102,.35)',
+                                    }}
+                                >
+                                    <IconWhats/> Falar no WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    )}
+
+                    <button
+                        className="rtk-fab"
+                        onClick={() => setAjudaAberta(!ajudaAberta)}
+                        aria-label={ajudaAberta ? 'Fechar ajuda' : 'Precisa de ajuda?'}
+                        title="Precisa de ajuda?"
+                        style={{
+                            position: 'fixed', right: 20, bottom: 20, zIndex: 1001,
+                            width: 58, height: 58, borderRadius: '50%', border: 'none',
+                            cursor: 'pointer', color: '#fff', fontSize: 28, fontWeight: 800,
+                            background: 'linear-gradient(135deg,#4762EA,#7B5CF0)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                    >
+                        {ajudaAberta ? '×' : '?'}
+                    </button>
+                </>
+            ) : null}
         </div>
     )
 }
