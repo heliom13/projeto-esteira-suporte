@@ -113,21 +113,15 @@ export const WrapImage = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px 16px;
   margin: 0 0 24px 0;
-  background: linear-gradient(120deg, #4762ea 0%, #7b5cf0 55%, #22a6f2 100%);
-  box-shadow: 0 4px 16px rgba(71, 98, 234, 0.3);
+  /* Cor solida da logo (#4762EA). A logo e um quadrado dessa mesma cor com o
+     icone em branco, entao ela se funde ao fundo e fica so o icone + o nome. */
+  background: #4762ea;
+  box-shadow: 0 2px 10px rgba(71, 98, 234, 0.18);
   position: sticky;
   top: 0;
   z-index: 20;
-
-  /* a logo ganha um fundo branco para ler bem sobre o gradiente */
-  img {
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 5px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-  }
 `

@@ -12,8 +12,6 @@ const CSS = `
   100% { box-shadow: 0 0 0 0 rgba(71,98,234,0); }
 }
 @keyframes rtkPop { 0% { transform: scale(.4); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
-@keyframes rtkShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-@keyframes rtkShine { 0% { transform: translateX(-120%);} 100% { transform: translateX(320%);} }
 @keyframes rtkFloat { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-4px);} }
 
 /* 'backwards': durante o atraso usa o estado inicial, e ao terminar volta ao
@@ -21,10 +19,8 @@ const CSS = `
 .rtk-enter { animation: rtkFadeUp .55s cubic-bezier(.22,1,.36,1) backwards; }
 .rtk-pulse { animation: rtkPulse 1.9s infinite; }
 .rtk-pop   { animation: rtkPop .45s cubic-bezier(.22,1,.36,1); }
-.rtk-head  { background-size: 220% 220%; animation: rtkShift 9s ease infinite; }
 .rtk-float { animation: rtkFloat 3.5s ease-in-out infinite; }
 .rtk-bar   { transition: width 1.2s cubic-bezier(.22,1,.36,1); }
-.rtk-shine { animation: rtkShine 2.6s ease-in-out infinite; }
 .rtk-card  { transition: transform .18s ease, box-shadow .18s ease; }
 .rtk-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,.10); }
 @keyframes rtkPopIn { from { opacity:0; transform: translateY(12px) scale(.96);} to { opacity:1; transform:none; } }
@@ -120,27 +116,18 @@ export const ExternalTimelineComponent = ({steps, titulo, info, codigo, papel}: 
 
             {/* ---------- Cabecalho ---------- */}
             <div
-                className="rtk-head rtk-enter"
+                className="rtk-enter"
                 style={{
                     position: 'relative',
                     overflow: 'hidden',
-                    background: 'linear-gradient(120deg,#4762EA 0%,#7B5CF0 45%,#22A6F2 100%)',
+                    background: '#4762EA',
                     color: '#fff',
                     borderRadius: 18,
                     padding: '20px 22px 18px',
-                    boxShadow: '0 12px 30px rgba(71,98,234,.32)',
+                    boxShadow: '0 6px 18px rgba(71,98,234,.22)',
                     marginBottom: 26,
                 }}
             >
-                {/* brilho passando */}
-                <div
-                    className="rtk-shine"
-                    style={{
-                        position: 'absolute', top: 0, left: 0, width: '45%', height: '100%',
-                        background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent)',
-                        pointerEvents: 'none',
-                    }}
-                />
                 <div style={{display: 'flex', alignItems: 'center', gap: 10, position: 'relative'}}>
                     <div className="rtk-float" style={{opacity: .95}}>
                         <IconFlag/>
@@ -347,7 +334,7 @@ export const ExternalTimelineComponent = ({steps, titulo, info, codigo, papel}: 
                             }}
                         >
                             <div style={{
-                                background: 'linear-gradient(120deg,#4762EA,#7B5CF0)', color: '#fff',
+                                background: '#4762EA', color: '#fff',
                                 padding: '14px 16px', display: 'flex', alignItems: 'center',
                                 justifyContent: 'space-between',
                             }}>
@@ -417,7 +404,7 @@ export const ExternalTimelineComponent = ({steps, titulo, info, codigo, papel}: 
                             position: 'fixed', right: 20, bottom: 20, zIndex: 1001,
                             width: 58, height: 58, borderRadius: '50%', border: 'none',
                             cursor: 'pointer', color: '#fff', fontSize: 28, fontWeight: 800,
-                            background: 'linear-gradient(135deg,#4762EA,#7B5CF0)',
+                            background: '#4762EA',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}
                     >
