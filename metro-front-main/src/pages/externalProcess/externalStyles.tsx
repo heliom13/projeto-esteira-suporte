@@ -115,7 +115,7 @@ export const WrapImage = styled.div`
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 16px;
   margin: 0 0 24px 0;
   /* Cor solida da logo (#4762EA). A logo e um quadrado dessa mesma cor com o
      icone em branco, entao ela se funde ao fundo e fica so o icone + o nome. */
