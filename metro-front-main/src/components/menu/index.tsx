@@ -67,11 +67,7 @@ export const SideMenu = () => {
                     label: <Link to={"criar-fluxo/caixa"}>🏛️ Caixa</Link>,
                     roles: ["ADMIN", "ANALYST"],
                 },
-                {
-                    key: "criar-fluxo-regularizacao",
-                    label: <Link to={"criar-fluxo/regularizacao"}>📋 Regularização</Link>,
-                    roles: ["ADMIN", "ANALYST"],
-                },
+                // Regularizacao saiu daqui: tem setor proprio (menu Regularizacao > Fluxos)
             ],
         },
         {
