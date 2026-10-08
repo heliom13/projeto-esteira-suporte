@@ -1,4 +1,20 @@
-import {Badge, Button, Col, Form, Input, Modal, Popconfirm, Row, Space, Spin, Table, Tag, Tooltip, Typography,} from "antd";
+import {
+    Badge,
+    Button,
+    Col,
+    Form,
+    Input,
+    Modal,
+    Popconfirm,
+    Radio,
+    Row,
+    Space,
+    Spin,
+    Table,
+    Tag,
+    Tooltip,
+    Typography,
+} from "antd";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import "moment/locale/pt-br";
 import {buttonLeft, buttonRadius} from "../../components/button";
@@ -50,6 +66,20 @@ type ProcessProps = {
     property: {
         description: string;
     };
+    // true quando o usuario logado e o responsavel pelo processo (vem da API)
+    isUserProcessOwner: boolean;
+};
+
+type Visao = "todos" | "meus";
+const CHAVE_VISAO = "processos-visao";
+
+// Lembra a ultima visao escolhida neste navegador; padrao: "Meus processos".
+const lerVisaoSalva = (): Visao => {
+    try {
+        return localStorage.getItem(CHAVE_VISAO) === "todos" ? "todos" : "meus";
+    } catch (e) {
+        return "meus";
+    }
 };
 
 const Processes = () => {
@@ -66,6 +96,22 @@ const Processes = () => {
     const [selectedUser, setSelectedUser] = useState<{ id: number | null }>({id: null});
     const [processId, setProcessId] = useState(null);
     const [chatClient, setChatClient] = useState<{ id: number; name: string } | null>(null);
+    const [visao, setVisao] = useState<Visao>(lerVisaoSalva);
+
+    const mudarVisao = (nova: Visao) => {
+        setVisao(nova);
+        try {
+            localStorage.setItem(CHAVE_VISAO, nova);
+        } catch (e) {
+            // sem armazenamento (aba anonima etc.): so nao lembra a escolha
+        }
+    };
+
+    const meusProcessos = useMemo(
+        () => (processData as ProcessProps[]).filter((p) => p.isUserProcessOwner),
+        [processData]
+    );
+    const processosVisiveis = visao === "meus" ? meusProcessos : processData;
 
     moment.locale("pt-br");
 
@@ -367,6 +413,21 @@ const Processes = () => {
                 onFinish={onSubmit}
                 form={form}
             >
+                <FormItem colon={false} label="Visão">
+                    <Radio.Group
+                        value={visao}
+                        onChange={(e) => mudarVisao(e.target.value)}
+                        optionType="button"
+                        buttonStyle="solid"
+                    >
+                        <Radio.Button value="todos">
+                            Todos os processos ({processData.length})
+                        </Radio.Button>
+                        <Radio.Button value="meus">
+                            Meus processos ({meusProcessos.length})
+                        </Radio.Button>
+                    </Radio.Group>
+                </FormItem>
                 <Row {...rowProps}>
                     <Col span={10}>
                         <FormItem colon={false} label="Nome" name="name">
@@ -383,7 +444,13 @@ const Processes = () => {
             <Table
                 columns={columns}
                 rowKey={(r: ProcessProps) => r.id}
-                dataSource={processData}
+                dataSource={processosVisiveis}
+                locale={{
+                    emptyText:
+                        visao === "meus" && processData.length > 0
+                            ? "Você não é responsável por nenhum destes processos. Mude para \"Todos os processos\" para ver todos."
+                            : "Nenhum processo encontrado.",
+                }}
                 {...marginTop}
             />
             <div {...buttonLeft}></div>
