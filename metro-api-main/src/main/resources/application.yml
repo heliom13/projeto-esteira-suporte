@@ -19,7 +19,9 @@ spring:
       keepalive-time: 120000
   h2:
     console:
-      enabled: ${H2_CONSOLE:true}
+      # Console do banco de teste (H2): desligado por padrao. Para usar
+      # localmente com o banco em memoria: H2_CONSOLE=true
+      enabled: ${H2_CONSOLE:false}
   sql:
     init:
       mode: always
@@ -27,7 +29,9 @@ spring:
 management:
   endpoint:
     health:
-      show-details: always
+      # Sem login, /actuator/health responde so {"status":"UP"} (antes mostrava
+      # tipo do banco, disco etc. para qualquer pessoa).
+      show-details: when-authorized
 
 message:
   token: ${TOKEN_MESSAGE:token}

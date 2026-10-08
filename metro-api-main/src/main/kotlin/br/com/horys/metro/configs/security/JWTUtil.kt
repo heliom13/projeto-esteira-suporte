@@ -35,8 +35,9 @@ class JWTUtil {
             Base64.getEncoder().encodeToString(aleatorio)
         }
 
-    // Validade do token: usa JWT_EXPIRATION_MS se definido (padrão ~2h = 7200000 ms)
-    private val expiration: Long = System.getenv("JWT_EXPIRATION_MS")?.toLongOrNull() ?: 600000000
+    // Validade do token de login: usa JWT_EXPIRATION_MS se definido; padrao 12h
+    // (um dia de trabalho). Antes o padrao era ~7 dias.
+    private val expiration: Long = System.getenv("JWT_EXPIRATION_MS")?.toLongOrNull() ?: 43200000
 
     fun generateToken(userDetailsImpl: UserDetailsImpl): String {
         val username = userDetailsImpl.username
@@ -55,6 +56,9 @@ class JWTUtil {
 
     fun isTokenValid(token: String): Boolean {
         val claims = getClaimsToken(token)
+        // O token do link "esqueci a senha" serve SO para redefinir a senha,
+        // nunca como login (os dois sao assinados com a mesma chave).
+        if (claims != null && claims[PASSWORD_RESET_CLAIM] == true) return false
         if (claims != null) {
             val username = claims.subject
             val expirationDate = claims.expiration

@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.7.0"
-    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("org.springframework.boot") version "2.7.18"
+    id("io.spring.dependency-management") version "1.0.15.RELEASE"
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.spring") version "1.6.21"
     kotlin("plugin.jpa") version "1.6.21"
@@ -16,7 +16,11 @@ repositories {
     mavenCentral()
 }
 
-extra["springCloudVersion"] = "2021.0.3"
+extra["springCloudVersion"] = "2021.0.9"
+// Correcoes de seguranca alem das que o Spring Boot 2.7.18 ja traz
+// (mesmas familias de versao, sem mudanca de API):
+extra["tomcat.version"] = "9.0.118"
+extra["postgresql.version"] = "42.7.7"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -36,7 +40,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-security:1.6.11")
 
 
-    implementation("commons-io:commons-io:2.11.0")
+    implementation("commons-io:commons-io:2.16.1")
     implementation("io.jsonwebtoken:jjwt:0.9.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
