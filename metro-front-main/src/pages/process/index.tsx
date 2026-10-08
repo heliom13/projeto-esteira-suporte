@@ -6,7 +6,6 @@ import {
     Input,
     Modal,
     Popconfirm,
-    Radio,
     Row,
     Space,
     Spin,
@@ -26,7 +25,9 @@ import {
     SearchOutlined,
     SendOutlined,
     TeamOutlined,
+    UserOutlined,
 } from "@ant-design/icons";
+import VisaoToggle from "../../components/visaoToggle/VisaoToggle";
 import ClientChat from "../client/chat";
 import {validateMessages} from "../../utils/ValidatorFields";
 import {rowProps} from "../../utils/FormUtils";
@@ -414,19 +415,27 @@ const Processes = () => {
                 form={form}
             >
                 <FormItem colon={false} label="Visão">
-                    <Radio.Group
-                        value={visao}
-                        onChange={(e) => mudarVisao(e.target.value)}
-                        optionType="button"
-                        buttonStyle="solid"
-                    >
-                        <Radio.Button value="todos">
-                            Todos os processos ({processData.length})
-                        </Radio.Button>
-                        <Radio.Button value="meus">
-                            Meus processos ({meusProcessos.length})
-                        </Radio.Button>
-                    </Radio.Group>
+                    <VisaoToggle<Visao>
+                        valor={visao}
+                        onChange={mudarVisao}
+                        rotuloAcessivel="Visão dos processos"
+                        opcoes={[
+                            {
+                                valor: "todos",
+                                rotulo: "Todos os processos",
+                                rotuloCurto: "Todos",
+                                icone: <TeamOutlined/>,
+                                contador: processData.length,
+                            },
+                            {
+                                valor: "meus",
+                                rotulo: "Meus processos",
+                                rotuloCurto: "Meus",
+                                icone: <UserOutlined/>,
+                                contador: meusProcessos.length,
+                            },
+                        ]}
+                    />
                 </FormItem>
                 <Row {...rowProps}>
                     <Col span={10}>
