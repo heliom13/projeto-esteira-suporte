@@ -11,6 +11,7 @@ import {ClientService} from "../../services/client";
 import onNotification from "../../components/notification/notification";
 import Client from "./view";
 import {useForm} from "antd/lib/form/Form";
+import LinkRastreio from "../../components/linkRastreio/LinkRastreio";
 
 const FormItem = Form.Item;
 const {Title} = Typography;
@@ -108,17 +109,7 @@ const Clients = () => {
         },
         {
             title: "Acesso externo",
-            render: (r: ClientProps) => (
-                <a
-                    href={`https://sistema.suporteimobiliario.com/external/cliente-comprador/${r.externalId}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ fontSize: 12, wordBreak: 'break-all' }}
-                >
-                    Ver link
-                </a>
-            ),
-            width: 100,
+            render: (r: ClientProps) => <LinkRastreio tipo="cliente-comprador" externalId={r.externalId}/>,
         },
         {
             title: "Ação",

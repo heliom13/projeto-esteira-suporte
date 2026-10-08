@@ -10,6 +10,7 @@ import {PropertyService} from "../../services/property";
 import Property from "./view";
 import onNotification from "../../components/notification/notification";
 import {useForm} from "antd/lib/form/Form";
+import LinkRastreio from "../../components/linkRastreio/LinkRastreio";
 
 const {Title} = Typography;
 const FormItem = Form.Item;
@@ -111,19 +112,7 @@ const Properties = () => {
         },
         {
             title: "Acesso Externo",
-            render: (r: ImmobileProps) => (
-                <span>
-          <a
-              href={`https://sistema.suporteimobiliario.com/external/imovel/${r.externalId}`}
-              target="_blank"
-              rel="noreferrer"
-          >
-            {" "}
-              https://sistema.suporteimobiliario.com/external/imovel/
-              {r.externalId}{" "}
-          </a>
-        </span>
-            ),
+            render: (r: ImmobileProps) => <LinkRastreio tipo="imovel" externalId={r.externalId}/>,
         },
 
         {

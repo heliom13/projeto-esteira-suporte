@@ -8,6 +8,7 @@ import {SellerService} from "../../services/seller";
 import {marginTop, primaryText} from "../../styles/stylesProps";
 import {rowProps} from "../../utils/FormUtils";
 import {useForm} from "antd/lib/form/Form";
+import LinkRastreio from "../../components/linkRastreio/LinkRastreio";
 
 const {Title, Text} = Typography;
 const FormItem = Form.Item;
@@ -111,18 +112,7 @@ const Seller = () => {
         },
         {
             title: "Acesso Externo",
-            render: (r: SellerProps) => (
-                <span>
-          <a
-              href={`https://sistema.suporteimobiliario.com/external/vendedor/${r.externalId}`}
-              target="_blank"
-              rel="noreferrer"
-          >
-            {" "}
-              https://sistema.suporteimobiliario.com/external/vendedor/{r.externalId}{" "}
-          </a>
-        </span>
-            ),
+            render: (r: SellerProps) => <LinkRastreio tipo="vendedor" externalId={r.externalId}/>,
         },
 
         {
