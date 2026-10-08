@@ -31,6 +31,17 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
   <title>Suporte Imobiliário </title>
+  <script>
+    // Protecao contra "clickjacking": o sistema nao pode ser aberto escondido
+    // dentro de outro site (iframe). Se estiver, sai do iframe ou esconde a tela.
+    if (window.top !== window.self) {
+      try {
+        window.top.location.replace(window.location.href);
+      } catch (e) {
+        document.documentElement.style.display = 'none';
+      }
+    }
+  </script>
 </head>
 
 <body>
